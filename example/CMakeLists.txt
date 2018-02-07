@@ -106,6 +106,7 @@ ADD_EXECUTABLE(${TARGET_NAME} ${TARGET_SRCS} ${TARGET_HEADERS})
 
 # BEGIN Build dependencies --------------------------------------------------------------------------------------------------------------------------
 add_dependencies(${TARGET_NAME} espresso)
+add_dependencies(${TARGET_NAME} caffeDataParser)
 # END Build dependencies ----------------------------------------------------------------------------------------------------------------------------
 
 
