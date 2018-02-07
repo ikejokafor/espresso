@@ -1,5 +1,4 @@
 #include "caffeDataParser.hpp"
-using namespace caffeDataParser;
 using namespace std;
 
 vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {

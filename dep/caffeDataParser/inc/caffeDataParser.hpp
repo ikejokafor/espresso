@@ -49,4 +49,4 @@ typedef struct {
 } layerInfo_t;
 
 
-std::vector<caffeDataParser::layerInfo_t> parseCaffeData(std::string protoFileName, std::string modelFileName);
+std::vector<layerInfo_t> parseCaffeData(std::string protoFileName, std::string modelFileName);
