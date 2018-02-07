@@ -150,6 +150,7 @@ TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
     -L/usr/local/lib
     -L/usr/lib/
     -L${PROJECT_SOURCE_DIR}/../build/debug/
+    -lespresso
 )
 endif()
 # END Library Settings ------------------------------------------------------------------------------------------------------------------------------
