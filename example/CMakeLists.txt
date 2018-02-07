@@ -150,7 +150,9 @@ TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
     -L/usr/local/lib
     -L/usr/lib/
     -L${PROJECT_SOURCE_DIR}/../build/debug/
+    -L${PROJECT_SOURCE_DIR}/../build/debug/dep/caffeDataParser/
     -lespresso
+    -lcaffeDataParser
 )
 endif()
 # END Library Settings ------------------------------------------------------------------------------------------------------------------------------
