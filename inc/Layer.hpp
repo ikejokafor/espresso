@@ -11,34 +11,6 @@
 #include <random>
 #include <float.h>
 
-namespace CNNLayerInfo {
-	//	LayerTypes:
-	//		Input
-	//		Convolution
-	//		ReLU
-	//		Pooling
-	//		InnerProduct
-	//		Softmax
-	//		Concat
-
-	typedef struct {
-		std::string layerName;
-		std::vector<std::string> topLayerNames;
-		std::vector<std::string> bottomLayerNames;
-		std::string layerType;
-		int numInputRows;
-		int numInputCols;
-		int inputDepth;
-		int outputDepth;
-		int numKernelRows;
-		int numKernelCols;
-		int stride;
-		int padding;
-		float *filterData;
-		float *biasData;
-	} layerInfo_t;
-}
-
 typedef struct {
     float *data;
 	int numRows;
