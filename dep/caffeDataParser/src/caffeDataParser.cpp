@@ -17,9 +17,9 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
    
     // for david chambers network, might need to change for over networks
     layerInfo.layerName = "data";
-    layerInfo.inputDepth = param.input_dim(0);
-	layerInfo.numInputCols = param.input_dim(1);
-	layerInfo.inputDepth = param.input_dim(2);
+    layerInfo.inputDepth = param.input_dim(1);
+	layerInfo.numInputRows = param.input_dim(2);
+	layerInfo.numInputCols = param.input_dim(3);
     caffeLayers.push_back(layerInfo);
     
 	for (int nlayers = 0; nlayers < param.layer_size(); nlayers++) {
