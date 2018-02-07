@@ -1,6 +1,5 @@
 #include "ConcatLayer.hpp"
 using namespace std;
-using namespace CNNLayerInfo;
 
 ConcatLayer::ConcatLayer	(
     							string layerName,

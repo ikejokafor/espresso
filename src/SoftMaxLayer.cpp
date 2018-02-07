@@ -1,6 +1,5 @@
 #include "SoftMaxLayer.hpp"
 using namespace std;
-using namespace CNNLayerInfo;
 
 SoftMaxLayer::SoftMaxLayer	(
     							string layerName,

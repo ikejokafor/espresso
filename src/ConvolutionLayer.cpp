@@ -1,6 +1,5 @@
 #include "ConvolutionLayer.hpp"
 using namespace std;
-using namespace CNNLayerInfo;
 
 ConvolutionLayer::ConvolutionLayer	(
     									string layerName,

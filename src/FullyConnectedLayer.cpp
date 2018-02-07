@@ -1,6 +1,5 @@
 #include "FullyConnectedLayer.hpp"
 using namespace std;
-using namespace CNNLayerInfo;
 
 FullyConnectedLayer::FullyConnectedLayer	(
     											string layerName,

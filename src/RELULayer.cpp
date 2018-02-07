@@ -1,6 +1,5 @@
 #include "RELULayer.hpp"
 using namespace std;
-using namespace CNNLayerInfo;
 
 RELULayer::RELULayer	(
     						string layerName,

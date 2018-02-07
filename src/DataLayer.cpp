@@ -1,6 +1,5 @@
 #include "DataLayer.hpp"
 using namespace std;
-using namespace CNNLayerInfo;
 
 DataLayer::DataLayer	(
     						string layerName,

@@ -1,6 +1,5 @@
 #include "PoolingLayer.hpp"
 using namespace std;
-using namespace CNNLayerInfo;
 
 PoolingLayer::PoolingLayer	(
     							string layerName,
