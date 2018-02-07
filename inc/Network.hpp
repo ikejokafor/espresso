@@ -9,6 +9,7 @@
 #include "ConcatLayer.hpp"
 #include "FullyConnectedLayer.hpp"
 #include "SoftMaxLayer.hpp"
+#include "caffeDataParser.hpp"
 
 
 #include <vector>
@@ -17,7 +18,7 @@
 class Network {
 
 	public:
-		Network(std::vector<CNNLayerInfo::layerInfo_t> layerInfo);
+		Network(std::vector<layerInfo_t> layerInfo);
 		~Network();
 		void Forward(Blob_t inputBlob, Blob_t *outputBlob);
 			

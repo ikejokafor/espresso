@@ -135,6 +135,7 @@ TARGET_COMPILE_OPTIONS(${TARGET_NAME} PUBLIC
 TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
     ${PROJECT_SOURCE_DIR}/inc/
     ${PROJECT_SOURCE_DIR}/common/inc/
+    ${PROJECT_SOURCE_DIR}/dep/caffeDataParser/inc/
 #    <include_path0>
 #    <include_path1>
 #    <include_pathN>

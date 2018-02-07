@@ -1,6 +1,5 @@
 #include "Layer.hpp"
 using namespace std;
-using namespace CNNLayerInfo;
 
 Layer::Layer   (  
 					string layerName,

@@ -1,5 +1,4 @@
 #include "Network.hpp"
-#include "caffeDataParser.hpp"
 using namespace std;
 
 int main(int argc, char **agrv) {

@@ -1,6 +1,5 @@
 #include "Network.hpp"
 using namespace std;
-using namespace CNNLayerInfo;
 
 Network::Network(vector<layerInfo_t> layerInfo) {
 	
