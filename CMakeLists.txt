@@ -148,18 +148,22 @@ TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
 #   For shared libraries make sure.....
 #       WINDOWS: PATH env variable includes path(s) to dll's
 #       LINUX:  LD_LIBRARY_PATH env variablel includes path(s) to so's
-if(WIN32)
-TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
-
-)
-else()
-TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
-    -L/usr/local/lib/
-    -L/usr/lib/
-    -L${PROJECT_SOURCE_DIR}/build/debug/
-    -lespresso
-)
-endif()
+#if(WIN32)
+#TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
+#    <lib0_NAME>.lib
+#    <lib1_NAME>.lib
+#    <libN_NAME>.lib
+#)
+#else()
+#TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
+#    -L<path_to_lib0>
+#    -L<path_to_lib1>
+#    -L<path_to_libN>
+#    <lib0_NAME>
+#    <lib1_NAME>
+#    <libN_NAME>
+#)
+#endif()
 # END Library Settings ------------------------------------------------------------------------------------------------------------------------------
 
 
