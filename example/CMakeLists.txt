@@ -153,6 +153,7 @@ TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
     -L${PROJECT_SOURCE_DIR}/../build/debug/dep/caffeDataParser/
     -lespresso
     -lcaffeDataParser
+    -lprotobuf
 )
 endif()
 # END Library Settings ------------------------------------------------------------------------------------------------------------------------------

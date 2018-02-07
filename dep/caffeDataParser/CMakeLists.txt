@@ -154,7 +154,6 @@ else()
 TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
     -L/usr/local/lib/
     -L/usr/lib/
-    -L/home/ikenna/caffe-master/lib/
     -lprotobuf
 )
 endif()
