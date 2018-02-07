@@ -38,7 +38,7 @@ SoftMaxLayer::SoftMaxLayer	(
 SoftMaxLayer::~SoftMaxLayer() {}
 
 
-void Layer::ComputeLayerParam() {
+void SoftMaxLayer::ComputeLayerParam() {
 	// input size
 	m_inputDepth = m_bottomLayers[0]->m_outputDepth;
 	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;

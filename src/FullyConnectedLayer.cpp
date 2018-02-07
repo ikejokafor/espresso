@@ -38,7 +38,7 @@ FullyConnectedLayer::FullyConnectedLayer	(
 FullyConnectedLayer::~FullyConnectedLayer() {}
 
 
-void Layer::ComputeLayerParam() {
+void FullyConnectedLayer::ComputeLayerParam() {
 	// input size
 	m_inputDepth = m_bottomLayers[0]->m_outputDepth;
 	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;
