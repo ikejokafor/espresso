@@ -125,6 +125,13 @@ Network::Network(vector<layerInfo_t> &layerInfo) {
 
 	for (int i = 0; i < m_cnn.size(); i++) {
 		m_cnn[i]->ComputeLayerParam();
+		cout << m_cnn[i]->m_layerName << endl;
+		cout << m_cnn[i]->m_inputDepth << endl;
+		cout << m_cnn[i]->m_numInputRows << endl;
+		cout << m_cnn[i]->m_numInputCols << endl;
+		cout << m_cnn[i]->m_outputDepth << endl;
+		cout << m_cnn[i]->m_numOutputRows << endl;
+		cout << m_cnn[i]->m_numOutputCols << endl;
 	}
 }
 
