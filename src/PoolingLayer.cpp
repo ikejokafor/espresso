@@ -45,8 +45,9 @@ void PoolingLayer::ComputeLayerParam() {
 	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
 
 	// output size
-	m_numOutputRows = ((m_numInputRows - m_numKernelRows + 2 * m_padding) / m_stride) + 1;
-	m_numOutputCols = ((m_numInputCols - m_numKernelCols + 2 * m_padding) / m_stride) + 1;
+	m_outputDepth = m_inputDepth;
+	m_numOutputRows = (int)ceil((float)((m_numInputRows - m_numKernelRows + 2 * m_padding) / m_stride)) + 1;
+	m_numOutputCols = (int)ceil((float)((m_numInputCols - m_numKernelCols + 2 * m_padding) / m_stride)) + 1;
 
 	// create output blob
 	m_blob.depth = m_outputDepth;

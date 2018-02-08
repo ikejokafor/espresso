@@ -47,7 +47,7 @@ void RELULayer::ComputeLayerParam() {
 	m_outputDepth = m_inputDepth;
 	m_numOutputCols = m_numInputRows;
 	m_numOutputRows = m_numInputCols;
-	}
+}
 
 
 void RELULayer::ComputeLayer(Blob_t inputBlob) {
