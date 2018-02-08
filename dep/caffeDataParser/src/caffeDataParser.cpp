@@ -22,6 +22,14 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
 	if(!success) {
 		exit(1);
 	}
+    
+    // for dcNet, might need to change for over networks
+    layerInfo.layerName = "data";
+	layerInfo.layerType = "Input";
+    layerInfo.inputDepth = param.input_dim(1);
+	layerInfo.numInputRows = param.input_dim(2);
+	layerInfo.numInputCols = param.input_dim(3);
+    caffeLayers.push_back(layerInfo);
 
     // get Weights
     fd = open((modelFileName).c_str(), O_RDONLY);
@@ -35,17 +43,8 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
     if(!success) {
         exit(1);
     }
-
-   
-    // for david chambers network, might need to change for over networks
-    //layerInfo.layerName = "data";
-	//layerInfo.layerType = "Input";
-    //layerInfo.inputDepth = param.input_dim(1);
-	//layerInfo.numInputRows = param.input_dim(2);
-	//layerInfo.numInputCols = param.input_dim(3);
-    //caffeLayers.push_back(layerInfo);
     
-	for (int nlayers = 0; nlayers < param.layer_size(); nlayers++) {
+	for (int nlayers = 5; nlayers < param.layer_size(); nlayers++) {  // for dcNet start at 5
 
 		layerInfo.layerName = " ";
 		layerInfo.topLayerNames.clear();
@@ -65,7 +64,7 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
 		lparam = param.layer(nlayers);
 		layerInfo.layerName = lparam.name();
 		layerInfo.layerType = lparam.type();
-		for (int num_bottom_layers = 0; num_bottom_layers < lparam.bottom_size(); num_bottom_layers++) {
+		for (int num_bottom_layers = 0; num_bottom_layers < lparam.bottom_size(); num_bottom_layers++) {   
 			layerInfo.bottomLayerNames.push_back(lparam.bottom(num_bottom_layers));
 		}
 		for (int num_top_layers = 0; num_top_layers < lparam.top_size(); num_top_layers++) {
@@ -79,6 +78,16 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
 			if(lparam.convolution_param().stride_size() > 0) {
                 layerInfo.stride = lparam.convolution_param().stride(0);
 			}
+            // filter weights
+            layerInfo.filterData = (float*)malloc(lparam.blobs(0).data_size() * sizeof(float));    // asuming each number is a float
+            for(int i = 0; i < lparam.blobs(0).data_size(); i++) {
+                layerInfo.filterData[i] = lparam.blobs(0).data(i);
+            }
+            // bias
+            layerInfo.biasData = (float*)malloc(lparam.blobs(1).data_size() * sizeof(float));    // asuming each number is a float
+            for(int i = 0; i < lparam.blobs(1).data_size(); i++) {
+                layerInfo.biasData[i] = lparam.blobs(1).data(i);
+            }
 		}
 		if (lparam.has_lrn_param()) {
 			//cout << "Local Size: " << lparam.lrn_param().local_size() << endl;
