@@ -14,6 +14,8 @@ int main(int argc, char **agrv) {
 											* network->m_cnn[network->m_cnn.size() - 1]->m_numOutputCols 
 											* sizeof(float)
 										);
+
+
 	network->Forward(inputBlob, &outputBlob);
 
 
