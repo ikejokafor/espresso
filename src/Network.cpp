@@ -100,7 +100,7 @@ Network::Network(vector<layerInfo_t> &layerInfo) {
 	for (int i = 0; i < m_cnn.size(); i++) {	// for every layer
 		for (int j = 0; j < m_cnn[j]->m_topLayerNames.size(); j++) { // for every top layer of the current cnn layer
 			for (int k = 0; k < m_cnn.size(); k++) {	// search for the top layer 
-				if(m_cnn[j].m_layerType != "Input") { 
+				if(m_cnn[j]->m_layerType != "Input") { 
 					if (m_cnn[j]->m_topLayerNames[j] == m_cnn[k]->m_layerName) {
 						m_cnn[j]->m_topLayers.push_back(m_cnn[k]);
 						break;
@@ -113,7 +113,7 @@ Network::Network(vector<layerInfo_t> &layerInfo) {
 	for (int i = 0; i < m_cnn.size(); i++) {	// for every layer
 		for (int j = 0; j < m_cnn[j]->m_bottomLayerNames.size(); j++) { // for every bottom layer of the current cnn layer
 			for (int k = 0; k < m_cnn.size(); k++) {	// search for the top layer
-				if (m_cnn[j].m_layerType != "Input") {
+				if (m_cnn[j]->m_layerType != "Input") {
 					if (m_cnn[j]->m_bottomLayerNames[j] == m_cnn[k]->m_layerName) {
 						m_cnn[j]->m_bottomLayers.push_back(m_cnn[k]);
 						break;
