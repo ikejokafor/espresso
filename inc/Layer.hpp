@@ -9,7 +9,7 @@
 #include <cstring>
 #include <vector>
 #include <random>
-#include <float.h> 
+#include <float.h>
 
 typedef struct {
     float *data;

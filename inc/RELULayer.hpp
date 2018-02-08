@@ -1,7 +1,7 @@
 #ifndef __RELU_LAYER_H__
 #define __RELU_LAYER_H__
 
-#include "Layer.hpp" 
+#include "Layer.hpp"
 
 class RELULayer : public Layer {
 	

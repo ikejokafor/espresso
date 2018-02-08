@@ -1,5 +1,5 @@
 #include "PoolingLayer.hpp"
-using namespace std; 
+using namespace std;
 
 PoolingLayer::PoolingLayer(
 	string layerName,

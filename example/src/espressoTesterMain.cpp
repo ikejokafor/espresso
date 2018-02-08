@@ -1,9 +1,10 @@
 #include "Network.hpp"
-using namespace std; 
+using namespace std;
 
 int main(int argc, char **agrv) {
 	string protoTxt = "/home/ikenna/caffe-master/models/dcNet/deploy_sqz.prototxt";
-	vector<layerInfo_t> layerInfo = parseCaffeData(protoTxt, " ");
+    string model = "/home/ikenna/caffe-master/models/dcNet/sqz_iter_19036.caffemodel";
+	vector<layerInfo_t> layerInfo = parseCaffeData(protoTxt, model);
 	Network *network = new Network(layerInfo);
 	Blob_t inputBlob;
 	inputBlob.data = (float*)malloc(network->m_cnn[0]->m_inputDepth * network->m_cnn[0]->m_numInputRows * network->m_cnn[0]->m_numInputCols * sizeof(float));
@@ -14,8 +15,6 @@ int main(int argc, char **agrv) {
 											* network->m_cnn[network->m_cnn.size() - 1]->m_numOutputCols 
 											* sizeof(float)
 										);
-
-
 	network->Forward(inputBlob, &outputBlob);
 
 

@@ -1,5 +1,12 @@
 #include "caffeDataParser.hpp"
-using namespace std; 
+using namespace std;
+using google::protobuf::io::FileInputStream;
+using google::protobuf::io::FileOutputStream;
+using google::protobuf::io::ZeroCopyInputStream;
+using google::protobuf::io::CodedInputStream;
+using google::protobuf::io::ZeroCopyOutputStream;
+using google::protobuf::io::CodedOutputStream;
+using google::protobuf::Message;
 
 vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
 	vector<layerInfo_t> caffeLayers;
@@ -11,17 +18,32 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
 	cout << "File not found: " << protoFileName;
 	google::protobuf::io::FileInputStream* input = new google::protobuf::io::FileInputStream(fd);
 	bool success = google::protobuf::TextFormat::Parse(input, &param);
+    close(fd);
 	if(!success) {
 		exit(1);
 	}
+
+    // get Weights
+    fd = open((modelFileName).c_str(), O_RDONLY);
+    ZeroCopyInputStream* raw_input = new FileInputStream(fd);
+    CodedInputStream* coded_input = new CodedInputStream(raw_input);
+    //coded_input->SetTotalBytesLimit(INT_MAX, 536870912);
+    coded_input->SetTotalBytesLimit(INT_MAX, 536870912);
+    success = param.ParseFromCodedStream(coded_input);
+    delete coded_input;
+    delete raw_input;
+    if(!success) {
+        exit(1);
+    }
+
    
     // for david chambers network, might need to change for over networks
-    layerInfo.layerName = "data";
-	layerInfo.layerType = "Input";
-    layerInfo.inputDepth = param.input_dim(1);
-	layerInfo.numInputRows = param.input_dim(2);
-	layerInfo.numInputCols = param.input_dim(3);
-    caffeLayers.push_back(layerInfo);
+    //layerInfo.layerName = "data";
+	//layerInfo.layerType = "Input";
+    //layerInfo.inputDepth = param.input_dim(1);
+	//layerInfo.numInputRows = param.input_dim(2);
+	//layerInfo.numInputCols = param.input_dim(3);
+    //caffeLayers.push_back(layerInfo);
     
 	for (int nlayers = 0; nlayers < param.layer_size(); nlayers++) {
 

@@ -1,5 +1,5 @@
 #include "DataLayer.hpp"
-using namespace std; 
+using namespace std;
 
 DataLayer::DataLayer	(
     						string layerName,

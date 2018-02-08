@@ -5,19 +5,14 @@
 #include <string>
 #include <vector>
 #include <string>
-#include <iostream> 
+#include <iostream>
+#include <unistd.h>
 
 // Google protobufs
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
-using google::protobuf::io::FileInputStream;
-using google::protobuf::io::FileOutputStream;
-using google::protobuf::io::ZeroCopyInputStream;
-using google::protobuf::io::CodedInputStream;
-using google::protobuf::io::ZeroCopyOutputStream;
-using google::protobuf::io::CodedOutputStream;
-using google::protobuf::Message;
+
 
 // caffe
 #include "caffe.pb.h"

@@ -1,6 +1,6 @@
 #ifndef __FULLY_CONNECTED_LAYER_H__
 #define __FULLY_CONNECTED_LAYER_H__
-#include "Layer.hpp" 
+#include "Layer.hpp"
 
 class FullyConnectedLayer : public Layer {
 	
