@@ -51,8 +51,5 @@ void DataLayer::ComputeLayerParam() {
 
 
 void DataLayer::ComputeLayer(Blob_t inputBlob) {
-
-	// output
-	float *dataout = inputBlob.data;
-
+	m_blob.data = inputBlob.data;
 }

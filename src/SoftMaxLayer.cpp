@@ -52,8 +52,8 @@ void SoftMaxLayer::ComputeLayerParam() {
 	// create output blob
 	m_blob.depth = m_outputDepth;
 	m_blob.numRows = m_numOutputRows;
-	m_blob.numCols = m_numKernelCols;
-	m_blob.data = (float*)malloc(m_outputDepth * m_numOutputRows * m_numKernelCols * sizeof(float));
+	m_blob.numCols = m_numOutputCols;
+	m_blob.data = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
 }
 
 void SoftMaxLayer::ComputeLayer(Blob_t inputBlob) {
