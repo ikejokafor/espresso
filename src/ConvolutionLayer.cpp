@@ -44,8 +44,8 @@ void ConvolutionLayer::ComputeLayerParam() {
 	m_numInputCols  = m_bottomLayers[0]->m_numOutputCols;
 
 	// output size
-	m_numOutputRows = (int)floor((float)((m_numInputRows - m_numKernelRows + 2 * m_padding) / m_stride)) + 1;
-	m_numOutputCols = (int)floor((float)((m_numInputCols - m_numKernelCols + 2 * m_padding) / m_stride)) + 1;
+	m_numOutputRows = (int)((m_numInputRows - m_numKernelRows + 2 * m_padding) / m_stride) + 1;
+	m_numOutputCols = (int)((m_numInputCols - m_numKernelCols + 2 * m_padding) / m_stride) + 1;
 
 	// create output blob
 	m_blob.depth = m_outputDepth;
