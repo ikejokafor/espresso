@@ -1,7 +1,7 @@
 #include "Network.hpp"
 using namespace std;
 
-Network::Network(vector<layerInfo_t> layerInfo) {
+Network::Network(vector<layerInfo_t> &layerInfo) {
 	
 	for (int i = 0; i < layerInfo.size(); i++) {
 		if (layerInfo[i].layerType == "Input") {

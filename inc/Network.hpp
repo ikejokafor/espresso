@@ -18,7 +18,7 @@
 class Network {
 
 	public:
-		Network(std::vector<layerInfo_t> layerInfo);
+		Network(std::vector<layerInfo_t> &layerInfo);
 		~Network();
 		void Forward(Blob_t inputBlob, Blob_t *outputBlob);
 			
