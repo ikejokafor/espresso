@@ -75,8 +75,8 @@ void ConvolutionLayer::ComputeLayer(Blob_t inputBlob) {
 			for(int y = 0; y < m_numOutputCols; y++) {
 				index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = m_biasData[m];
 				for (int k = 0; k < m_kernelDepth; k++) {
-					for (int i = -m_padding; i < m_numKernelRows; i++) {
-						for (int j = -m_padding; j < m_numKernelCols; j++) {
+					for (int i = x - m_padding, kr = 0; kr < m_numKernelRows; i++, kr++) {
+						for (int j = y - m_padding, kc = 0; kc < m_numKernelCols; j++, kc++) {
 								if (i >= 0 && j >= 0) {	// in valid region
 									index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) += (
 										index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, k, (m_stride * x + i), (m_stride * y + j)) *
