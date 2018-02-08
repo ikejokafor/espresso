@@ -10,8 +10,8 @@ int main(int argc, char **agrv) {
 	Blob_t outputBlob;
 	outputBlob.data = (float*)malloc	(
 											network->m_cnn[network->m_cnn.size() - 1]->m_outputDepth 
-											* network->m_cnn[network->m_cnn.size()]->m_numOutputRows 
-											* network->m_cnn[network->m_cnn.size()]->m_numOutputCols 
+											* network->m_cnn[network->m_cnn.size() - 1]->m_numOutputRows 
+											* network->m_cnn[network->m_cnn.size() - 1]->m_numOutputCols 
 											* sizeof(float)
 										);
 	network->Forward(inputBlob, &outputBlob);
