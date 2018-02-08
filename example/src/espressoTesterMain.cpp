@@ -8,7 +8,12 @@ int main(int argc, char **agrv) {
 	Blob_t inputBlob;
 	inputBlob.data = (float*)malloc(network->m_cnn[0]->m_inputDepth * network->m_cnn[0]->m_numInputRows * network->m_cnn[0]->m_numInputCols * sizeof(float));
 	Blob_t outputBlob;
-	outputBlob.data = (float*)malloc(network->m_cnn[m_cnn.size() - 1]->m_outputDepth * network->m_cnn[0]->m_numOutputRows * network->m_cnn[0]->m_numOutputCols * sizeof(float));
+	outputBlob.data = (float*)malloc	(
+											network->m_cnn[network->m_cnn.size() - 1]->m_outputDepth 
+											* network->m_cnn[network->m_cnn.size()]->m_numOutputRows 
+											* network->m_cnn[network->m_cnn.size()]->m_numOutputCols 
+											* sizeof(float)
+										);
 	network->Forward(inputBlob, &outputBlob);
 
 
