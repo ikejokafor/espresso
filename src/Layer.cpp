@@ -1,5 +1,5 @@
 #include "Layer.hpp"
-using namespace std;
+using namespace std; 
 
 Layer::Layer   (  
 					string layerName,

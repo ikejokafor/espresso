@@ -1,5 +1,5 @@
 #include "ConvolutionLayer.hpp"
-using namespace std;
+using namespace std; 
 
 ConvolutionLayer::ConvolutionLayer	(
     									string layerName,

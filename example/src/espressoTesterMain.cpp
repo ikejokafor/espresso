@@ -1,5 +1,5 @@
 #include "Network.hpp"
-using namespace std;
+using namespace std; 
 
 int main(int argc, char **agrv) {
 	string protoTxt = "/home/ikenna/caffe-master/models/dcNet/deploy_sqz.prototxt";

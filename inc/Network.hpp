@@ -9,7 +9,7 @@
 #include "ConcatLayer.hpp"
 #include "FullyConnectedLayer.hpp"
 #include "SoftMaxLayer.hpp"
-#include "caffeDataParser.hpp"
+#include "caffeDataParser.hpp" 
 
 
 #include <vector>

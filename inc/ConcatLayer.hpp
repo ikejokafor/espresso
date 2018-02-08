@@ -1,6 +1,6 @@
 #ifndef __CONCAT_LAYER_H__
 #define __CONCAT_LAYER_H__
-#include "Layer.hpp"
+#include "Layer.hpp" 
 
 class ConcatLayer : public Layer {
 	

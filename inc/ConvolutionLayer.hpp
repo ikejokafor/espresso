@@ -1,6 +1,6 @@
 #ifndef __CONVOLUTION_LAYER_H__
 #define __CONVOLUTION_LAYER_H__
-#include "Layer.hpp"
+#include "Layer.hpp" 
 
 class ConvolutionLayer : public Layer {
 	

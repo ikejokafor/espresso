@@ -1,5 +1,5 @@
 #include "RELULayer.hpp"
-using namespace std;
+using namespace std; 
 
 RELULayer::RELULayer	(
     						string layerName,

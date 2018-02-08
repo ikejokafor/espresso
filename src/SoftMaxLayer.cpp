@@ -1,5 +1,5 @@
 #include "SoftMaxLayer.hpp"
-using namespace std;
+using namespace std; 
 
 SoftMaxLayer::SoftMaxLayer	(
     							string layerName,

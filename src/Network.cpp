@@ -1,5 +1,5 @@
 #include "Network.hpp"
-using namespace std;
+using namespace std; 
 
 Network::Network(vector<layerInfo_t> &layerInfo) {
 	
