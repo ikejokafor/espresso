@@ -7,9 +7,9 @@
 using namespace std;
 using namespace cv;
 
-void dataTransform(vector<espresso::layerInfo_t> &networkLayerInfo, vector<caffeDataParser::layerInfo_t> caffeDataParserLayerInfo) {
+void dataTransform(vector<espresso::layerInfo_t<float>> &networkLayerInfo, vector<caffeDataParser::layerInfo_t> caffeDataParserLayerInfo) {
     
-    for(int i = 0; i < caffeDataParserLayerInfo.size(); i++) {
+    for(uint32_t i = 0; i < caffeDataParserLayerInfo.size(); i++) {
         networkLayerInfo[i].layerName             = caffeDataParserLayerInfo[i].layerName;     
         networkLayerInfo[i].topLayerNames         = caffeDataParserLayerInfo[i].topLayerNames;    
         networkLayerInfo[i].bottomLayerNames      = caffeDataParserLayerInfo[i].bottomLayerNames; 
@@ -34,12 +34,12 @@ int main(int argc, char **agrv) {
 	string protoTxt = "/home/ikenna/caffe-master/models/dcNet/deploy_sqz_2.prototxt";
     string model = "/home/ikenna/caffe-master/models/dcNet/dcNet_deploy_sq_2.caffemodel";
 	vector<caffeDataParser::layerInfo_t> caffeDataParserLayerInfo = parseCaffeData(protoTxt, model);
-    vector<espresso::layerInfo_t> networkLayerInfo;
+    vector<espresso::layerInfo_t<float>> networkLayerInfo;
     networkLayerInfo.resize(caffeDataParserLayerInfo.size());
     dataTransform(networkLayerInfo, caffeDataParserLayerInfo);
-	Network *network = new Network(networkLayerInfo);
+	Network<float> *network = new Network<float>(networkLayerInfo);
     
-    Blob_t inputBlob;
+    Blob_t<float> inputBlob;
     Mat img = imread("/home/ikenna/detector_test_kitti/temp.png", IMREAD_COLOR);
 	inputBlob.data = (float*)malloc(img.channels() * img.rows * img.cols * sizeof(float)); 
     inputBlob.depth = img.channels();

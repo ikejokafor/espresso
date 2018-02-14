@@ -107,6 +107,7 @@ ADD_EXECUTABLE(${TARGET_NAME} ${TARGET_SRCS} ${TARGET_HEADERS})
 # BEGIN Build dependencies --------------------------------------------------------------------------------------------------------------------------
 add_dependencies(${TARGET_NAME} espresso)
 add_dependencies(${TARGET_NAME} caffeDataParser)
+add_dependencies(${TARGET_NAME} fixedPoint)
 # END Build dependencies ----------------------------------------------------------------------------------------------------------------------------
 
 
@@ -133,6 +134,7 @@ TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
     ${PROJECT_SOURCE_DIR}/../tp/caffeDataParser/inc/
     ${PROJECT_SOURCE_DIR}/inc/
     ${PROJECT_SOURCE_DIR}/../inc/
+    ${PROJECT_SOURCE_DIR}/../../fixedPoint/inc/
 )
 # END Include directories ---------------------------------------------------------------------------------------------------------------------------
 
@@ -152,7 +154,9 @@ TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
     -L/usr/lib/
     -L${PROJECT_SOURCE_DIR}/../build/debug/
     -L${PROJECT_SOURCE_DIR}/../build/debug/tp/caffeDataParser/
-    -lespresso
+    -L${PROJECT_SOURCE_DIR}/../../fixedPoint/build/debug/
+    -lespresso          #this must go before fixedPoint, bc espresso depends on fixedpoint
+    -lfixedPoint
     -lcaffeDataParser
     -lprotobuf
     -lopencv_core
