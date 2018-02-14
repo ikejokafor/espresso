@@ -88,6 +88,11 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
             for(int i = 0; i < lparam.blobs(1).data_size(); i++) {
                 layerInfo.biasData[i] = lparam.blobs(1).data(i);
             }
+            
+            layerInfo.inputDepth = lparam.blobs(0).data_size() 
+                                    / lparam.convolution_param().num_output()   
+                                    / lparam.convolution_param().kernel_size(0) 
+                                    / lparam.convolution_param().kernel_size(0);
 		}
 		if (lparam.has_lrn_param()) {
 			//cout << "Local Size: " << lparam.lrn_param().local_size() << endl;

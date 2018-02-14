@@ -28,6 +28,46 @@ void dataTransform(vector<espresso::layerInfo_t<float>> &networkLayerInfo, vecto
 }
 
 
+void dataTransform(vector<espresso::layerInfo_t<FixedPoint>> &networkLayerInfo, vector<caffeDataParser::layerInfo_t> caffeDataParserLayerInfo) {
+    
+    for(uint32_t i = 0; i < caffeDataParserLayerInfo.size(); i++) {
+        networkLayerInfo[i].layerName             = caffeDataParserLayerInfo[i].layerName;     
+        networkLayerInfo[i].topLayerNames         = caffeDataParserLayerInfo[i].topLayerNames;    
+        networkLayerInfo[i].bottomLayerNames      = caffeDataParserLayerInfo[i].bottomLayerNames; 
+        networkLayerInfo[i].layerType             = caffeDataParserLayerInfo[i].layerType;       
+        networkLayerInfo[i].numInputRows          = caffeDataParserLayerInfo[i].numInputRows;     
+        networkLayerInfo[i].numInputCols          = caffeDataParserLayerInfo[i].numInputCols;     
+        networkLayerInfo[i].inputDepth            = caffeDataParserLayerInfo[i].inputDepth;       
+        networkLayerInfo[i].outputDepth           = caffeDataParserLayerInfo[i].outputDepth;      
+        networkLayerInfo[i].numKernelRows         = caffeDataParserLayerInfo[i].numKernelRows;    
+        networkLayerInfo[i].numKernelCols         = caffeDataParserLayerInfo[i].numKernelCols;    
+        networkLayerInfo[i].stride                = caffeDataParserLayerInfo[i].stride;          
+        networkLayerInfo[i].padding               = caffeDataParserLayerInfo[i].padding;
+        if(caffeDataParserLayerInfo[i].layerType == "Convolution" || caffeDataParserLayerInfo[i].layerType == "InnerProduct") {
+            networkLayerInfo[i].filterData = new FixedPoint [    
+                                                                caffeDataParserLayerInfo[i].numKernelRows 
+                                                                * caffeDataParserLayerInfo[i].numKernelCols 
+                                                                * caffeDataParserLayerInfo[i].inputDepth 
+                                                                * caffeDataParserLayerInfo[i].outputDepth
+                                                            ];
+            int numFilterValues = caffeDataParserLayerInfo[i].numKernelRows 
+                                  * caffeDataParserLayerInfo[i].numKernelCols
+                                  * caffeDataParserLayerInfo[i].inputDepth 
+                                  * caffeDataParserLayerInfo[i].outputDepth;           
+            networkLayerInfo[i].biasData = new FixedPoint [caffeDataParserLayerInfo[i].outputDepth];
+            for(int j = 0; j < numFilterValues; j++) {
+                networkLayerInfo[i].filterData[j] = caffeDataParserLayerInfo[i].filterData[j];
+                networkLayerInfo[i].filterData[j].SetParam(18,10);
+            }
+            for(int j = 0; j < caffeDataParserLayerInfo[i].outputDepth; i++) {
+                networkLayerInfo[i].biasData[j] = caffeDataParserLayerInfo[i].filterData[j];
+                networkLayerInfo[i].biasData[j].SetParam(18,10);
+            }
+        }
+    }
+}
+
+
 int main(int argc, char **agrv) {
     
     ofstream fd;
@@ -41,7 +81,7 @@ int main(int argc, char **agrv) {
     
     Blob_t<float> inputBlob;
     Mat img = imread("/home/ikenna/detector_test_kitti/temp.png", IMREAD_COLOR);
-	inputBlob.data = (float*)malloc(img.channels() * img.rows * img.cols * sizeof(float)); 
+	inputBlob.data = new float[img.channels() * img.rows * img.cols]; 
     inputBlob.depth = img.channels();
     inputBlob.numRows = img.rows;
     inputBlob.numCols = img.cols;    
