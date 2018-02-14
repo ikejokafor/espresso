@@ -1,7 +1,9 @@
 #include "Layer.hpp"
 using namespace std;
 
-Layer::Layer   (  
+
+template <typename DType>
+Layer<DType>::Layer   (  
 					string layerName,
 					vector<string> topLayerNames,
 					vector<string> bottomLayerNames,
@@ -14,8 +16,10 @@ Layer::Layer   (
 					int numKernelCols,
 					int stride,
 					int padding,
-					float *filterData,
-					float *biasData
+					DType *filterData,
+					DType *biasData,
+                    int length,
+                    int numFracbits
                 ) {
 		m_layerName         = layerName;      
 		m_topLayerNames     = topLayerNames;
@@ -35,14 +39,21 @@ Layer::Layer   (
 		m_blob.numRows		= 1;
 		m_blob.numCols		= 1;
 		m_blob.depth		= 1;
+        m_length            = length;         
+        m_numFracbits       = numFracbits;  
 }
 
-Layer::~Layer() {
-	if(m_filterData) {
-		free(m_filterData);
+
+template <typename DType>
+Layer<DType>::~Layer() {
+	if(this->m_filterData) {
+		free(this->m_filterData);
 	}
-	if(m_biasData) {
-		free(m_biasData);
+	if(this->m_biasData) {
+		free(this->m_biasData);
 	}
 }
 
+
+template class Layer<float>;
+template class Layer<FixedPoint>;

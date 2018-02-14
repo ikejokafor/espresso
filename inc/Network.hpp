@@ -13,19 +13,18 @@
 
 #include <vector>
 
+template <typename DType>
 class Network {
 
 	public:
         Network();
-
-		Network(std::vector<espresso::layerInfo_t> &layerInfo);
-
-		~Network();
-		void Forward(std::string start = " ", std::string end = " ");
+        Network(std::vector<espresso::layerInfo_t<DType>> &layerInfo);
+        ~Network();
+        void Forward(std::string start = " ", std::string end = " ");
         int ReturnLayerIdx(std::string name);
-
-		std::vector<Layer*> m_cnn;
-        std::vector<Layer*> m_outputLayers;
+        
+		std::vector<Layer<DType>*> m_cnn;
+        std::vector<Layer<DType>*> m_outputLayers;
         
 	protected:
 

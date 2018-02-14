@@ -13,14 +13,16 @@
 #include <iostream>
 #include <fstream>
 #include <stack>
+#include "FixedPoint.hpp"
 
-
-typedef struct {
-    float *data;
+template <typename DType>
+struct Blob_t{
+    DType *data;
 	int numRows;
     int numCols;
 	int depth;
-} Blob_t;
+};
+
 
 namespace espresso {
     //	LayerTypes:
@@ -31,8 +33,9 @@ namespace espresso {
     //		InnerProduct
     //		Softmax
     //		Concat
-
-    typedef struct {
+    
+    template <typename DType>
+    struct layerInfo_t {
         std::string layerName;
         std::vector<std::string> topLayerNames;
         std::vector<std::string> bottomLayerNames;
@@ -45,9 +48,9 @@ namespace espresso {
         int numKernelCols;
         int stride;
         int padding;
-        float *filterData;
-        float *biasData;
-    } layerInfo_t;
+        DType *filterData;
+        DType *biasData;
+    };
 }
 
 
@@ -58,29 +61,31 @@ namespace espresso {
 // 3x3 filter with stride 1 and pad 0 we would get a 5x5 output.With stride 2 we would get a 3x3 output.
 
 
+template <typename DType>
 class Layer {
 
     public:
-        Layer   (  
-					std::string layerName = " ",
-					std::vector<std::string> topLayerNames = std::vector<std::string>(),
-					std::vector<std::string> bottomLayerNames = std::vector<std::string>(),
-					std::string  layerType = " ",
-					int numInputRows = 1,
-					int numInputCols = 1,
-					int inputDepth = 1,
-					int outputDepth = 1,
-					int numKernelRows = 1,
-					int numKernelCols = 1,
-					int stride = 1,
-					int padding = 0,
-					float *filterData = NULL,
-					float *biasData = NULL
-                );
-		virtual ~Layer();
-
-        virtual void ComputeLayer() = 0;
-		virtual void ComputeLayerParam() = 0;
+           Layer  (  
+                            std::string layerName = " ",
+                            std::vector<std::string> topLayerNames = std::vector<std::string>(),
+                            std::vector<std::string> bottomLayerNames = std::vector<std::string>(),
+                            std::string  layerType = " ",
+                            int numInputRows = 1,
+                            int numInputCols = 1,
+                            int inputDepth = 1,
+                            int outputDepth = 1,
+                            int numKernelRows = 1,
+                            int numKernelCols = 1,
+                            int stride = 1,
+                            int padding = 0,
+                            DType *filterData = NULL,
+                            DType *biasData = NULL,
+                            int length = 16,
+                            int numFracbits = 14
+                        );
+            virtual ~Layer();
+            virtual void ComputeLayer() = 0;
+            virtual void ComputeLayerParam() = 0;
 
 		std::string m_layerName;
 		std::vector<std::string> m_topLayerNames;
@@ -98,11 +103,14 @@ class Layer {
 		int m_numKernels;
 		int m_stride;
 		int m_padding;
-		float *m_filterData;
-		float *m_biasData;
-		Blob_t m_blob;
-		std::vector<Layer*> m_topLayers;
-		std::vector<Layer*> m_bottomLayers;
+		DType *m_filterData;
+		DType *m_biasData;
+		Blob_t<DType> m_blob;
+		std::vector<Layer<DType>*> m_topLayers;
+		std::vector<Layer<DType>*> m_bottomLayers;
+        int m_length;
+        int m_numFracbits;
+        
 
     protected:
 

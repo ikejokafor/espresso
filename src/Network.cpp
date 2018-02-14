@@ -2,14 +2,17 @@
 using namespace std;
 using namespace espresso;
 
-Network::Network() {}
+
+template <typename DType>
+Network<DType>::Network() {}
 
 
-Network::Network(vector<layerInfo_t> &layerInfo) {
+template <typename DType>
+Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 	
 	for (uint32_t i = 0; i < layerInfo.size(); i++) {
 		if (layerInfo[i].layerType == "Input") {
-			m_cnn.push_back(new DataLayer(
+			m_cnn.push_back(new DataLayer<DType>(
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -19,7 +22,7 @@ Network::Network(vector<layerInfo_t> &layerInfo) {
 				layerInfo[i].inputDepth
 			));
 		} else if(layerInfo[i].layerType == "Convolution") {
-			m_cnn.push_back(new ConvolutionLayer(
+			m_cnn.push_back(new ConvolutionLayer<DType>(
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -36,7 +39,7 @@ Network::Network(vector<layerInfo_t> &layerInfo) {
 				layerInfo[i].biasData
 			));
 		} else if(layerInfo[i].layerType == "ReLU") {
-			m_cnn.push_back(new RELULayer(
+			m_cnn.push_back(new RELULayer<DType>(
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -53,7 +56,7 @@ Network::Network(vector<layerInfo_t> &layerInfo) {
 				layerInfo[i].biasData
 			));
 		} else if(layerInfo[i].layerType == "Pooling") {
-			m_cnn.push_back(new PoolingLayer(
+			m_cnn.push_back(new PoolingLayer<DType>(
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -68,7 +71,7 @@ Network::Network(vector<layerInfo_t> &layerInfo) {
 				layerInfo[i].padding
 			));
 		} else if(layerInfo[i].layerType == "InnerProduct") {
-			m_cnn.push_back(new FullyConnectedLayer(
+			m_cnn.push_back(new FullyConnectedLayer<DType>(
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -85,14 +88,14 @@ Network::Network(vector<layerInfo_t> &layerInfo) {
 				layerInfo[i].biasData
 			));
 		} else if(layerInfo[i].layerType == "Concat") {
-			m_cnn.push_back(new ConcatLayer(
+			m_cnn.push_back(new ConcatLayer<DType>(
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
 				layerInfo[i].layerType
 			));
 		} else if(layerInfo[i].layerType == "Softmax") {
-			m_cnn.push_back(new SoftMaxLayer(
+			m_cnn.push_back(new SoftMaxLayer<DType>(
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -128,7 +131,7 @@ Network::Network(vector<layerInfo_t> &layerInfo) {
 	}
 
     // get output layers
-    stack<Layer*> outputLayers;
+    stack<Layer<DType>*> outputLayers;
     for(uint32_t i = 0; i < m_cnn.size(); i ++) {
         if(m_cnn[i]->m_layerType != "ReLU") {   // ReLU is in place      
             outputLayers.push(m_cnn[i]);
@@ -155,14 +158,16 @@ Network::Network(vector<layerInfo_t> &layerInfo) {
 }
 
 
-Network::~Network() {
+template <typename DType>
+Network<DType>::~Network() {
 	for (uint32_t i = 0; i < m_cnn.size(); i++) {
 		delete m_cnn[i];
 	}
 }
 
 
-void Network::Forward(string start, string end) {
+template <typename DType>
+void Network<DType>::Forward(string start, string end) {
 	
     // find start and end
     int startIdx = -1;
@@ -199,7 +204,8 @@ void Network::Forward(string start, string end) {
 }
 
 
-int Network::ReturnLayerIdx(string name) {
+template <typename DType>
+int Network<DType>::ReturnLayerIdx(string name) {
     for(uint32_t i = 0; i < m_cnn.size(); i++) {
         if(m_cnn[i]->m_layerName == name) {
             return i;
@@ -207,3 +213,7 @@ int Network::ReturnLayerIdx(string name) {
     }
     return -1;
 }
+
+
+template class Network<float>;
+template class Network<FixedPoint>;
