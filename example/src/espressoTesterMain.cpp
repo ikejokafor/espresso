@@ -70,9 +70,16 @@ void dataTransform(vector<espresso::layerInfo_t<FixedPoint>> &networkLayerInfo, 
 
 int main(int argc, char **agrv) {
     
-    ofstream fd;
 	string protoTxt = "/home/ikenna/caffe-master/models/dcNet/deploy_sqz_2.prototxt";
     string model = "/home/ikenna/caffe-master/models/dcNet/dcNet_deploy_sq_2.caffemodel";
+    Mat img = imread("/home/ikenna/detector_test_kitti/temp.png", IMREAD_COLOR);
+    
+    //string protoTxt = "/home/ikenna/caffe-master/models/googleNet/googleNet_deploy.prototxt";
+    //string model = "/home/ikenna/caffe-master/models/googleNet/bvlc_googlenet.caffemodel";
+    //Mat img = imread("image.bmp", IMREAD_COLOR);
+
+    
+    ofstream fd;
 	vector<caffeDataParser::layerInfo_t> caffeDataParserLayerInfo = parseCaffeData(protoTxt, model);
     vector<espresso::layerInfo_t<float>> networkLayerInfo;
     networkLayerInfo.resize(caffeDataParserLayerInfo.size());
@@ -80,14 +87,15 @@ int main(int argc, char **agrv) {
 	Network<float> *network = new Network<float>(networkLayerInfo);
     
     Blob_t<float> inputBlob;
-    Mat img = imread("/home/ikenna/detector_test_kitti/temp.png", IMREAD_COLOR);
+
+
 	inputBlob.data = new float[img.channels() * img.rows * img.cols]; 
     inputBlob.depth = img.channels();
     inputBlob.numRows = img.rows;
     inputBlob.numCols = img.cols;    
     for(int c = 0; c < img.channels(); c++) {
-        for(int i=0; i < img.rows; i++) { //210
-            for(int j=0; j < img.cols; j++) { // 695
+        for(int i=0; i < img.rows; i++) {
+            for(int j=0; j < img.cols; j++) { 
                 int a = img.at<cv::Vec3b>(i,j)[c];
                 index3D(img.channels(), img.rows, img.cols, inputBlob.data, c, i, j) = (float)a - 127.0f;
             }
@@ -101,11 +109,28 @@ int main(int argc, char **agrv) {
 
     network->Forward();
     
+    //int layerIdx = network->ReturnLayerIdx("conv1");
+    //fd.open("output.txt");
+    //for(int i = 0; i < network->m_cnn[layerIdx]->m_blob.depth; i++) {
+    //    for(int j = 0; j < network->m_cnn[layerIdx]->m_blob.numRows; j++) {
+    //        for(int k = 0; k < network->m_cnn[layerIdx]->m_blob.numCols; k++) {
+    //            fd << index3D(  
+    //                            network->m_cnn[layerIdx]->m_blob.depth, 
+    //                            network->m_cnn[layerIdx]->m_blob.numRows, 
+    //                            network->m_cnn[layerIdx]->m_blob.numCols, 
+    //                            network->m_cnn[layerIdx]->m_blob.data, i, j, k
+    //                         ) << " ";
+    //        }
+    //        fd << endl;
+    //    }
+    //    fd << endl << endl << endl;
+    //}
+    
     fd.open("obj.txt");
-    for(int i = 0; i < network->m_outputLayers[0]->m_blob.depth; i++) {
-        for(int j = 0; j < network->m_outputLayers[0]->m_blob.numRows; j++) {
-            for(int k = 0; k < network->m_outputLayers[0]->m_blob.numCols; k++) {
-                fd << index3D(network->m_outputLayers[0]->m_blob.depth, network->m_outputLayers[0]->m_blob.numRows, network->m_outputLayers[0]->m_blob.numCols, network->m_outputLayers[0]->m_blob.data, i, j, k) << " ";
+    for(int i = 0; i < network->m_outputLayers[3]->m_blob.depth; i++) {
+        for(int j = 0; j < network->m_outputLayers[3]->m_blob.numRows; j++) {
+            for(int k = 0; k < network->m_outputLayers[3]->m_blob.numCols; k++) {
+                fd << index3D(network->m_outputLayers[3]->m_blob.depth, network->m_outputLayers[3]->m_blob.numRows, network->m_outputLayers[3]->m_blob.numCols, network->m_outputLayers[3]->m_blob.data, i, j, k) << " ";
             }
             fd << endl;
         }
@@ -114,10 +139,10 @@ int main(int argc, char **agrv) {
     fd.close();
     
     fd.open("cls.txt");
-    for(int i = 0; i < network->m_outputLayers[1]->m_blob.depth; i++) {
-        for(int j = 0; j < network->m_outputLayers[1]->m_blob.numRows; j++) {
-            for(int k = 0; k < network->m_outputLayers[1]->m_blob.numCols; k++) {
-                fd << index3D(network->m_outputLayers[1]->m_blob.depth, network->m_outputLayers[1]->m_blob.numRows, network->m_outputLayers[1]->m_blob.numCols, network->m_outputLayers[1]->m_blob.data, i, j, k) << " ";
+    for(int i = 0; i < network->m_outputLayers[4]->m_blob.depth; i++) {
+        for(int j = 0; j < network->m_outputLayers[4]->m_blob.numRows; j++) {
+            for(int k = 0; k < network->m_outputLayers[4]->m_blob.numCols; k++) {
+                fd << index3D(network->m_outputLayers[4]->m_blob.depth, network->m_outputLayers[4]->m_blob.numRows, network->m_outputLayers[4]->m_blob.numCols, network->m_outputLayers[4]->m_blob.data, i, j, k) << " ";
             }
             fd << endl;
         }
@@ -126,10 +151,10 @@ int main(int argc, char **agrv) {
     fd.close();
     
     fd.open("loc.txt");
-    for(int i = 0; i < network->m_outputLayers[2]->m_blob.depth; i++) {
-        for(int j = 0; j < network->m_outputLayers[2]->m_blob.numRows; j++) {
-            for(int k = 0; k < network->m_outputLayers[2]->m_blob.numCols; k++) {
-                fd << index3D(network->m_outputLayers[2]->m_blob.depth, network->m_outputLayers[2]->m_blob.numRows, network->m_outputLayers[2]->m_blob.numCols, network->m_outputLayers[2]->m_blob.data, i, j, k) << " ";
+    for(int i = 0; i < network->m_outputLayers[5]->m_blob.depth; i++) {
+        for(int j = 0; j < network->m_outputLayers[5]->m_blob.numRows; j++) {
+            for(int k = 0; k < network->m_outputLayers[5]->m_blob.numCols; k++) {
+                fd << index3D(network->m_outputLayers[5]->m_blob.depth, network->m_outputLayers[5]->m_blob.numRows, network->m_outputLayers[5]->m_blob.numCols, network->m_outputLayers[5]->m_blob.data, i, j, k) << " ";
             }
             fd << endl;
         }
