@@ -18,6 +18,9 @@ PoolingLayer<DType>::PoolingLayer   (
                                         int padding,
                                         DType *filterData,
                                         DType *biasData,
+                                        int localSize,
+                                        float alpha,
+                                        float beta,
                                         int length,
                                         int numFracbits
                                     ) : Layer<DType>	(	
@@ -35,6 +38,9 @@ PoolingLayer<DType>::PoolingLayer   (
                                                             padding,
                                                             filterData,
                                                             biasData,
+                                                            localSize,
+                                                            alpha,
+                                                            beta,
                                                             length,
                                                             numFracbits
                                                         ) {

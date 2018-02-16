@@ -4,23 +4,26 @@ using namespace std;
 
 template <typename DType>
 DataLayer<DType>::DataLayer	(
-    							string layerName,
-								vector<string> topLayerNames,
-								vector<string> bottomLayerNames,
-								string layerType,
-								int numInputRows,
-								int numInputCols,
-								int inputDepth,
-								int outputDepth,
-								int numKernelRows,
-								int numKernelCols,
-								int stride,
-								int padding,
-								DType *filterData,
-								DType *biasData,
+                                string layerName,
+                                vector<string> topLayerNames,
+                                vector<string> bottomLayerNames,
+                                string layerType,
+                                int numInputRows,
+                                int numInputCols,
+                                int inputDepth,
+                                int outputDepth,
+                                int numKernelRows,
+                                int numKernelCols,
+                                int stride,
+                                int padding,
+                                DType *filterData,
+                                DType *biasData,
+                                int localSize,
+                                float alpha,
+                                float beta,
                                 int length,
                                 int numFracbits
-							) : Layer<DType>    (	
+                            ) : Layer<DType>	(	
                                                     layerName,
                                                     topLayerNames,
                                                     bottomLayerNames,
@@ -35,6 +38,9 @@ DataLayer<DType>::DataLayer	(
                                                     padding,
                                                     filterData,
                                                     biasData,
+                                                    localSize,
+                                                    alpha,
+                                                    beta,
                                                     length,
                                                     numFracbits
                                                 ) {

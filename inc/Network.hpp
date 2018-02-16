@@ -9,6 +9,7 @@
 #include "ConcatLayer.hpp"
 #include "FullyConnectedLayer.hpp"
 #include "SoftMaxLayer.hpp"
+#include "NormLayer.hpp"
 
 
 #include <vector>

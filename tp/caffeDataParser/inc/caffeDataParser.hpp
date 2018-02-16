@@ -45,6 +45,9 @@ namespace caffeDataParser {
         int padding;
         float *filterData;
         float *biasData;
+        int localSize;
+        float alpha;
+        float beta;
     } layerInfo_t;
 }
 

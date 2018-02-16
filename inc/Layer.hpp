@@ -29,6 +29,7 @@ namespace espresso {
     //		Input
     //		Convolution
     //		ReLU
+    //      LRN
     //		Pooling
     //		InnerProduct
     //		Softmax
@@ -50,6 +51,9 @@ namespace espresso {
         int padding;
         DType *filterData;
         DType *biasData;
+        int localSize;
+        float alpha;
+        float beta;
     };
 }
 
@@ -74,7 +78,7 @@ class Layer {
                             std::string layerName = " ",
                             std::vector<std::string> topLayerNames = std::vector<std::string>(),
                             std::vector<std::string> bottomLayerNames = std::vector<std::string>(),
-                            std::string  layerType = " ",
+                            std::string layerType = " ",
                             int numInputRows = 1,
                             int numInputCols = 1,
                             int inputDepth = 1,
@@ -85,6 +89,9 @@ class Layer {
                             int padding = 0,
                             DType *filterData = NULL,
                             DType *biasData = NULL,
+                            int localSize = 5,
+                            float alpha = 0.0001f,
+                            float beta = 0.75f,
                             int length = 16,
                             int numFracbits = 14
                         );
@@ -110,11 +117,16 @@ class Layer {
 		int m_padding;
 		DType *m_filterData;
 		DType *m_biasData;
+        int m_length;
+        int m_numFracbits;
+        int m_localSize;
+        float m_alpha;
+        float m_beta;
+        
 		Blob_t<DType> m_blob;
 		std::vector<Layer<DType>*> m_topLayers;
 		std::vector<Layer<DType>*> m_bottomLayers;
-        int m_length;
-        int m_numFracbits;
+
         
 
     protected:

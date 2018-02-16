@@ -3,7 +3,7 @@ using namespace std;
 
 
 template <typename DType>
-ConvolutionLayer<DType>::ConvolutionLayer	(
+ConvolutionLayer<DType>::ConvolutionLayer  (
                                                 string layerName,
                                                 vector<string> topLayerNames,
                                                 vector<string> bottomLayerNames,
@@ -18,6 +18,9 @@ ConvolutionLayer<DType>::ConvolutionLayer	(
                                                 int padding,
                                                 DType *filterData,
                                                 DType *biasData,
+                                                int localSize,
+                                                float alpha,
+                                                float beta,
                                                 int length,
                                                 int numFracbits
                                             ) : Layer<DType>	(	
@@ -35,6 +38,9 @@ ConvolutionLayer<DType>::ConvolutionLayer	(
                                                                     padding,
                                                                     filterData,
                                                                     biasData,
+                                                                    localSize,
+                                                                    alpha,
+                                                                    beta,
                                                                     length,
                                                                     numFracbits
                                                                 ) {

@@ -55,6 +55,26 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 				layerInfo[i].filterData,
 				layerInfo[i].biasData
 			));
+        } else if(layerInfo[i].layerType == "LRN") {
+			m_cnn.push_back(new NormLayer<DType>(
+				layerInfo[i].layerName,
+				layerInfo[i].topLayerNames,
+				layerInfo[i].bottomLayerNames,
+				layerInfo[i].layerType,
+				layerInfo[i].numInputRows,
+				layerInfo[i].numInputCols,
+				layerInfo[i].inputDepth,
+				layerInfo[i].outputDepth,
+				layerInfo[i].numKernelRows,
+				layerInfo[i].numKernelCols,
+				layerInfo[i].stride,
+				layerInfo[i].padding,
+				layerInfo[i].filterData,
+				layerInfo[i].biasData,
+                layerInfo[i].localSize,
+                layerInfo[i].alpha,
+                layerInfo[i].beta
+			));
 		} else if(layerInfo[i].layerType == "Pooling") {
 			m_cnn.push_back(new PoolingLayer<DType>(
 				layerInfo[i].layerName,

@@ -1,15 +1,15 @@
-#ifndef __CONCAT_LAYER_HPP__
-#define __CONCAT_LAYER_HPP__
+#ifndef __NORM_LAYER_HPP__
+#define __NORM_LAYER_HPP__
 
 
 #include "Layer.hpp"
 
 
 template <typename DType>
-class ConcatLayer : public Layer<DType> {
+class NormLayer : public Layer<DType> {
 	
 	public:
-        ConcatLayer		(
+        NormLayer	(
                             std::string layerName = " ",
                             std::vector<std::string> topLayerNames = std::vector<std::string>(),
                             std::vector<std::string> bottomLayerNames = std::vector<std::string>(),
@@ -28,12 +28,11 @@ class ConcatLayer : public Layer<DType> {
                             float alpha = 0.0001f,
                             float beta = 0.75f,
                             int length = 16,
-                            int numFracbits = 14
-                        );
-        ~ConcatLayer();         
-        void ComputeLayerParam();
+                            int numFracbits = 14                            
+                    );  
+        ~NormLayer();      
+        void ComputeLayerParam();  
         void ComputeLayer();
-
 
 
 	protected:
@@ -42,5 +41,6 @@ class ConcatLayer : public Layer<DType> {
 	private:
 
 };
+
 
 #endif

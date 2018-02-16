@@ -18,6 +18,9 @@ FullyConnectedLayer<DType>::FullyConnectedLayer	(
                                                     int padding,
                                                     DType *filterData,
                                                     DType *biasData,
+                                                    int localSize,
+                                                    float alpha,
+                                                    float beta,
                                                     int length,
                                                     int numFracbits
                                                 ) : Layer<DType>	(	
@@ -35,6 +38,9 @@ FullyConnectedLayer<DType>::FullyConnectedLayer	(
                                                                         padding,
                                                                         filterData,
                                                                         biasData,
+                                                                        localSize,
+                                                                        alpha,
+                                                                        beta,
                                                                         length,
                                                                         numFracbits
                                                                     ) {
@@ -55,8 +61,11 @@ void FullyConnectedLayer<DType>::ComputeLayerParam() {
 	this->m_numInputCols = this->m_bottomLayers[0]->m_numOutputCols;
 
 	// output size
-	this->m_numOutputRows = this->m_inputDepth * this->m_numInputRows * this->m_numInputCols;
+	this->m_numOutputRows = 1;
 	this->m_numOutputCols = 1;
+    
+    // kernel depth
+    this->m_kernelDepth = this->m_inputDepth * this->m_numInputRows * this->m_numInputCols;
 
 	// create output blob
 	this->m_blob.depth = this->m_outputDepth;
@@ -69,7 +78,6 @@ void FullyConnectedLayer<DType>::ComputeLayerParam() {
 template <typename DType>
 void FullyConnectedLayer<DType>::ComputeLayer() {
 
-     TODO:
 	// get input
 	DType *datain = this->m_bottomLayers[0]->m_blob.data;
     
@@ -77,10 +85,10 @@ void FullyConnectedLayer<DType>::ComputeLayer() {
 	DType *dataout = this->m_topLayers[0]->m_blob.data;
     
 	for (int m = 0; m < this->m_numKernels; m++) {
-		for (int x = 0; x < this->m_numOutputRows; x++) {
-			index2D(this->m_outputDepth, this->m_numOutputRows, dataout, m, x) = this->m_biasData[m];
-			for (int k = 0; k < this->m_inputDepth; k++) {
-				index2D(this->m_outputDepth, this->m_numOutputRows, dataout, m, x) += datain[k] * index2D(this->m_numKernels, this->m_kernelDepth, this->m_filterData, m, k);
+		for (int x = 0; x < this->m_outputDepth; x++) {
+			dataout[x] = this->m_biasData[m];
+			for (int k = 0; k < (this->m_inputDepth * this->m_numInputRows * this->m_numInputCols); k++) {
+				dataout[x] += datain[k] * index2D(this->m_numKernels, this->m_kernelDepth, this->m_filterData, m, k);
 			}
 		}
 	}

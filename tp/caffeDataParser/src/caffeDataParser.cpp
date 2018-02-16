@@ -18,10 +18,8 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
     V1LayerParameter v1lparam;
     bool success;
     
-    // for dcNet, might need to change for over networks
 
-
-    // get Weights
+    // Open Binary ProtoFile
     int fd = open((modelFileName).c_str(), O_RDONLY);
     ZeroCopyInputStream* raw_input = new FileInputStream(fd);
     CodedInputStream* coded_input = new CodedInputStream(raw_input);
@@ -36,6 +34,7 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
     if(param.input_size() > 0) {
         layerInfo.layerName = "data";
         layerInfo.layerType = "Input";
+        caffeLayers.push_back(layerInfo);
     }
     if(param.input_dim_size() > 0) {
         layerInfo.inputDepth = param.input_dim(1);
@@ -43,6 +42,7 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
         layerInfo.numInputCols = param.input_dim(3);
         caffeLayers.push_back(layerInfo);
     }
+
     
     if(param.layer_size() > 0) {    // for new LayerParameter definition in proto definition
         for (int nlayers = 0; nlayers < param.layer_size(); nlayers++) {  
@@ -103,9 +103,9 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
                                         / lparam.convolution_param().kernel_size(0);
             }
             if (lparam.has_lrn_param()) {
-                //cout << "Local Size: " << lparam.lrn_param().local_size() << endl;
-                //cout << "Alpha: " << lparam.lrn_param().alpha() << endl;
-                //cout << "Beta: " << lparam.lrn_param().beta() << endl;
+                layerInfo.localSize = lparam.lrn_param().local_size();
+                layerInfo.alpha = lparam.lrn_param().alpha();
+                layerInfo.beta = lparam.lrn_param().beta();
             }
             if (lparam.has_pooling_param()) {   // assuming pooling parameter is always MAX
                 layerInfo.numKernelRows = lparam.pooling_param().kernel_size();
@@ -114,9 +114,17 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
             }
             if (lparam.has_inner_product_param()) {
                 layerInfo.outputDepth = lparam.inner_product_param().num_output();
-            }
-            if (lparam.has_dropout_param()) {
-                //cout << "Dropout Ratio: " << lparam.dropout_param().dropout_ratio() << endl;
+                // filter weights
+                layerInfo.filterData = (float*)malloc(lparam.blobs(0).data_size() * sizeof(float));    // asuming each number is a float
+                for(int i = 0; i < lparam.blobs(0).data_size(); i++) {
+                    layerInfo.filterData[i] = lparam.blobs(0).data(i);
+                }
+                
+                // bias
+                layerInfo.biasData = (float*)malloc(lparam.blobs(1).data_size() * sizeof(float));    // asuming each number is a float
+                for(int i = 0; i < lparam.blobs(1).data_size(); i++) {
+                    layerInfo.biasData[i] = lparam.blobs(1).data(i);
+                }
             }
             caffeLayers.push_back(layerInfo);
         }
@@ -153,6 +161,11 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
                 
                 case V1LayerParameter_LayerType_RELU:
                     layerInfo.layerType = "ReLU";
+                break;
+                
+                
+                case V1LayerParameter_LayerType_LRN:
+                    layerInfo.layerType = "LRN";
                 break;
                 
                 
@@ -214,9 +227,9 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
                                         / v1lparam.convolution_param().kernel_size(0);
             }
             if (v1lparam.has_lrn_param()) {
-                //cout << "Local Size: " << v1lparam.lrn_param().local_size() << endl;
-                //cout << "Alpha: " << v1lparam.lrn_param().alpha() << endl;
-                //cout << "Beta: " << v1lparam.lrn_param().beta() << endl;
+                layerInfo.localSize = v1lparam.lrn_param().local_size();
+                layerInfo.alpha = v1lparam.lrn_param().alpha();
+                layerInfo.beta = v1lparam.lrn_param().beta();
             }
             if (v1lparam.has_pooling_param()) {   // assuming pooling parameter is always MAX
                 layerInfo.numKernelRows = v1lparam.pooling_param().kernel_size();
@@ -225,9 +238,6 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
             }
             if (v1lparam.has_inner_product_param()) {
                 layerInfo.outputDepth = v1lparam.inner_product_param().num_output();
-            }
-            if (v1lparam.has_dropout_param()) {
-                //cout << "Dropout Ratio: " << v1lparam.dropout_param().dropout_ratio() << endl;
             }
             caffeLayers.push_back(layerInfo);
         }

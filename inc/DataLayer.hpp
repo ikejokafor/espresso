@@ -1,6 +1,9 @@
 #ifndef __DATA_LAYER_HPP__
 #define __DATA_LAYER_HPP__
+
+
 #include "Layer.hpp"
+
 
 template <typename DType>
 class DataLayer : public Layer<DType> {
@@ -21,6 +24,9 @@ class DataLayer : public Layer<DType> {
                             int padding = 0,
                             DType *filterData = NULL,
                             DType *biasData = NULL,
+                            int localSize = 5,
+                            float alpha = 0.0001f,
+                            float beta = 0.75f,
                             int length = 16,
                             int numFracbits = 14
                     );

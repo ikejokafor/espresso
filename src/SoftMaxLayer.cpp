@@ -18,6 +18,9 @@ SoftMaxLayer<DType>::SoftMaxLayer	(
                                         int padding,
                                         DType *filterData,
                                         DType *biasData,
+                                        int localSize,
+                                        float alpha,
+                                        float beta,
                                         int length,
                                         int numFracbits
                                     ) : Layer<DType>	(	
@@ -35,6 +38,9 @@ SoftMaxLayer<DType>::SoftMaxLayer	(
                                                             padding,
                                                             filterData,
                                                             biasData,
+                                                            localSize,
+                                                            alpha,
+                                                            beta,
                                                             length,
                                                             numFracbits
                                                         ) {
