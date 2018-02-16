@@ -81,19 +81,19 @@ int main(int argc, char **argv) {
     }
     
     
-    //AlexNet
-    string protoTxt = "/home/ikenna/caffe-master/models/bvlc_alexnet/deploy.prototxt";
-    string model = "/home/ikenna/caffe-master/models/bvlc_alexnet/bvlc_alexnet.caffemodel";
-    Mat img = imread("image.bmp", IMREAD_COLOR);
+    // AlexNet
+    //string protoTxt = "/home/ikenna/caffe-master/models/bvlc_alexnet/deploy.prototxt";
+    //string model = "/home/ikenna/caffe-master/models/bvlc_alexnet/bvlc_alexnet.caffemodel";
+    //Mat img = imread("image.bmp", IMREAD_COLOR);
  
  
     // Vgg16
-    //string protoTxt = argv[1];
-    //string model = argv[2];
-    //Mat img = imread("/home/ikenna/SOC_IT/espresso/scripts/image.png", IMREAD_COLOR);
+    string protoTxt = argv[1];
+    string model = argv[2];
+    Mat img = imread("/home/ikenna/SOC_IT/espresso/scripts/image.png", IMREAD_COLOR);
 
     
-    //DcNet
+    // DcNet
 	//string protoTxt = "/home/ikenna/caffe-master/models/dcNet/deploy_sqz_2.prototxt";
     //string model = "/home/ikenna/caffe-master/models/dcNet/dcNet_deploy_sq_2.caffemodel";
     //Mat img = imread("/home/ikenna/detector_test_kitti/temp.png", IMREAD_COLOR);
@@ -125,24 +125,29 @@ int main(int argc, char **argv) {
     network->m_cnn[0]->m_numInputRows   = inputBlob.numRows;
     network->m_cnn[0]->m_numInputCols   = inputBlob.numCols;
     network->m_cnn[0]->m_blob.data      = inputBlob.data;
-    network->Forward(argv[3], argv[4]);
     int layerIdx = network->ReturnLayerIdx(argv[4]);
+    network->Forward(argv[3], argv[4]);
     fd.open("output.txt");
-    for(int i = 0; i < network->m_cnn[layerIdx]->m_blob.depth; i++) {
-        for(int j = 0; j < network->m_cnn[layerIdx]->m_blob.numRows; j++) {
-            for(int k = 0; k < network->m_cnn[layerIdx]->m_blob.numCols; k++) {
-                fd << index3D(  
-                                network->m_cnn[layerIdx]->m_blob.depth, 
-                                network->m_cnn[layerIdx]->m_blob.numRows, 
-                                network->m_cnn[layerIdx]->m_blob.numCols, 
-                                network->m_cnn[layerIdx]->m_blob.data, i, j, k
-                             ) << " ";
+    if(network->m_cnn[layerIdx]->m_layerType != "InnerProduct" && network->m_cnn[layerIdx]->m_layerType != "Softmax") {
+        for(int i = 0; i < network->m_cnn[layerIdx]->m_blob.depth; i++) {
+            for(int j = 0; j < network->m_cnn[layerIdx]->m_blob.numRows; j++) {
+                for(int k = 0; k < network->m_cnn[layerIdx]->m_blob.numCols; k++) {
+                    fd << index3D(  
+                                    network->m_cnn[layerIdx]->m_blob.depth, 
+                                    network->m_cnn[layerIdx]->m_blob.numRows, 
+                                    network->m_cnn[layerIdx]->m_blob.numCols, 
+                                    network->m_cnn[layerIdx]->m_blob.data, i, j, k
+                                 ) << " ";
+                }
+                fd << endl;
             }
-            fd << endl;
+            fd << endl << endl << endl;
         }
-        fd << endl << endl << endl;
+    } else {
+        for(int i = 0; i < network->m_cnn[layerIdx]->m_blob.depth; i++) {
+            fd << network->m_cnn[layerIdx]->m_blob.data[i] << endl;
+        }
     }
-    
     
     // dcNet debug
     //inputBlob.data = new float[img.channels() * img.rows * img.cols]; 

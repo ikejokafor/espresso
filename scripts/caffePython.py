@@ -1,6 +1,5 @@
 import sys
 sys.path.append('/home/ikenna/caffe-master/python/')
-sys.path.append('/home/ikenna/detector_test_kitti/solo2/python/')
 import numpy as np
 import caffe
 import cv2
@@ -36,7 +35,6 @@ if __name__ == "__main__":
 
     net_output = net.forward(start=beginLayer, end=endLayer)   
     print net_output[endLayer].shape 
-    print net_output[endLayer].ndim    
     fh = open('output_golden.txt', 'w')
     if(net_output[endLayer].ndim == 4):
         for i in range(0, net_output[endLayer].shape[1]):

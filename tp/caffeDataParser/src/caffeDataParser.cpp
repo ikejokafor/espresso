@@ -238,6 +238,17 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
             }
             if (v1lparam.has_inner_product_param()) {
                 layerInfo.outputDepth = v1lparam.inner_product_param().num_output();
+                // filter weights
+                layerInfo.filterData = (float*)malloc(v1lparam.blobs(0).data_size() * sizeof(float));    // asuming each number is a float
+                for(int i = 0; i < v1lparam.blobs(0).data_size(); i++) {
+                    layerInfo.filterData[i] = v1lparam.blobs(0).data(i);
+                }
+                
+                // bias
+                layerInfo.biasData = (float*)malloc(v1lparam.blobs(1).data_size() * sizeof(float));    // asuming each number is a float
+                for(int i = 0; i < v1lparam.blobs(1).data_size(); i++) {
+                    layerInfo.biasData[i] = v1lparam.blobs(1).data(i);
+                }
             }
             caffeLayers.push_back(layerInfo);
         }

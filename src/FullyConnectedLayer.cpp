@@ -66,7 +66,8 @@ void FullyConnectedLayer<DType>::ComputeLayerParam() {
     
     // kernel depth
     this->m_kernelDepth = this->m_inputDepth * this->m_numInputRows * this->m_numInputCols;
-
+    this->m_numKernels = this->m_outputDepth;
+    
 	// create output blob
 	this->m_blob.depth = this->m_outputDepth;
 	this->m_blob.numRows = this->m_numOutputRows;
@@ -85,12 +86,10 @@ void FullyConnectedLayer<DType>::ComputeLayer() {
 	DType *dataout = this->m_topLayers[0]->m_blob.data;
     
 	for (int m = 0; m < this->m_numKernels; m++) {
-		for (int x = 0; x < this->m_outputDepth; x++) {
-			dataout[x] = this->m_biasData[m];
-			for (int k = 0; k < (this->m_inputDepth * this->m_numInputRows * this->m_numInputCols); k++) {
-				dataout[x] += datain[k] * index2D(this->m_numKernels, this->m_kernelDepth, this->m_filterData, m, k);
-			}
-		}
+        dataout[m] = this->m_biasData[m];
+        for (int k = 0; k < this->m_kernelDepth; k++) {
+            dataout[m] += datain[k] * index2D(this->m_numKernels, this->m_kernelDepth, this->m_filterData, m, k);
+        }
 	}
 
 }
@@ -99,19 +98,17 @@ template <>
 void FullyConnectedLayer<FixedPoint>::ComputeLayer() {
 
     // TODO:
-	//// get input
+	// get input
 	//DType *datain = this->m_bottomLayers[0]->m_blob.data;
     //
 	//// output
 	//DType *dataout = this->m_topLayers[0]->m_blob.data;
     //
 	//for (int m = 0; m < this->m_numKernels; m++) {
-	//	for (int x = 0; x < this->m_numOutputRows; x++) {
-	//		index2D(this->m_outputDepth, this->m_numOutputRows, dataout, m, x) = this->m_biasData[m];
-	//		for (int k = 0; k < this->m_inputDepth; k++) {
-	//			index2D(this->m_outputDepth, this->m_numOutputRows, dataout, m, x) += datain[k] * index2D(this->m_numKernels, this->m_kernelDepth, this->m_filterData, m, k);
-	//		}
-	//	}
+    //    dataout[m] = this->m_biasData[m];
+    //    for (int k = 0; k < this->m_kernelDepth; k++) {
+    //        dataout[m] += datain[k] * index2D(this->m_numKernels, this->m_kernelDepth, this->m_filterData, m, k);
+    //    }
 	//}
 
 }
