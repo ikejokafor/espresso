@@ -81,23 +81,19 @@ int main(int argc, char **argv) {
     }
     
     
-    // AlexNet
-    //string protoTxt = "/home/ikenna/caffe-master/models/bvlc_alexnet/deploy.prototxt";
-    //string model = "/home/ikenna/caffe-master/models/bvlc_alexnet/bvlc_alexnet.caffemodel";
-    //Mat img = imread("image.bmp", IMREAD_COLOR);
- 
+    // DcNet
+	//string protoTxt = "/home/ikenna/caffe-master/models/dcNet/deploy_sqz_2.prototxt";
+    //string model = "/home/ikenna/caffe-master/models/dcNet/dcNet_deploy_sq_2.caffemodel";
+    //Mat img = imread("/home/ikenna/detector_test_kitti/temp.png", IMREAD_COLOR);
+    
+
  
     // Vgg16
     string protoTxt = argv[1];
     string model = argv[2];
     Mat img = imread("/home/ikenna/SOC_IT/espresso/scripts/image.png", IMREAD_COLOR);
 
-    
-    // DcNet
-	//string protoTxt = "/home/ikenna/caffe-master/models/dcNet/deploy_sqz_2.prototxt";
-    //string model = "/home/ikenna/caffe-master/models/dcNet/dcNet_deploy_sq_2.caffemodel";
-    //Mat img = imread("/home/ikenna/detector_test_kitti/temp.png", IMREAD_COLOR);
-   
+
     // Read in model
     ofstream fd;
     Blob_t<float> inputBlob;

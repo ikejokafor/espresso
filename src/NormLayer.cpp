@@ -46,6 +46,7 @@ NormLayer<DType>::NormLayer	(
                                                 ) {
 }
 
+
 template <typename DType>
 NormLayer<DType>::~NormLayer() {}
 
@@ -89,7 +90,7 @@ void NormLayer<DType>::ComputeLayer() {
     DType *paddedSquare = (DType*)malloc((this->m_inputDepth + this->m_localSize - 1) * this->m_numOutputRows * this->m_numOutputCols * sizeof(DType));
     memset(paddedSquare, 0, ((this->m_inputDepth + this->m_localSize - 1) * this->m_numOutputRows * this->m_numOutputCols * sizeof(DType)));
     DType *ptr = paddedSquare;
-    ptr += ((this->m_localSize - 1 / 2) * this->m_numOutputRows * this->m_numOutputCols);
+    ptr += (((this->m_localSize - 1) / 2) * this->m_numOutputRows * this->m_numOutputCols);
     for(int i = 0; i < (this->m_inputDepth * this->m_numOutputRows * this->m_numOutputCols); i++) {
         paddedSquare[i] = datain[i] * datain[i];
     }
@@ -98,9 +99,9 @@ void NormLayer<DType>::ComputeLayer() {
     // compute norm values
     DType *normValues = (DType*)malloc(this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols * sizeof(DType));
     int paddedSquareDepth = (this->m_inputDepth + this->m_localSize - 1);
-	for (int m = 0; m < this->m_outputDepth; m++) {
+	for (int m = 0, start = 0; m < this->m_outputDepth; m++, start++) {
 		for (int x = 0; x < this->m_numOutputRows; x++) {
-			for(int y = 0, start = 0; y < this->m_numOutputCols; y++, start++) {
+			for(int y = 0; y < this->m_numOutputCols; y++) {
                 float sum = 0.0f;
                 for(int i = start; i < (this->m_localSize + start); i++) {
                     sum += index3D(paddedSquareDepth, numInputBlobRows, numInputBlobCols, paddedSquare, i, x, y);

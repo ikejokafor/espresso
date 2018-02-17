@@ -70,10 +70,7 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
             }
             for (int num_top_layers = 0; num_top_layers < lparam.top_size(); num_top_layers++) {
                 layerInfo.topLayerNames.push_back(lparam.top(num_top_layers));
-            }
-            if(lparam.has_input_param()) { // dim(0) is batch size
-
-            }            
+            }          
             if (lparam.has_convolution_param()) {
                 layerInfo.outputDepth = lparam.convolution_param().num_output();
                 if(lparam.convolution_param().pad_size() > 0) {
@@ -186,7 +183,12 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
                 
                 case V1LayerParameter_LayerType_SOFTMAX:
                     layerInfo.layerType = "Softmax";
-                break;                
+                break;     
+                
+                
+                case V1LayerParameter_LayerType_SOFTMAX_LOSS:
+                    layerInfo.layerType = "Softmax";
+                break;                   
             }
             
             for (int num_bottom_layers = 0; num_bottom_layers < v1lparam.bottom_size(); num_bottom_layers++) {   
@@ -195,9 +197,6 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
             for (int num_top_layers = 0; num_top_layers < v1lparam.top_size(); num_top_layers++) {
                 layerInfo.topLayerNames.push_back(v1lparam.top(num_top_layers));
             }
-            if(lparam.has_input_param()) { // dim(0) is batch size
-
-            } 
             if (v1lparam.has_convolution_param()) {
                 layerInfo.outputDepth = v1lparam.convolution_param().num_output();
                 if(v1lparam.convolution_param().pad_size() > 0) {

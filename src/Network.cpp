@@ -121,8 +121,15 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 				layerInfo[i].bottomLayerNames,
 				layerInfo[i].layerType
 			));
-		}
+		} else {
+            cout << "[ESPRESSO]: " << "Skipping " << layerInfo[i].layerName << " " << "of type " << layerInfo[i].layerType << endl;
+        }
 	}
+    
+    for (int i = 0; i < m_cnn.size(); i++) {
+        cout << "Layer " << i <<  " " << m_cnn[i]->m_layerName << "\t\tloaded" << endl;
+	}
+
 
 	for (uint32_t i = 0; i < m_cnn.size(); i++) {	// for every layer
 		if (m_cnn[i]->m_layerType != "Input") {
@@ -209,12 +216,22 @@ void Network<DType>::Forward(string start, string end) {
         }   
     }
     if((startIdx == -1 || endIdx == -1) || (endIdx < startIdx)) {
-        cout << "No start " << start << " or end " << end  << " or direction wrong" << endl;
-        return;
+        cout << "No start layer: " << start << " or end layer: " << end  << " or direction wrong" << endl;
+        exit(0);
     }
     
     for (int i = startIdx; i < (endIdx + 1); i++) {
 		m_cnn[i]->ComputeLayerParam();
+	}
+    
+    for (int i = startIdx; i < (endIdx + 1); i++) {
+        cout << "Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
+		cout << "\t inputDepth:     \t\t"   << m_cnn[i]->m_inputDepth       << endl;
+        cout << "\t numInputRows:   \t\t"   << m_cnn[i]->m_numInputRows     << endl;
+        cout << "\t numInputCols:   \t\t"   << m_cnn[i]->m_numInputCols     << endl;
+		cout << "\t outputDepth:    \t\t"   << m_cnn[i]->m_outputDepth      << endl;
+        cout << "\t numOutputRows:  \t\t"   << m_cnn[i]->m_numOutputRows    << endl;
+        cout << "\t numOutputCols:  \t\t"   << m_cnn[i]->m_numOutputCols    << endl;
 	}
    
     // Forward Propagation
