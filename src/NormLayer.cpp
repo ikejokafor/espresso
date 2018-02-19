@@ -89,13 +89,21 @@ void NormLayer<DType>::ComputeLayer() {
     // get padded x_i squared
     DType *paddedSquare = (DType*)malloc((this->m_inputDepth + this->m_localSize - 1) * this->m_numOutputRows * this->m_numOutputCols * sizeof(DType));
     memset(paddedSquare, 0, ((this->m_inputDepth + this->m_localSize - 1) * this->m_numOutputRows * this->m_numOutputCols * sizeof(DType)));
+    DType *pre_pad_offset = paddedSquare + (((this->m_localSize - 1) / 2) * this->m_numOutputRows * this->m_numOutputCols);
+    memcpy(pre_pad_offset, datain, (this->m_inputDepth * this->m_numOutputRows * this->m_numOutputCols * sizeof(DType)));
     for(int i = 0; i < ((this->m_inputDepth + this->m_localSize - 1) * this->m_numOutputRows * this->m_numOutputCols); i++) {   // dont really need to square the pad values, because they are zero
-        paddedSquare[i] = datain[i] * datain[i];
+        paddedSquare[i] = paddedSquare[i] * paddedSquare[i];
     }
     
+
+    //FILE *fd = fopen("tmp.txt", "w");    
+    //for(int i = 0; i < ((this->m_inputDepth + this->m_localSize - 1) * this->m_numOutputRows * this->m_numOutputCols); i++) {
+    //    fprintf(fd, "%f\n",  paddedSquare[i]);
+    //}
+    //fclose(fd);
+    //exit(0);
     
     // compute norm values
-
     DType *normValues = (DType*)malloc(this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols * sizeof(DType));
     int paddedSquareDepth = (this->m_inputDepth + this->m_localSize - 1);
 	for (int m = 0, start = 0; m < this->m_outputDepth; m++, start++) {
@@ -112,7 +120,7 @@ void NormLayer<DType>::ComputeLayer() {
     
     //FILE *fd = fopen("tmp.txt", "w");    
     //for(int i = 0; i < (this->m_inputDepth * this->m_numOutputRows * this->m_numOutputCols); i++) {
-    //    fprintf(fd, "%f\n", index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, normValues, m, x, y));
+    //    fprintf(fd, "%f\n",  normValues[i]);
     //}
     //fclose(fd);
     //exit(0);
