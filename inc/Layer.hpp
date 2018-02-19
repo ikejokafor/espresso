@@ -34,6 +34,7 @@ namespace espresso {
     //		InnerProduct
     //		Softmax
     //		Concat
+    //      Split
     
     template <typename DType>
     struct layerInfo_t {

@@ -10,42 +10,135 @@ using google::protobuf::io::CodedOutputStream;
 using google::protobuf::Message;
 using namespace caffeDataParser;
 
+
+void GetLayerFilterAndBias(layerInfo_t *layerInfo, NetParameter wparam){
+	LayerParameter lparam;
+    V1LayerParameter v1lparam;
+    
+    if(wparam.layer_size() > 0) {
+        for(int i = 0; i < wparam.layer_size(); i++) {
+            lparam = wparam.layer(i);
+            if(lparam.name() == layerInfo->layerName) {
+                // filter weights
+                layerInfo->filterData = (float*)malloc(lparam.blobs(0).data_size() * sizeof(float));    // asuming each number is a float
+                for(int j = 0; j < lparam.blobs(0).data_size(); j++) {
+                    layerInfo->filterData[j] = lparam.blobs(0).data(j);
+                }
+                
+                // bias
+                layerInfo->biasData = (float*)malloc(lparam.blobs(1).data_size() * sizeof(float));    // asuming each number is a float
+                for(int j = 0; j < lparam.blobs(1).data_size(); j++) {
+                    layerInfo->biasData[j] = lparam.blobs(1).data(j);
+                }
+                
+                if(layerInfo->layerType != "InnerProduct") {
+                    layerInfo->inputDepth = lparam.blobs(0).data_size() 
+                        / lparam.convolution_param().num_output()   
+                        / lparam.convolution_param().kernel_size(0) 
+                        / lparam.convolution_param().kernel_size(0);
+                }
+                break;
+            }
+        }
+    } else if (wparam.layers_size()){
+        for(int i = 0; i < wparam.layers_size(); i++) {
+            v1lparam = wparam.layers(i);
+            if(v1lparam.name() == layerInfo->layerName) {
+                // filter weights
+                layerInfo->filterData = (float*)malloc(v1lparam.blobs(0).data_size() * sizeof(float));    // asuming each number is a float
+                for(int j = 0; j < v1lparam.blobs(0).data_size(); j++) {
+                    layerInfo->filterData[j] = v1lparam.blobs(0).data(j);
+                }
+                
+                // bias
+                layerInfo->biasData = (float*)malloc(v1lparam.blobs(1).data_size() * sizeof(float));    // asuming each number is a float
+                for(int j = 0; j < v1lparam.blobs(1).data_size(); j++) {
+                    layerInfo->biasData[j] = v1lparam.blobs(1).data(j);
+                }
+                
+                if(layerInfo->layerType != "InnerProduct") {
+                    layerInfo->inputDepth = v1lparam.blobs(0).data_size() 
+                        / v1lparam.convolution_param().num_output()   
+                        / v1lparam.convolution_param().kernel_size(0) 
+                        / v1lparam.convolution_param().kernel_size(0);
+                }
+                break;
+            }
+        }   
+    }
+}
+
+
 vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
 	vector<layerInfo_t> caffeLayers;
     layerInfo_t layerInfo;
-	NetParameter param;
+	NetParameter dparam;
+    NetParameter wparam;
 	LayerParameter lparam;
     V1LayerParameter v1lparam;
-    bool success;
     
 
-    // Open Binary ProtoFile
-    int fd = open((modelFileName).c_str(), O_RDONLY);
-    ZeroCopyInputStream* raw_input = new FileInputStream(fd);
-    CodedInputStream* coded_input = new CodedInputStream(raw_input);
-    coded_input->SetTotalBytesLimit(INT_MAX, 536870912);
-    success = param.ParseFromCodedStream(coded_input);
-    delete coded_input;
-    delete raw_input;
+    // Open Deploy ProtoFile
+    int fd = open((protoFileName).c_str(), O_RDONLY);
+    if (fd == -1) {
+        cout << protoFileName << " " << "not found" << endl;
+        exit(1);
+    }
+    google::protobuf::io::FileInputStream* input = new google::protobuf::io::FileInputStream(fd);
+    bool success = google::protobuf::TextFormat::Parse(input, &dparam);
     if(!success) {
+        cout << "Error in Parsing Prototxt" << endl;
         exit(1);
     }
     
-    if(param.input_size() > 0) {
-        layerInfo.layerName = "data";
-        layerInfo.layerType = "Input";
-        caffeLayers.push_back(layerInfo);
+    
+    
+    // Open Binary ProtoFile
+    fd = open((modelFileName).c_str(), O_RDONLY);
+    if(fd == -1) {
+        cout << modelFileName << " " << "not found" << endl;
     }
-    if(param.input_dim_size() > 0) {
-        layerInfo.inputDepth = param.input_dim(1);
-        layerInfo.numInputRows = param.input_dim(2);
-        layerInfo.numInputCols = param.input_dim(3);
-        caffeLayers.push_back(layerInfo);
+    ZeroCopyInputStream* raw_input = new FileInputStream(fd);
+    CodedInputStream* coded_input = new CodedInputStream(raw_input);
+    coded_input->SetTotalBytesLimit(INT_MAX, 536870912);
+    success = wparam.ParseFromCodedStream(coded_input);
+    delete coded_input;
+    delete raw_input;
+    if(!success) {
+        cout << "Error in Parsing Model File Prototxt" << endl;
+        exit(1);
     }
+    
+    layerInfo.layerName = " ";
+    layerInfo.topLayerNames.clear();
+    layerInfo.bottomLayerNames.clear();
+    layerInfo.layerType = " ";
+    layerInfo.numInputRows = 1;
+    layerInfo.numInputCols = 1;
+    layerInfo.inputDepth = 1;
+    layerInfo.outputDepth = 1;
+    layerInfo.numKernelRows = 1;
+    layerInfo.numKernelCols = 1;
+    layerInfo.stride = 1;
+    layerInfo.padding = 0;
+    layerInfo.filterData = NULL;
+    layerInfo.biasData = NULL;
+    
+
+    layerInfo.layerName = "data";
+    layerInfo.layerType = "Input";
+    if(dparam.input_dim_size() > 0) {
+        layerInfo.inputDepth = dparam.input_dim(1);
+        layerInfo.numInputRows = dparam.input_dim(2);
+        layerInfo.numInputCols = dparam.input_dim(3);
+    }
+    caffeLayers.push_back(layerInfo);
 
     
-    if(param.layer_size() > 0) {    // for new LayerParameter definition in proto definition
-        for (int nlayers = 0; nlayers < param.layer_size(); nlayers++) {  
+    if(dparam.layer_size() > 0) {    // for new LayerParameter definition in proto definition
+        for (int nlayers = 0; nlayers < dparam.layer_size(); nlayers++) {
+
+
 
             layerInfo.layerName = " ";
             layerInfo.topLayerNames.clear();
@@ -62,9 +155,14 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
             layerInfo.filterData = NULL;
             layerInfo.biasData = NULL;
 
-            lparam = param.layer(nlayers);
+            lparam = dparam.layer(nlayers);
             layerInfo.layerName = lparam.name();
             layerInfo.layerType = lparam.type();
+            
+            if(caffeLayers[0].layerType == "Input" && layerInfo.layerType == "Input") {  // make this cleaner, to prevent two data layers for some prototxt          
+                continue;
+            }
+            
             for (int num_bottom_layers = 0; num_bottom_layers < lparam.bottom_size(); num_bottom_layers++) {   
                 layerInfo.bottomLayerNames.push_back(lparam.bottom(num_bottom_layers));
             }
@@ -82,22 +180,7 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
                     layerInfo.stride = lparam.convolution_param().stride(0);
                 }
                 
-                // filter weights
-                layerInfo.filterData = (float*)malloc(lparam.blobs(0).data_size() * sizeof(float));    // asuming each number is a float
-                for(int i = 0; i < lparam.blobs(0).data_size(); i++) {
-                    layerInfo.filterData[i] = lparam.blobs(0).data(i);
-                }
-                
-                // bias
-                layerInfo.biasData = (float*)malloc(lparam.blobs(1).data_size() * sizeof(float));    // asuming each number is a float
-                for(int i = 0; i < lparam.blobs(1).data_size(); i++) {
-                    layerInfo.biasData[i] = lparam.blobs(1).data(i);
-                }
-                
-                layerInfo.inputDepth = lparam.blobs(0).data_size() 
-                                        / lparam.convolution_param().num_output()   
-                                        / lparam.convolution_param().kernel_size(0) 
-                                        / lparam.convolution_param().kernel_size(0);
+                GetLayerFilterAndBias(&layerInfo,  wparam);
             }
             if (lparam.has_lrn_param()) {
                 layerInfo.localSize = lparam.lrn_param().local_size();
@@ -111,23 +194,17 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
             }
             if (lparam.has_inner_product_param()) {
                 layerInfo.outputDepth = lparam.inner_product_param().num_output();
-                // filter weights
-                layerInfo.filterData = (float*)malloc(lparam.blobs(0).data_size() * sizeof(float));    // asuming each number is a float
-                for(int i = 0; i < lparam.blobs(0).data_size(); i++) {
-                    layerInfo.filterData[i] = lparam.blobs(0).data(i);
-                }
-                
-                // bias
-                layerInfo.biasData = (float*)malloc(lparam.blobs(1).data_size() * sizeof(float));    // asuming each number is a float
-                for(int i = 0; i < lparam.blobs(1).data_size(); i++) {
-                    layerInfo.biasData[i] = lparam.blobs(1).data(i);
-                }
+                GetLayerFilterAndBias(&layerInfo,  wparam);
             }
             caffeLayers.push_back(layerInfo);
         }
-    } else if(param.layers_size() > 0) { // for old V1LayerParameter definition in proto definition
-        for (int nlayers = 0; nlayers < param.layers_size(); nlayers++) {  
+    } else if(dparam.layers_size() > 0) { // for old V1LayerParameter definition in proto definition. might not need this anymore
+        for (int nlayers = 0; nlayers < dparam.layers_size(); nlayers++) {  
 
+            if(caffeLayers[0].layerType == "Input") {  // make this cleaner, to prevent two data layers           
+                continue;
+            }
+            
             layerInfo.layerName = " ";
             layerInfo.topLayerNames.clear();
             layerInfo.bottomLayerNames.clear();
@@ -143,7 +220,7 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
             layerInfo.filterData = NULL;
             layerInfo.biasData = NULL;
 
-            v1lparam = param.layers(nlayers);
+            v1lparam = dparam.layers(nlayers);
             layerInfo.layerName = v1lparam.name();
             switch (v1lparam.type()){
                 case V1LayerParameter_LayerType_DATA:
@@ -174,6 +251,11 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
                 case V1LayerParameter_LayerType_CONCAT:
                    layerInfo.layerType = "Concat";
                 break;
+                
+                
+                case V1LayerParameter_LayerType_SPLIT:
+                   layerInfo.layerType = "Split";
+                break;
 
  
                 case V1LayerParameter_LayerType_INNER_PRODUCT:
@@ -191,6 +273,10 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
                 break;                   
             }
             
+            if(caffeLayers[0].layerType == "Input" && layerInfo.layerType == "Input") {  // make this cleaner, to prevent two data layers for some prototxt          
+                continue;
+            }
+            
             for (int num_bottom_layers = 0; num_bottom_layers < v1lparam.bottom_size(); num_bottom_layers++) {   
                 layerInfo.bottomLayerNames.push_back(v1lparam.bottom(num_bottom_layers));
             }
@@ -206,24 +292,8 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
                 layerInfo.numKernelCols = v1lparam.convolution_param().kernel_size(0);
                 if(v1lparam.convolution_param().stride_size() > 0) {
                     layerInfo.stride = v1lparam.convolution_param().stride(0);
-                }
-                
-                // filter weights
-                layerInfo.filterData = (float*)malloc(v1lparam.blobs(0).data_size() * sizeof(float));    // asuming each number is a float
-                for(int i = 0; i < v1lparam.blobs(0).data_size(); i++) {
-                    layerInfo.filterData[i] = v1lparam.blobs(0).data(i);
-                }
-                
-                // bias
-                layerInfo.biasData = (float*)malloc(v1lparam.blobs(1).data_size() * sizeof(float));    // asuming each number is a float
-                for(int i = 0; i < v1lparam.blobs(1).data_size(); i++) {
-                    layerInfo.biasData[i] = v1lparam.blobs(1).data(i);
-                }
-                
-                layerInfo.inputDepth = v1lparam.blobs(0).data_size() 
-                                        / v1lparam.convolution_param().num_output()   
-                                        / v1lparam.convolution_param().kernel_size(0) 
-                                        / v1lparam.convolution_param().kernel_size(0);
+                }              
+                GetLayerFilterAndBias(&layerInfo, wparam);              
             }
             if (v1lparam.has_lrn_param()) {
                 layerInfo.localSize = v1lparam.lrn_param().local_size();
@@ -237,21 +307,55 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
             }
             if (v1lparam.has_inner_product_param()) {
                 layerInfo.outputDepth = v1lparam.inner_product_param().num_output();
-                // filter weights
-                layerInfo.filterData = (float*)malloc(v1lparam.blobs(0).data_size() * sizeof(float));    // asuming each number is a float
-                for(int i = 0; i < v1lparam.blobs(0).data_size(); i++) {
-                    layerInfo.filterData[i] = v1lparam.blobs(0).data(i);
-                }
-                
-                // bias
-                layerInfo.biasData = (float*)malloc(v1lparam.blobs(1).data_size() * sizeof(float));    // asuming each number is a float
-                for(int i = 0; i < v1lparam.blobs(1).data_size(); i++) {
-                    layerInfo.biasData[i] = v1lparam.blobs(1).data(i);
-                }
+                GetLayerFilterAndBias(&layerInfo, wparam);
             }
             caffeLayers.push_back(layerInfo);
         }
     }
     
 	return caffeLayers;
+}
+
+
+void printModelProtocalBuffer(string protoFileName, string modelFileName) {
+	NetParameter param;
+	LayerParameter *lparam;
+    V1LayerParameter *v1lparam;
+    
+    int fd = open((modelFileName).c_str(), O_RDONLY);
+    ZeroCopyInputStream* raw_input = new FileInputStream(fd);
+    CodedInputStream* coded_input = new CodedInputStream(raw_input);
+    coded_input->SetTotalBytesLimit(INT_MAX, 536870912);
+    bool success = param.ParseFromCodedStream(coded_input);
+    delete coded_input;
+    delete raw_input;
+    if(!success) {
+        cout << "Error in Parsing Prototxt" << endl;
+        exit(1);
+    }
+    
+    if(param.layer_size() > 0) {
+        for (int nlayers = 0; nlayers < param.layer_size(); nlayers++) {  
+            lparam = param.::caffe::NetParameter::mutable_layer(nlayers);
+            if(lparam->has_convolution_param()) {
+                lparam->clear_blobs();
+            }
+            if(lparam->has_inner_product_param()) {
+                lparam->clear_blobs();
+            }
+        }
+    } else if( param.layers_size()) {
+        for (int nlayers = 0; nlayers < param.layers_size(); nlayers++) {  
+            v1lparam = param.::caffe::NetParameter::mutable_layers(nlayers);
+            if(v1lparam->has_convolution_param() || v1lparam->has_inner_product_param()) {
+                v1lparam->clear_blobs();
+            }
+        }
+    }
+  
+    fd = open((protoFileName).c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    FileOutputStream* output = new FileOutputStream(fd);
+    google::protobuf::TextFormat::Print(param, output);
+    delete output;
+    close(fd);
 }

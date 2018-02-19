@@ -29,6 +29,7 @@ namespace caffeDataParser {
     //		InnerProduct
     //		Softmax
     //		Concat
+    //      Split
 
     typedef struct {
         std::string layerName;
@@ -51,6 +52,9 @@ namespace caffeDataParser {
     } layerInfo_t;
 }
 
+void GetLayerFilterAndBias(caffeDataParser::layerInfo_t *layerInfo, caffe::NetParameter wparam);
 std::vector<caffeDataParser::layerInfo_t> parseCaffeData(std::string protoFileName, std::string modelFileName);
+void printModelProtocalBuffer(std::string protoFileName, std::string modelFileName);
+
 
 #endif

@@ -107,7 +107,7 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 				layerInfo[i].filterData,
 				layerInfo[i].biasData
 			));
-		} else if(layerInfo[i].layerType == "Concat") {
+        } else if(layerInfo[i].layerType == "Concat") {
 			m_cnn.push_back(new ConcatLayer<DType>(
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
@@ -122,16 +122,18 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 				layerInfo[i].layerType
 			));
 		} else {
-            cout << "[ESPRESSO]: " << "Skipping " << layerInfo[i].layerName << " " << "of type " << layerInfo[i].layerType << endl;
+            cout << "[ESPRESSO]: " << "Skipping Layer " << layerInfo[i].layerName << layerInfo[i].layerType << endl;
         }
 	}
-    
+  
+  
     for (int i = 0; i < m_cnn.size(); i++) {
-        cout << "Layer " << i <<  " " << m_cnn[i]->m_layerName << "\t\tloaded" << endl;
+        cout << "[ESPRESSO]: Loaded Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
 	}
-
-
-	for (uint32_t i = 0; i < m_cnn.size(); i++) {	// for every layer
+   
+    
+    // look for top layers first and insert split clones if needed
+   	for (uint32_t i = 0; i < m_cnn.size(); i++) {	// for every layer
 		if (m_cnn[i]->m_layerType != "Input") {
 			for (uint32_t j = 0; j < m_cnn[i]->m_topLayerNames.size(); j++) { // for every top layer of the current cnn layer
 				for (uint32_t k = 0; k < m_cnn.size(); k++) {	// search for the top layer: where I write my data to
@@ -143,8 +145,9 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 			}
 		}
 	}
+   
 
-	for (uint32_t i = 0; i < m_cnn.size(); i++) {	// for every layer
+    for (uint32_t i = 0; i < m_cnn.size(); i++) {	// for every layer
 		if (m_cnn[i]->m_layerType != "Input") {
 			for (uint32_t j = 0; j < m_cnn[i]->m_bottomLayerNames.size(); j++) { // for every bottom layer of the current cnn layer
 				for (uint32_t k = 0; k < m_cnn.size(); k++) {	// search for the bottom layer: where I get my data from
@@ -153,9 +156,11 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 						break;
 					}
 				}
-			}
+			}           
 		}
 	}
+
+
 
     // get output layers
     stack<Layer<DType>*> outputLayers;
@@ -232,6 +237,14 @@ void Network<DType>::Forward(string start, string end) {
 		cout << "\t outputDepth:    \t\t"   << m_cnn[i]->m_outputDepth      << endl;
         cout << "\t numOutputRows:  \t\t"   << m_cnn[i]->m_numOutputRows    << endl;
         cout << "\t numOutputCols:  \t\t"   << m_cnn[i]->m_numOutputCols    << endl;
+        if(m_cnn[i]->m_layerType == "Convolution" || m_cnn[i]->m_layerType == "InnerProduct") {
+            cout << "\t Number of Kernels:  \t\t" << m_cnn[i]->m_numKernels << endl;
+            cout << "\t Kernel Depth:       \t\t" << m_cnn[i]->m_kernelDepth << endl;
+            cout << "\t Kernel Size:        \t\t" << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
+        }
+        if(m_cnn[i]->m_layerType == "Pooling") {
+            cout << "\t Kernel Size:        \t\t" << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
+        }
 	}
    
     // Forward Propagation

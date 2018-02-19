@@ -75,25 +75,40 @@ void dataTransform(vector<espresso::layerInfo_t<FixedPoint>> &networkLayerInfo, 
 
 
 int main(int argc, char **argv) {
-    if(argc < 5) {
+    if(argc < 4) {
         cout << "Need more args" << endl;
         exit(0);
     }
     
-    
-    // DcNet
-	//string protoTxt = "/home/ikenna/caffe-master/models/dcNet/deploy_sqz_2.prototxt";
-    //string model = "/home/ikenna/caffe-master/models/dcNet/dcNet_deploy_sq_2.caffemodel";
-    //Mat img = imread("/home/ikenna/detector_test_kitti/temp.png", IMREAD_COLOR);
-    
+    // OverFeat
 
- 
-    // Vgg16
+    // SSD
+    
+    // YOLO
+    
+    // VGG16
+    // ../../../../../caffe-master/models/vgg16/vgg16_deploy.prototxt ../../../../../caffe-master/models/vgg16/VGG_ILSVRC_16_layers.caffemodel ../../../scripts/image.png data prob 
+    
+    // VGG19
+    // ../../../../../caffe-master/models/vgg19/vgg16_deploy.prototxt ../../../../../caffe-master/models/vgg19/VGG_ILSVRC_16_layers.caffemodel ../../../scripts/image.png data prob 
+    
+    // GoogleNet
+    // ../../../../../caffe-master/models/bvlc_googlenet/deploy.prototxt ../../../../../caffe-master/models/bvlc_googlenet/bvlc_googlenet.caffemodel ../../../scripts/image.png data prob 
+    
+    // Alexnet
+    // ../../../../../caffe-master/models/bvlc_alexnet/deploy.prototxt ../../../../../caffe-master/models/bvlc_alexnet/bvlc_alexnet.caffemodel ../../../scripts/image.png data prob 
+
+    // dcNet
+    // ../../../../../caffe-master/models/dcNet/deploy_sqz_2.prototxt ../../../../../caffe-master/models/dcNet/sqz_rework_iter_100000.caffemodel ../../../../../detector_test_kitti/temp.png data objectness0_soft 
+
+    
     string protoTxt = argv[1];
     string model = argv[2];
-    Mat img = imread("/home/ikenna/SOC_IT/espresso/scripts/image.png", IMREAD_COLOR);
-
-
+    Mat img = imread(argv[3], IMREAD_COLOR);
+    
+    //printModelProtocalBuffer(argv[1], argv[2]);
+    //exit(0);
+    
     // Read in model
     ofstream fd;
     Blob_t<float> inputBlob;
@@ -104,7 +119,7 @@ int main(int argc, char **argv) {
 	Network<float> *network = new Network<float>(networkLayerInfo);
     
 
-    // Other cnn debug
+    // Input Image, for dcNet remember to subtract 127 from each pixel value to compare results
 	inputBlob.data = new float[img.channels() * img.rows * img.cols]; 
     inputBlob.depth = img.channels();
     inputBlob.numRows = img.rows;
@@ -121,48 +136,47 @@ int main(int argc, char **argv) {
     network->m_cnn[0]->m_numInputRows   = inputBlob.numRows;
     network->m_cnn[0]->m_numInputCols   = inputBlob.numCols;
     network->m_cnn[0]->m_blob.data      = inputBlob.data;
-    int layerIdx = network->ReturnLayerIdx(argv[4]);
-    network->Forward(argv[3], argv[4]);
-    fd.open("output.txt");
-    if(network->m_cnn[layerIdx]->m_layerType != "InnerProduct" && network->m_cnn[layerIdx]->m_layerType != "Softmax") {
-        for(int i = 0; i < network->m_cnn[layerIdx]->m_blob.depth; i++) {
-            for(int j = 0; j < network->m_cnn[layerIdx]->m_blob.numRows; j++) {
-                for(int k = 0; k < network->m_cnn[layerIdx]->m_blob.numCols; k++) {
-                    fd << index3D(  
-                                    network->m_cnn[layerIdx]->m_blob.depth, 
-                                    network->m_cnn[layerIdx]->m_blob.numRows, 
-                                    network->m_cnn[layerIdx]->m_blob.numCols, 
-                                    network->m_cnn[layerIdx]->m_blob.data, i, j, k
-                                 ) << " ";
+    
+    string beginLayer = " "; 
+    string endlayer = " ";
+    
+    if(argc == 5) {
+        beginLayer = argv[4];
+    }
+    if(argc == 6) {
+        endlayer = argv[5];
+    }
+    
+    network->Forward(beginLayer, endlayer);
+    
+    int layerIdx = network->ReturnLayerIdx(endlayer);
+    if(layerIdx != -1) {
+        fd.open("output.txt");
+        if(network->m_cnn[layerIdx]->m_blob.depth > 1 && network->m_cnn[layerIdx]->m_blob.numRows > 1 && network->m_cnn[layerIdx]->m_blob.numCols > 1) {
+            for(int i = 0; i < network->m_cnn[layerIdx]->m_blob.depth; i++) {
+                for(int j = 0; j < network->m_cnn[layerIdx]->m_blob.numRows; j++) {
+                    for(int k = 0; k < network->m_cnn[layerIdx]->m_blob.numCols; k++) {
+                        fd << index3D(  
+                                        network->m_cnn[layerIdx]->m_blob.depth, 
+                                        network->m_cnn[layerIdx]->m_blob.numRows, 
+                                        network->m_cnn[layerIdx]->m_blob.numCols, 
+                                        network->m_cnn[layerIdx]->m_blob.data, i, j, k
+                                     ) << " ";
+                    }
+                    fd << endl;
                 }
-                fd << endl;
+                fd << endl << endl << endl;
             }
-            fd << endl << endl << endl;
-        }
-    } else {
-        for(int i = 0; i < network->m_cnn[layerIdx]->m_blob.depth; i++) {
-            fd << network->m_cnn[layerIdx]->m_blob.data[i] << endl;
+        } else {
+            for(int i = 0; i < network->m_cnn[layerIdx]->m_blob.depth; i++) {
+                fd << network->m_cnn[layerIdx]->m_blob.data[i] << endl;
+            }
         }
     }
     
-    // dcNet debug
-    //inputBlob.data = new float[img.channels() * img.rows * img.cols]; 
-    //inputBlob.depth = img.channels();
-    //inputBlob.numRows = img.rows;
-    //inputBlob.numCols = img.cols;    
-    //for(int c = 0; c < img.channels(); c++) {
-    //    for(int i=0; i < img.rows; i++) {
-    //        for(int j=0; j < img.cols; j++) { 
-    //            int a = img.at<cv::Vec3b>(i,j)[c];
-    //            index3D(img.channels(), img.rows, img.cols, inputBlob.data, c, i, j) = (float)a - 127.0f;
-    //        }
-    //    }
-    //}
-    //network->m_cnn[0]->m_inputDepth     = inputBlob.depth;
-    //network->m_cnn[0]->m_numInputRows   = inputBlob.numRows;
-    //network->m_cnn[0]->m_numInputCols   = inputBlob.numCols;
-    //network->m_cnn[0]->m_blob.data      = inputBlob.data;
-    //network->Forward();
+
+
+
     //fd.open("obj.txt");
     //for(int i = 0; i < network->m_outputLayers[3]->m_blob.depth; i++) {
     //    for(int j = 0; j < network->m_outputLayers[3]->m_blob.numRows; j++) {
@@ -199,13 +213,7 @@ int main(int argc, char **argv) {
     //}
     //fd.close();  
     
-    
-    // Regular CNN flow
-    //network->Forward();
-
-    
     delete network;
-  
   
     return 0;
 }
