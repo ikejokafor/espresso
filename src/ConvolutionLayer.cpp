@@ -112,38 +112,6 @@ void ConvolutionLayer<DType>::ComputeLayer() {
 template <>
 void ConvolutionLayer<FixedPoint>::ComputeLayer() {
 
-	// get input
-	FixedPoint *datain = this->m_bottomLayers[0]->m_blob.data;
-	int numInputBlobRows = this->m_bottomLayers[0]->m_blob.numRows;
-	int numInputBlobCols = this->m_bottomLayers[0]->m_blob.numCols;
-	int inputBlobDepth = this->m_bottomLayers[0]->m_blob.depth;
-    
-	// output
-	FixedPoint *dataout = this->m_topLayers[0]->m_blob.data;
-        
-	for (int m = 0; m < this->m_numKernels; m++) {
-		for (int x = 0, a = 0; x < this->m_numOutputRows; x++, a += this->m_stride) {
-			for(int y = 0, b = 0; y < this->m_numOutputCols; y++, b += this->m_stride) {
-				index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = this->m_biasData[m];
-				for (int k = 0; k < this->m_kernelDepth; k++) {
-					for (int i = a - this->m_padding, kr = 0; kr < this->m_numKernelRows; i++, kr++) {
-						for (int j = b - this->m_padding, kc = 0; kc < this->m_numKernelCols; j++, kc++) {
-							if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding
-                                FixedPoint product = FixedPoint::mult   (  
-                                                                            index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, k, i, j),
-                                                                            index4D(this->m_numKernels, this->m_kernelDepth, this->m_numKernelRows, this->m_numKernelCols, this->m_filterData, m, k, kr, kc),
-                                                                            this->m_length,
-                                                                            this->m_numFracbits
-                                                                        );                               
-                                index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) += (product);
-
-                            }
-						}
-					}
-				}
-			}
-		}
-	}
 }
 
 

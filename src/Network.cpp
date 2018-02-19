@@ -75,7 +75,7 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
                 layerInfo[i].alpha,
                 layerInfo[i].beta
 			));
-		} else if(layerInfo[i].layerType == "Pooling") {
+		} else if(layerInfo[i].layerType == "Pooling_MAX" || layerInfo[i].layerType == "Pooling_AVE") {
 			m_cnn.push_back(new PoolingLayer<DType>(
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
@@ -122,12 +122,12 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 				layerInfo[i].layerType
 			));
 		} else {
-            cout << "[ESPRESSO]: " << "Skipping Layer " << layerInfo[i].layerName << layerInfo[i].layerType << endl;
+            cout << "[ESPRESSO]: " << "Skipping Loading Layer: " << layerInfo[i].layerName << endl;
         }
 	}
   
   
-    for (int i = 0; i < m_cnn.size(); i++) {
+    for (uint32_t i = 0; i < m_cnn.size(); i++) {
         cout << "[ESPRESSO]: Loaded Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
 	}
    
@@ -242,7 +242,7 @@ void Network<DType>::Forward(string start, string end) {
             cout << "\t Kernel Depth:       \t\t" << m_cnn[i]->m_kernelDepth << endl;
             cout << "\t Kernel Size:        \t\t" << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
         }
-        if(m_cnn[i]->m_layerType == "Pooling") {
+        if(m_cnn[i]->m_layerType == "Pooling_MAX"|| m_cnn[i]->m_layerType == "Pooling_AVE") {
             cout << "\t Kernel Size:        \t\t" << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
         }
 	}

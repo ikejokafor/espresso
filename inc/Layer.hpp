@@ -30,7 +30,8 @@ namespace espresso {
     //		Convolution
     //		ReLU
     //      LRN
-    //		Pooling
+    //		Pooling_MAX
+    //		Pooling_AVE
     //		InnerProduct
     //		Softmax
     //		Concat

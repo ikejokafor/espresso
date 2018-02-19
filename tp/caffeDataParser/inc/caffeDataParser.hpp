@@ -25,7 +25,8 @@ namespace caffeDataParser {
     //		Input
     //		Convolution
     //		ReLU
-    //		Pooling
+    //		Pooling_MAX
+    //		Pooling_AVE
     //		InnerProduct
     //		Softmax
     //		Concat

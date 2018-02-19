@@ -125,20 +125,19 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
     layerInfo.biasData = NULL;
     
 
-    layerInfo.layerName = "data";
-    layerInfo.layerType = "Input";
+
     if(dparam.input_dim_size() > 0) {
+        layerInfo.layerName = "data";
+        layerInfo.layerType = "Input";
         layerInfo.inputDepth = dparam.input_dim(1);
         layerInfo.numInputRows = dparam.input_dim(2);
         layerInfo.numInputCols = dparam.input_dim(3);
+        caffeLayers.push_back(layerInfo);
     }
-    caffeLayers.push_back(layerInfo);
 
     
     if(dparam.layer_size() > 0) {    // for new LayerParameter definition in proto definition
         for (int nlayers = 0; nlayers < dparam.layer_size(); nlayers++) {
-
-
 
             layerInfo.layerName = " ";
             layerInfo.topLayerNames.clear();
@@ -157,11 +156,25 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
 
             lparam = dparam.layer(nlayers);
             layerInfo.layerName = lparam.name();
-            layerInfo.layerType = lparam.type();
             
-            if(caffeLayers[0].layerType == "Input" && layerInfo.layerType == "Input") {  // make this cleaner, to prevent two data layers for some prototxt          
-                continue;
+            if(lparam.has_pooling_param()) {
+                switch(lparam.pooling_param().pool()) {
+                    case PoolingParameter_PoolMethod_MAX:
+                        layerInfo.layerType = "Pooling_MAX";
+                    break;                   
+                    case PoolingParameter_PoolMethod_AVE:
+                        layerInfo.layerType = "Pooling_AVE";
+                    break;
+                    default:                    
+                    break;
+                };  
+            } else {
+                layerInfo.layerType = lparam.type();
             }
+
+            //if(caffeLayers[0].layerType == "Input" && layerInfo.layerType == "Input") {  // make this cleaner, to prevent two data layers for some prototxt          
+            //    continue;
+            //}
             
             for (int num_bottom_layers = 0; num_bottom_layers < lparam.bottom_size(); num_bottom_layers++) {   
                 layerInfo.bottomLayerNames.push_back(lparam.bottom(num_bottom_layers));
@@ -200,11 +213,7 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
         }
     } else if(dparam.layers_size() > 0) { // for old V1LayerParameter definition in proto definition. might not need this anymore
         for (int nlayers = 0; nlayers < dparam.layers_size(); nlayers++) {  
-
-            if(caffeLayers[0].layerType == "Input") {  // make this cleaner, to prevent two data layers           
-                continue;
-            }
-            
+           
             layerInfo.layerName = " ";
             layerInfo.topLayerNames.clear();
             layerInfo.bottomLayerNames.clear();
@@ -225,58 +234,47 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
             switch (v1lparam.type()){
                 case V1LayerParameter_LayerType_DATA:
                     layerInfo.layerType = "Input";
-                break;
-
-                
+                break;                
                 case V1LayerParameter_LayerType_CONVOLUTION:
                     layerInfo.layerType = "Convolution";
-                break;
-                
-                
+                break;                               
                 case V1LayerParameter_LayerType_RELU:
                     layerInfo.layerType = "ReLU";
-                break;
-                
-                
+                break;             
                 case V1LayerParameter_LayerType_LRN:
                     layerInfo.layerType = "LRN";
-                break;
-                
-                
+                break;              
                 case V1LayerParameter_LayerType_POOLING:
-                    layerInfo.layerType = "Pooling";
-                break;
-                
-                
+                    switch(v1lparam.pooling_param().pool()) {
+                        case PoolingParameter_PoolMethod_MAX:
+                            layerInfo.layerType = "Pooling_MAX";
+                        break;
+                        case PoolingParameter_PoolMethod_AVE:
+                            layerInfo.layerType = "Pooling_AVE";
+                        break;                        
+                        default:                        
+                        break;
+                    };                   
+                break;               
                 case V1LayerParameter_LayerType_CONCAT:
                    layerInfo.layerType = "Concat";
-                break;
-                
-                
+                break;                
                 case V1LayerParameter_LayerType_SPLIT:
                    layerInfo.layerType = "Split";
                 break;
-
- 
                 case V1LayerParameter_LayerType_INNER_PRODUCT:
                     layerInfo.layerType = "InnerProduct";
-                break;
-                
-                
+                break;             
                 case V1LayerParameter_LayerType_SOFTMAX:
                     layerInfo.layerType = "Softmax";
-                break;     
-                
-                
+                break;      
                 case V1LayerParameter_LayerType_SOFTMAX_LOSS:
                     layerInfo.layerType = "Softmax";
-                break;                   
+                break;  
+                default:          
+                break;
             }
-            
-            if(caffeLayers[0].layerType == "Input" && layerInfo.layerType == "Input") {  // make this cleaner, to prevent two data layers for some prototxt          
-                continue;
-            }
-            
+
             for (int num_bottom_layers = 0; num_bottom_layers < v1lparam.bottom_size(); num_bottom_layers++) {   
                 layerInfo.bottomLayerNames.push_back(v1lparam.bottom(num_bottom_layers));
             }

@@ -85,30 +85,53 @@ void PoolingLayer<DType>::ComputeLayer() {
 	// output
 	DType *dataout = this->m_topLayers[0]->m_blob.data;
     
-	for (int m = 0; m < this->m_outputDepth; m++) {
-		for (int x = 0, a = 0; x < this->m_numOutputRows; x++, a += this->m_stride) {
-			for (int y = 0, b = 0; y < this->m_numOutputCols; y++, b += this->m_stride) {
-				index3D(m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = -FLT_MAX;
-                for (int i = a - this->m_padding, kr = 0; kr < this->m_numKernelRows; i++, kr++) {
-                    for (int j = b - this->m_padding, kc = 0; kc < this->m_numKernelCols; j++, kc++) {
-                        if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding
-                            index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = (
-                                index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) 
-                                    < index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
-                                ) ? index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
-                                : index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y);
-                        } else {
-                            index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = (
-                                index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) 
-                                    < -FLT_MAX
-                                ) ? -FLT_MAX
-                                : index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y);
+    if(this->m_layerType == "Pooling_MAX") {
+        for (int m = 0; m < this->m_outputDepth; m++) {
+            for (int x = 0, a = 0; x < this->m_numOutputRows; x++, a += this->m_stride) {
+                for (int y = 0, b = 0; y < this->m_numOutputCols; y++, b += this->m_stride) {
+                    index3D(m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = -FLT_MAX;
+                    for (int i = a - this->m_padding, kr = 0; kr < this->m_numKernelRows; i++, kr++) {
+                        for (int j = b - this->m_padding, kc = 0; kc < this->m_numKernelCols; j++, kc++) {
+                            if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding
+                                index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = (
+                                    index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) 
+                                        < index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
+                                    ) ? index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
+                                    : index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y);
+                            } else {
+                                index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = (
+                                    index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) 
+                                        < -FLT_MAX
+                                    ) ? -FLT_MAX
+                                    : index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y);
+                            }
                         }
                     }
                 }
-			}
-		}
-	}
+            }
+        }
+    } else if(this->m_layerType == "Pooling_AVE") { 
+        for (int m = 0; m < this->m_outputDepth; m++) {
+            for (int x = 0, a = 0; x < this->m_numOutputRows; x++, a += this->m_stride) {
+                for (int y = 0, b = 0; y < this->m_numOutputCols; y++, b += this->m_stride) {
+                    DType ave = 0.0f;
+                    for (int i = a - this->m_padding, kr = 0; kr < this->m_numKernelRows; i++, kr++) {
+                        for (int j = b - this->m_padding, kc = 0; kc < this->m_numKernelCols; j++, kc++) {
+                            if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding
+                                ave += index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j);
+                            }
+                        }
+                    }
+                    index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = ave / DType(this->m_numKernelRows * this->m_numKernelCols);
+                }
+            }
+        }
+    }
+}
+
+template <>
+void PoolingLayer<FixedPoint>::ComputeLayer() {
+
 
 }
 
