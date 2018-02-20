@@ -238,11 +238,15 @@ void Network<DType>::Forward(string start, string end) {
         cout << "\t numOutputRows:  \t\t"   << m_cnn[i]->m_numOutputRows    << endl;
         cout << "\t numOutputCols:  \t\t"   << m_cnn[i]->m_numOutputCols    << endl;
         if(m_cnn[i]->m_layerType == "Convolution" || m_cnn[i]->m_layerType == "InnerProduct") {
+            cout << "\t Stride:             \t\t" << m_cnn[i]->m_stride << endl;
+            cout << "\t Padding:            \t\t" << m_cnn[i]->m_padding << endl;
             cout << "\t Number of Kernels:  \t\t" << m_cnn[i]->m_numKernels << endl;
             cout << "\t Kernel Depth:       \t\t" << m_cnn[i]->m_kernelDepth << endl;
             cout << "\t Kernel Size:        \t\t" << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
         }
         if(m_cnn[i]->m_layerType == "Pooling_MAX"|| m_cnn[i]->m_layerType == "Pooling_AVE") {
+            cout << "\t Stride:             \t\t" << m_cnn[i]->m_stride << endl;
+            cout << "\t Padding:            \t\t" << m_cnn[i]->m_padding << endl;
             cout << "\t Kernel Size:        \t\t" << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
         }
 	}

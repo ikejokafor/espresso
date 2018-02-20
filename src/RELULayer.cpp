@@ -62,6 +62,12 @@ void RELULayer<DType>::ComputeLayerParam() {
 	this->m_outputDepth = this->m_inputDepth;
 	this->m_numOutputRows = this->m_numInputRows;
 	this->m_numOutputCols = this->m_numInputCols;
+    
+	// create output blob
+	this->m_blob.depth = this->m_outputDepth;
+	this->m_blob.numRows = this->m_numOutputRows;
+	this->m_blob.numCols = this->m_numOutputCols;
+	this->m_blob.data = (DType*)this->m_topLayers[0]->m_blob.data;    
 }
 
 

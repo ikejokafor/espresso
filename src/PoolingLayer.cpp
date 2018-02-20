@@ -62,8 +62,8 @@ void PoolingLayer<DType>::ComputeLayerParam() {
 
 	// output size
 	this->m_outputDepth = this->m_inputDepth;
-	this->m_numOutputRows = (int)ceil((float)(this->m_numInputRows - this->m_numKernelRows + 2 * this->m_padding) / (float)this->m_stride) + 1;
-	this->m_numOutputCols = (int)ceil((float)(this->m_numInputCols - this->m_numKernelCols + 2 * this->m_padding) / (float)this->m_stride) + 1;
+	this->m_numOutputRows = int(ceil(float(this->m_numInputRows - this->m_numKernelRows + 2.0f * this->m_padding) / float(this->m_stride))) + 1;
+	this->m_numOutputCols = int(ceil(float(this->m_numInputCols - this->m_numKernelCols + 2.0f * this->m_padding) / float(this->m_stride))) + 1;
 
 	// create output blob
 	this->m_blob.depth = this->m_outputDepth;

@@ -201,6 +201,12 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
                 layerInfo.beta = lparam.lrn_param().beta();
             }
             if (lparam.has_pooling_param()) {   // assuming pooling parameter is always MAX
+                if(lparam.pooling_param().has_pad()) {
+                    layerInfo.padding = lparam.pooling_param().pad();
+                }
+                if(lparam.pooling_param().has_stride()) {
+                    layerInfo.stride = lparam.pooling_param().stride();
+                }
                 layerInfo.numKernelRows = lparam.pooling_param().kernel_size();
                 layerInfo.numKernelCols = lparam.pooling_param().kernel_size();
                 layerInfo.stride        = lparam.pooling_param().stride();
@@ -282,15 +288,15 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
                 layerInfo.topLayerNames.push_back(v1lparam.top(num_top_layers));
             }
             if (v1lparam.has_convolution_param()) {
-                layerInfo.outputDepth = v1lparam.convolution_param().num_output();
                 if(v1lparam.convolution_param().pad_size() > 0) {
                     layerInfo.padding = v1lparam.convolution_param().pad(0);
                 }
-                layerInfo.numKernelRows = v1lparam.convolution_param().kernel_size(0);
-                layerInfo.numKernelCols = v1lparam.convolution_param().kernel_size(0);
                 if(v1lparam.convolution_param().stride_size() > 0) {
                     layerInfo.stride = v1lparam.convolution_param().stride(0);
-                }              
+                } 
+                layerInfo.outputDepth = v1lparam.convolution_param().num_output();
+                layerInfo.numKernelRows = v1lparam.convolution_param().kernel_size(0);
+                layerInfo.numKernelCols = v1lparam.convolution_param().kernel_size(0);           
                 GetLayerFilterAndBias(&layerInfo, wparam);              
             }
             if (v1lparam.has_lrn_param()) {
@@ -299,6 +305,12 @@ vector<layerInfo_t> parseCaffeData(string protoFileName, string modelFileName) {
                 layerInfo.beta = v1lparam.lrn_param().beta();
             }
             if (v1lparam.has_pooling_param()) {   // assuming pooling parameter is always MAX
+                if(lparam.pooling_param().has_pad()) {
+                    layerInfo.padding = lparam.pooling_param().pad();
+                }
+                if(lparam.pooling_param().has_stride()) {
+                    layerInfo.stride = lparam.pooling_param().stride();
+                }
                 layerInfo.numKernelRows = v1lparam.pooling_param().kernel_size();
                 layerInfo.numKernelCols = v1lparam.pooling_param().kernel_size();
                 layerInfo.stride        = v1lparam.pooling_param().stride();
