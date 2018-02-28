@@ -45,8 +45,10 @@ namespace caffeDataParser {
         int numKernelCols;
         int stride;
         int padding;
+        bool globalPooling;
         float *filterData;
         float *biasData;
+        int group;
         int localSize;
         float alpha;
         float beta;

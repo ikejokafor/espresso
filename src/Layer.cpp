@@ -16,8 +16,10 @@ Layer<DType>::Layer   (
 					int numKernelCols,
 					int stride,
 					int padding,
+                    bool globalPooling,
 					DType *filterData,
 					DType *biasData,
+                    int group,
                     int localSize,
                     float alpha,
                     float beta,
@@ -36,8 +38,10 @@ Layer<DType>::Layer   (
     m_numKernelCols     = numKernelCols;
     m_stride            = stride;
     m_padding           = padding;
+    m_globalPooling     = globalPooling;
     m_filterData        = filterData;
     m_biasData          = biasData;
+    m_group             = group;
     m_localSize         = localSize; 
     m_alpha             = alpha;     
     m_beta              = beta;
@@ -59,6 +63,12 @@ Layer<DType>::~Layer() {
 	if(this->m_biasData) {
 		free(this->m_biasData);
 	}
+}
+
+
+template <>
+Layer<FixedPoint>::~Layer() {
+
 }
 
 

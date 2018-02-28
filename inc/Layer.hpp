@@ -51,8 +51,10 @@ namespace espresso {
         int numKernelCols;
         int stride;
         int padding;
+        bool globalPooling;
         DType *filterData;
         DType *biasData;
+        int group;
         int localSize;
         float alpha;
         float beta;
@@ -89,8 +91,10 @@ class Layer {
                             int numKernelCols = 1,
                             int stride = 1,
                             int padding = 0,
+                            bool globalPooling = false,
                             DType *filterData = NULL,
                             DType *biasData = NULL,
+                            int group = 1,
                             int localSize = 5,
                             float alpha = 0.0001f,
                             float beta = 0.75f,
@@ -117,8 +121,10 @@ class Layer {
 		int m_numKernels;
 		int m_stride;
 		int m_padding;
+        bool m_globalPooling;
 		DType *m_filterData;
 		DType *m_biasData;
+        int m_group;
         int m_length;
         int m_numFracbits;
         int m_localSize;

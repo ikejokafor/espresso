@@ -35,8 +35,10 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 				layerInfo[i].numKernelCols,
 				layerInfo[i].stride,
 				layerInfo[i].padding,
+                layerInfo[i].globalPooling,
 				layerInfo[i].filterData,
-				layerInfo[i].biasData
+				layerInfo[i].biasData,
+                layerInfo[i].group
 			));
 		} else if(layerInfo[i].layerType == "ReLU") {
 			m_cnn.push_back(new RELULayer<DType>(
@@ -52,6 +54,7 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 				layerInfo[i].numKernelCols,
 				layerInfo[i].stride,
 				layerInfo[i].padding,
+                layerInfo[i].globalPooling,
 				layerInfo[i].filterData,
 				layerInfo[i].biasData
 			));
@@ -69,8 +72,10 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 				layerInfo[i].numKernelCols,
 				layerInfo[i].stride,
 				layerInfo[i].padding,
+                layerInfo[i].globalPooling,
 				layerInfo[i].filterData,
 				layerInfo[i].biasData,
+                layerInfo[i].group,
                 layerInfo[i].localSize,
                 layerInfo[i].alpha,
                 layerInfo[i].beta
@@ -88,7 +93,8 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 				layerInfo[i].numKernelRows,
 				layerInfo[i].numKernelCols,
 				layerInfo[i].stride,
-				layerInfo[i].padding
+				layerInfo[i].padding,
+                layerInfo[i].globalPooling
 			));
 		} else if(layerInfo[i].layerType == "InnerProduct") {
 			m_cnn.push_back(new FullyConnectedLayer<DType>(
@@ -104,6 +110,7 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 				layerInfo[i].numKernelCols,
 				layerInfo[i].stride,
 				layerInfo[i].padding,
+                layerInfo[i].globalPooling,
 				layerInfo[i].filterData,
 				layerInfo[i].biasData
 			));
@@ -122,15 +129,13 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 				layerInfo[i].layerType
 			));
 		} else {
-            cout << "[ESPRESSO]: " << "Skipping Loading Layer: " << layerInfo[i].layerName << endl;
+            cout << "[ESPRESSO]: " << "Skipped Loading Layer: " << layerInfo[i].layerName << endl;
         }
 	}
-  
   
     for (uint32_t i = 0; i < m_cnn.size(); i++) {
         cout << "[ESPRESSO]: Loaded Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
 	}
-   
     
     // look for top layers first and insert split clones if needed
    	for (uint32_t i = 0; i < m_cnn.size(); i++) {	// for every layer
@@ -229,6 +234,17 @@ void Network<DType>::Forward(string start, string end) {
 		m_cnn[i]->ComputeLayerParam();
 	}
     
+    //float sum = 0.0f;
+    //for (uint32_t i = 0; i < m_cnn.size(); i++) {
+    //    if(m_cnn[i]->m_layerType == "Convolution") {
+    //        cout << m_cnn[i]->m_layerName << endl;
+    //        cout << "\tFilter Size:" << " " << m_cnn[i]->m_numKernelCols * m_cnn[i]->m_numKernelRows * m_cnn[i]->m_kernelDepth * m_cnn[i]->m_numKernels * sizeof(float) << " " << "bytes" << endl;
+    //        sum += m_cnn[i]->m_numKernelCols * m_cnn[i]->m_numKernelRows * m_cnn[i]->m_kernelDepth * m_cnn[i]->m_numKernels * sizeof(float); 
+    //    }
+	//}
+    //cout << "Total:" << " " << sum << " " << "bytes" << endl;
+    //exit(0);
+    
     for (int i = startIdx; i < (endIdx + 1); i++) {
         cout << "Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
 		cout << "\t inputDepth:     \t\t"   << m_cnn[i]->m_inputDepth       << endl;
@@ -245,6 +261,16 @@ void Network<DType>::Forward(string start, string end) {
             cout << "\t Kernel Size:        \t\t" << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
         }
         if(m_cnn[i]->m_layerType == "Pooling_MAX"|| m_cnn[i]->m_layerType == "Pooling_AVE") {
+            if(m_cnn[i]->m_layerType == "Pooling_MAX") {
+                cout << "\t Pooling Param:  \t\t" << "Max" << endl;
+            } else {
+                cout << "\t Pooling Param:  \t\t" << "Average" << endl;
+            }
+            if(m_cnn[i]->m_globalPooling) {
+                cout << "\t Global Pooling:  \t\t" << "Yes" << endl;
+            } else {
+                cout << "\t Global Pooling:  \t\t" << "No" << endl;
+            }
             cout << "\t Stride:             \t\t" << m_cnn[i]->m_stride << endl;
             cout << "\t Padding:            \t\t" << m_cnn[i]->m_padding << endl;
             cout << "\t Kernel Size:        \t\t" << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;

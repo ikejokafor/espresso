@@ -35,6 +35,7 @@ if __name__ == "__main__":
 
     net_output = net.forward(start=beginLayer, end=endLayer)   
     print net_output[endLayer].shape 
+    print net_output[endLayer].ndim
     fh = open('output_golden.txt', 'w')
     if(net_output[endLayer].ndim == 4):
         for i in range(0, net_output[endLayer].shape[1]):
@@ -42,9 +43,10 @@ if __name__ == "__main__":
                 for k in range(0, net_output[endLayer].shape[3]):
                     fh.write(str(net_output[endLayer].item(0, i, j, k)) + ' ')
                 fh.write('\n')
-            fh.write('\n')
-            fh.write('\n')
-            fh.write('\n')
+            if(net_output[endLayer].shape[3] != 1 and net_output[endLayer].shape[2] != 1):
+                fh.write('\n')
+                fh.write('\n')
+                fh.write('\n')
     elif (net_output[endLayer].ndim == 2) :
         for i in range(0, net_output[endLayer].shape[1]):
             fh.write(str(net_output[endLayer].item(0, i)) + '\n')
