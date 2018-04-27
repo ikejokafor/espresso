@@ -1,55 +1,76 @@
 #include "DataLayer.hpp"
 using namespace std;
 
-DataLayer::DataLayer	(
-    						string layerName,
-							vector<string> topLayerNames,
-							vector<string> bottomLayerNames,
-							string layerType,
-							int numInputRows,
-							int numInputCols,
-							int inputDepth,
-							int outputDepth,
-							int numKernelRows,
-							int numKernelCols,
-							int stride,
-							int padding,
-							float *filterData,
-							float *biasData
-						) : Layer	(	
-    										layerName,
-											topLayerNames,
-											bottomLayerNames,
-											layerType,
-											numInputRows,
-											numInputCols,
-											inputDepth,
-											outputDepth,
-											numKernelRows,
-											numKernelCols,
-											stride,
-											padding,
-											filterData,
-											biasData
-										) {
+
+template <typename DType>
+DataLayer<DType>::DataLayer	(
+                                    string layerName,
+                                    vector<string> topLayerNames,
+                                    vector<string> bottomLayerNames,
+                                    string layerType,
+                                    int numInputRows,
+                                    int numInputCols,
+                                    int inputDepth,
+                                    int outputDepth,
+                                    int numKernelRows,
+                                    int numKernelCols,
+                                    int stride,
+                                    int padding,
+                                    bool globalPooling,
+                                    DType *filterData,
+                                    DType *biasData,
+                                    int group,
+                                    int localSize,
+                                    float alpha,
+                                    float beta,
+                                    int fxPtLength,
+                                    int numFracBits
+                                ) : Layer<DType>	(	
+                                                        layerName,
+                                                        topLayerNames,
+                                                        bottomLayerNames,
+                                                        layerType,
+                                                        numInputRows,
+                                                        numInputCols,
+                                                        inputDepth,
+                                                        outputDepth,
+                                                        numKernelRows,
+                                                        numKernelCols,
+                                                        stride,
+                                                        padding,
+                                                        globalPooling,
+                                                        filterData,
+                                                        biasData,
+                                                        group,
+                                                        localSize,
+                                                        alpha,
+                                                        beta,
+                                                        fxPtLength,
+                                                        numFracBits
+                                                    ) {
 }
 
 
-DataLayer::~DataLayer() {}
+template <typename DType>
+DataLayer<DType>::~DataLayer() {}
 
 
-void DataLayer::ComputeLayerParam() {
-	m_numOutputRows = m_numInputRows;
-	m_numOutputCols = m_numInputCols;
-	m_outputDepth = m_inputDepth;
+template <typename DType>
+void DataLayer<DType>::ComputeLayerParam() {
+	this->m_numOutputRows = this->m_numInputRows;
+	this->m_numOutputCols = this->m_numInputCols;
+	this->m_outputDepth = this->m_inputDepth;
 
 	// create output blob
-	m_blob.depth = m_outputDepth;
-	m_blob.numRows = m_numOutputRows;
-	m_blob.numCols = m_numKernelCols;
+	this->m_blob.depth = this->m_outputDepth;
+	this->m_blob.numRows = this->m_numOutputRows;
+	this->m_blob.numCols = this->m_numOutputCols;
 }
 
 
-void DataLayer::ComputeLayer(Blob_t inputBlob) {
-	m_blob.data = inputBlob.data;
-}
+template <typename DType>
+void DataLayer<DType>::ComputeLayer() {}
+
+
+template class DataLayer<float>;
+template class DataLayer<FixedPoint>;

@@ -1,92 +1,196 @@
 #include "ConvolutionLayer.hpp"
 using namespace std;
 
-ConvolutionLayer::ConvolutionLayer	(
-    									string layerName,
-										vector<string> topLayerNames,
-										vector<string> bottomLayerNames,
-										string layerType,
-										int numInputRows,
-										int numInputCols,
-										int inputDepth,
-										int outputDepth,
-										int numKernelRows,
-										int numKernelCols,
-										int stride,
-										int padding,
-										float *filterData,
-										float *biasData
-									) : Layer	(	
-    										layerName,
-											topLayerNames,
-											bottomLayerNames,
-											layerType,
-											numInputRows,
-											numInputCols,
-											inputDepth,
-											outputDepth,
-											numKernelRows,
-											numKernelCols,
-											stride,
-											padding,
-											filterData,
-											biasData
-										) {
+
+template <typename DType>
+ConvolutionLayer<DType>::ConvolutionLayer  (
+                                                string layerName,
+                                                vector<string> topLayerNames,
+                                                vector<string> bottomLayerNames,
+                                                string layerType,
+                                                int numInputRows,
+                                                int numInputCols,
+                                                int inputDepth,
+                                                int outputDepth,
+                                                int numKernelRows,
+                                                int numKernelCols,
+                                                int stride,
+                                                int padding,
+                                                bool globalPooling,
+                                                DType *filterData,
+                                                DType *biasData,
+                                                int group,
+                                                int localSize,
+                                                float alpha,
+                                                float beta,
+                                                int fxPtLength,
+                                                int numFracBits
+                                            ) : Layer<DType>	(	
+                                                        layerName,
+                                                        topLayerNames,
+                                                        bottomLayerNames,
+                                                        layerType,
+                                                        numInputRows,
+                                                        numInputCols,
+                                                        inputDepth,
+                                                        outputDepth,
+                                                        numKernelRows,
+                                                        numKernelCols,
+                                                        stride,
+                                                        padding,
+                                                        globalPooling,
+                                                        filterData,
+                                                        biasData,
+                                                        group,
+                                                        localSize,
+                                                        alpha,
+                                                        beta,
+                                                        fxPtLength,
+                                                        numFracBits
+                                                    ) {
 }
 
-ConvolutionLayer::~ConvolutionLayer() {}
+
+template <typename DType>
+ConvolutionLayer<DType>::~ConvolutionLayer() {
+    free(this->m_blob.data);
+}
 
 
-void ConvolutionLayer::ComputeLayerParam() {
+template <>
+ConvolutionLayer<FixedPoint>::~ConvolutionLayer() {
+
+}
+
+
+template <typename DType>
+void ConvolutionLayer<DType>::ComputeLayerParam() {
 	// input size
-	m_inputDepth	= m_bottomLayers[0]->m_outputDepth;
-	m_numInputRows  = m_bottomLayers[0]->m_numOutputRows;
-	m_numInputCols  = m_bottomLayers[0]->m_numOutputCols;
+	this->m_inputDepth	= this->m_bottomLayers[0]->m_outputDepth;
+	this->m_numInputRows  = this->m_bottomLayers[0]->m_numOutputRows;
+	this->m_numInputCols  = this->m_bottomLayers[0]->m_numOutputCols;
 
 	// output size
-	m_numOutputRows = (int)((m_numInputRows - m_numKernelRows + 2 * m_padding) / m_stride) + 1;
-	m_numOutputCols = (int)((m_numInputCols - m_numKernelCols + 2 * m_padding) / m_stride) + 1;
-	m_numKernels	= m_outputDepth;
-	m_kernelDepth   = m_inputDepth;
+	this->m_numOutputRows = (int)((this->m_numInputRows - this->m_numKernelRows + 2 * this->m_padding) / this->m_stride) + 1;
+	this->m_numOutputCols = (int)((this->m_numInputCols - this->m_numKernelCols + 2 * this->m_padding) / this->m_stride) + 1;
+	this->m_numKernels	= this->m_outputDepth;
+	this->m_kernelDepth   = this->m_inputDepth / this->m_group;
 
 	// create output blob
-	m_blob.depth = m_outputDepth;
-	m_blob.numRows = m_numOutputRows;
-	m_blob.numCols = m_numOutputCols;
-	m_blob.data = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
+	this->m_blob.depth = this->m_outputDepth;
+	this->m_blob.numRows = this->m_numOutputRows;
+	this->m_blob.numCols = this->m_numOutputCols;
+	this->m_blob.data = (DType*)malloc(this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols * sizeof(DType));
+    
 }
 
 
-void ConvolutionLayer::ComputeLayer(Blob_t inputBlob) {
+template <>
+void ConvolutionLayer<FixedPoint>::ComputeLayerParam() {
+	// input size
+	this->m_inputDepth	= this->m_bottomLayers[0]->m_outputDepth;
+	this->m_numInputRows  = this->m_bottomLayers[0]->m_numOutputRows;
+	this->m_numInputCols  = this->m_bottomLayers[0]->m_numOutputCols;
+
+	// output size
+	this->m_numOutputRows = (int)((this->m_numInputRows - this->m_numKernelRows + 2 * this->m_padding) / this->m_stride) + 1;
+	this->m_numOutputCols = (int)((this->m_numInputCols - this->m_numKernelCols + 2 * this->m_padding) / this->m_stride) + 1;
+	this->m_numKernels	= this->m_outputDepth;
+	this->m_kernelDepth   = this->m_inputDepth / this->m_group;
+
+	// create output blob
+	this->m_blob.depth = this->m_outputDepth;
+	this->m_blob.numRows = this->m_numOutputRows;
+	this->m_blob.numCols = this->m_numOutputCols;
+	this->m_blob.data = (FixedPoint*)malloc(this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols * sizeof(FixedPoint));
+    for(int i = 0; i < (this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols); i++) {
+        this->m_blob.data[i].SetParam(32, 16);
+    }
+    
+}
+
+
+template <typename DType>
+void ConvolutionLayer<DType>::ComputeLayer() {
 
 	// get input
-	float *datain = m_bottomLayers[0]->m_blob.data;
-	int numInputBlobRows = m_bottomLayers[0]->m_blob.numRows;
-	int numInputBlobCols = m_bottomLayers[0]->m_blob.numCols;
-	int inputBlobDepth = m_bottomLayers[0]->m_blob.depth;
-
-
+	DType *datain = this->m_bottomLayers[0]->m_blob.data;
+	int numInputBlobRows = this->m_bottomLayers[0]->m_blob.numRows;
+	int numInputBlobCols = this->m_bottomLayers[0]->m_blob.numCols;
+	int inputBlobDepth = this->m_bottomLayers[0]->m_blob.depth;
+    
 	// output
-	float *dataout = m_topLayers[0]->m_blob.data;
-
-
-	for (int m = 0; m < m_numKernels; m++) {
-		for (int x = 0; x < m_numOutputRows; x++) {
-			for(int y = 0; y < m_numOutputCols; y++) {
-				index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = m_biasData[m];
-				for (int k = 0; k < m_kernelDepth; k++) {
-					for (int i = x - m_padding, kr = 0; kr < m_numKernelRows; i++, kr++) {
-						for (int j = y - m_padding, kc = 0; kc < m_numKernelCols; j++, kc++) {
-								if (i >= 0 && j >= 0) {	// in valid region
-									index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) += (
-										index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, k, (m_stride * x + i), (m_stride * y + j)) *
-										index4D(m_numKernels, m_kernelDepth, m_numKernelRows, m_numKernelCols, m_filterData, m, k, i, j)
-									);
-								}
-						}
-					}
-				}
-			}
-		}
-	}
+	DType *dataout = this->m_topLayers[0]->m_blob.data;
+    DType *filters = this->m_filterData;
+    
+    
+    
+    for(int g = 0; g < this->m_group; g++) {
+        for (int m = 0; m < (this->m_numKernels / this->m_group); m++) {
+            for (int x = 0, a = 0; x < this->m_numOutputRows; x++, a += this->m_stride) {
+                for(int y = 0, b = 0; y < this->m_numOutputCols; y++, b += this->m_stride) {
+                    index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = this->m_biasData[m];
+                    for (int k = 0; k < this->m_kernelDepth; k++) {
+                        for (int i = a - this->m_padding, kr = 0; kr < this->m_numKernelRows; i++, kr++) {
+                            for (int j = b - this->m_padding, kc = 0; kc < this->m_numKernelCols; j++, kc++) {
+                                if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding                        
+                                    index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) += (
+                                        index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, k, i, j)
+                                        * index4D(this->m_numKernels, this->m_kernelDepth, this->m_numKernelRows, this->m_numKernelCols, filters, m, k, kr, kc)
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        dataout += ((this->m_outputDepth / this->m_group) * this->m_numOutputRows * this->m_numOutputCols);
+        datain  += ((inputBlobDepth / this->m_group) * numInputBlobRows * numInputBlobCols); 
+        filters += ((this->m_numKernels / this->m_group) * this->m_kernelDepth * this->m_numKernelRows * this->m_numKernelCols);
+    }
 }
+
+
+template <>
+void ConvolutionLayer<FixedPoint>::ComputeLayer() {
+    // get input
+	FixedPoint *datain = this->m_bottomLayers[0]->m_blob.data;
+	int numInputBlobRows = this->m_bottomLayers[0]->m_blob.numRows;
+	int numInputBlobCols = this->m_bottomLayers[0]->m_blob.numCols;
+	int inputBlobDepth = this->m_bottomLayers[0]->m_blob.depth;
+    
+	// output
+	FixedPoint *dataout = this->m_topLayers[0]->m_blob.data;
+    FixedPoint *filters = this->m_filterData;
+    
+    
+    for(int g = 0; g < this->m_group; g++) {
+        for (int m = 0; m < (this->m_numKernels / this->m_group); m++) {
+            for (int x = 0, a = 0; x < this->m_numOutputRows; x++, a += this->m_stride) {
+                for(int y = 0, b = 0; y < this->m_numOutputCols; y++, b += this->m_stride) {
+                    index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = this->m_biasData[m];
+                    for (int k = 0; k < this->m_kernelDepth; k++) {
+                        for (int i = a - this->m_padding, kr = 0; kr < this->m_numKernelRows; i++, kr++) {
+                            for (int j = b - this->m_padding, kc = 0; kc < this->m_numKernelCols; j++, kc++) {
+                                if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding
+                                    FixedPoint product =    index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, k, i, j)
+                                                            * index4D(this->m_numKernels, this->m_kernelDepth, this->m_numKernelRows, this->m_numKernelCols, filters, m, k, kr, kc);
+                                    product.SetParam(this->m_fxPtLength, this->m_numFracBits);                                                                              
+                                    index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) += product;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        dataout += ((this->m_outputDepth / this->m_group) * this->m_numOutputRows * this->m_numOutputCols);
+        datain  += ((inputBlobDepth / this->m_group) * numInputBlobRows * numInputBlobCols); 
+        filters += ((this->m_numKernels / this->m_group) * this->m_kernelDepth * this->m_numKernelRows * this->m_numKernelCols);
+    }
+}
+
+
+template class ConvolutionLayer<float>;
+template class ConvolutionLayer<FixedPoint>;

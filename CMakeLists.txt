@@ -70,8 +70,8 @@ SET_PROPERTY(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT e
 # BEGIN External CMake files ------------------------------------------------------------------------------------------------------------------------
 # Make sure include and lib directories are relative to home dir of this cmake file
 ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/example)
-ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/dep/caffeDataParser/)
-ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/dep/caffeDataParser/example/)
+ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/tp/caffeDataParser/)
+ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/../fixedPoint/ ${PROJECT_SOURCE_DIR}/../fixedPoint/build/debug/)
 # END External CMake files --------------------------------------------------------------------------------------------------------------------------
 
 
@@ -109,7 +109,7 @@ ADD_LIBRARY(${TARGET_NAME} STATIC ${TARGET_SRCS} ${TARGET_HEADERS})
 
 
 # BEGIN Build dependencies --------------------------------------------------------------------------------------------------------------------------
-#add_dependencies(${TARGET_NAME} [<target-dependency>]...)
+add_dependencies(${TARGET_NAME} fixedPoint)
 # END Build dependencies ----------------------------------------------------------------------------------------------------------------------------
 
 
@@ -134,11 +134,7 @@ TARGET_COMPILE_OPTIONS(${TARGET_NAME} PUBLIC
 # BEGIN Include directories -------------------------------------------------------------------------------------------------------------------------
 TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
     ${PROJECT_SOURCE_DIR}/inc/
-    ${PROJECT_SOURCE_DIR}/common/inc/
-    ${PROJECT_SOURCE_DIR}/dep/caffeDataParser/inc/
-#    <include_path0>
-#    <include_path1>
-#    <include_pathN>
+    ${PROJECT_SOURCE_DIR}/../fixedPoint/inc/
 )
 # END Include directories ---------------------------------------------------------------------------------------------------------------------------
 
@@ -148,22 +144,16 @@ TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
 #   For shared libraries make sure.....
 #       WINDOWS: PATH env variable includes path(s) to dll's
 #       LINUX:  LD_LIBRARY_PATH env variablel includes path(s) to so's
-#if(WIN32)
-#TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
-#    <lib0_NAME>.lib
-#    <lib1_NAME>.lib
-#    <libN_NAME>.lib
-#)
-#else()
-#TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
-#    -L<path_to_lib0>
-#    -L<path_to_lib1>
-#    -L<path_to_libN>
-#    <lib0_NAME>
-#    <lib1_NAME>
-#    <libN_NAME>
-#)
-#endif()
+if(WIN32)
+TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
+
+)
+else()
+TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
+    -L/usr/local/lib/
+    -L/usr/lib/
+)
+endif()
 # END Library Settings ------------------------------------------------------------------------------------------------------------------------------
 
 

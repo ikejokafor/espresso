@@ -1,5 +1,5 @@
-#ifndef __NETWORK_H__
-#define __NETWORK_H__
+#ifndef __NETWORK_HPP__
+#define __NETWORK_HPP__
 
 #include "Layer.hpp"
 #include "DataLayer.hpp"
@@ -9,22 +9,24 @@
 #include "ConcatLayer.hpp"
 #include "FullyConnectedLayer.hpp"
 #include "SoftMaxLayer.hpp"
-#include "caffeDataParser.hpp"
+#include "NormLayer.hpp"
 
 
 #include <vector>
 
-
+template <typename DType>
 class Network {
 
 	public:
-		Network(std::vector<layerInfo_t> &layerInfo);
-		~Network();
-		void Forward(Blob_t inputBlob, Blob_t *outputBlob);
-			
-
-		std::vector<Layer*> m_cnn;
-
+        Network();
+        Network(std::vector<espresso::layerInfo_t<DType>> &layerInfo);
+        ~Network();
+        void Forward(std::string start = " ", std::string end = " ");
+        int ReturnLayerIdx(std::string name);
+        
+		std::vector<Layer<DType>*> m_cnn;
+        std::vector<Layer<DType>*> m_outputLayers;
+        
 	protected:
 
 

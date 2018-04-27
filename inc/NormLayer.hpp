@@ -1,15 +1,15 @@
-#ifndef __POOLING_LAYER_HPP__
-#define __POOLING_LAYER_HPP__
+#ifndef __NORM_LAYER_HPP__
+#define __NORM_LAYER_HPP__
 
 
 #include "Layer.hpp"
 
 
 template <typename DType>
-class PoolingLayer : public Layer<DType> {
+class NormLayer : public Layer<DType> {
 	
 	public:
-        PoolingLayer	(
+        NormLayer	(
                             std::string layerName = " ",
                             std::vector<std::string> topLayerNames = std::vector<std::string>(),
                             std::vector<std::string> bottomLayerNames = std::vector<std::string>(),
@@ -31,9 +31,9 @@ class PoolingLayer : public Layer<DType> {
                             float beta = 0.75f,
                             int fxPtLength = 32,
                             int numFracBits = 16                            
-                        );
-        ~PoolingLayer();
-        void ComputeLayerParam();
+                    );  
+        ~NormLayer();      
+        void ComputeLayerParam();  
         void ComputeLayer();
 
 
@@ -43,5 +43,6 @@ class PoolingLayer : public Layer<DType> {
 	private:
 
 };
+
 
 #endif

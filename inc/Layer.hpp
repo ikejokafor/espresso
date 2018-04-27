@@ -1,22 +1,70 @@
-#ifndef __LAYER_H__
-#define __LAYER_H__
+#ifndef __LAYER_HPP__
+#define __LAYER_HPP__
 
-#define index2D(ROW, COL, A, x, y)                            A[y * COL + x]
-#define index3D(DEPTH0, ROW, COL, A, x, y, z)                 A[(z * ROW + y) * COL + x]
-#define index4D(DEPTH1, DEPTH0, ROW, COL, A, x, y, z0, z1)    A[((z1 * DEPTH1 + z0) * ROW + y) * COL + x]
+
+#define index2D(ROW, COL, A, r, c)                                  A[r * COL + c]
+#define index3D(DEPTH, ROW, COL, A, d, r, c)                        A[(d * ROW + r) * COL + c]
+#define index4D(DEPTH1, DEPTH0, ROW, COL, A, d1, d0, r, c)          A[((d1 * DEPTH0 + d0) * ROW + r) * COL + c]
+
 
 #include <string>
 #include <cstring>
 #include <vector>
 #include <random>
 #include <float.h>
+#include <iostream>
+#include <fstream>
+#include <stack>
+#include "FixedPoint.hpp"
 
-typedef struct {
-    float *data;
+
+template <typename DType>
+struct Blob_t {
+    DType *data;
 	int numRows;
     int numCols;
 	int depth;
-} Blob_t;
+};
+
+
+namespace espresso {
+    //	LayerTypes:
+    //		Input
+    //		Convolution
+    //		ReLU
+    //      LRN
+    //		Pooling_MAX
+    //		Pooling_AVE
+    //		InnerProduct
+    //		Softmax
+    //		Concat
+    //      Split
+    
+    template <typename DType>
+    struct layerInfo_t {
+        std::string layerName;
+        std::vector<std::string> topLayerNames;
+        std::vector<std::string> bottomLayerNames;
+        std::string layerType;
+        int numInputRows;
+        int numInputCols;
+        int inputDepth;
+        int outputDepth;
+        int numKernelRows;
+        int numKernelCols;
+        int stride;
+        int padding;
+        bool globalPooling;
+        DType *filterData;
+        DType *biasData;
+        int group;
+        int localSize;
+        float alpha;
+        float beta;
+        int fxPtLength;
+        int fxPtnumFracBits;
+    };
+}
 
 
 // We can compute the spatial size of the output volume as a function of the input volume size (W), the
@@ -25,29 +73,43 @@ typedef struct {
 // calculating how many neurons “fit” is given by ((W - F + (2 * P)) / S) + 1. For example for a 7x7 input and a 
 // 3x3 filter with stride 1 and pad 0 we would get a 5x5 output.With stride 2 we would get a 3x3 output.
 
+// Blob memory is row-major in layout, so the last / rightmost dimension changes fastest. For example, in a 4D blob, the value at index (n, k, h, w) is physically 
+// located at index ((n * K + k) * H + h) * W + w. Number / N is the batch size of the data. Batch processing achieves better throughput for communication and device processing. 
+// For an ImageNet training batch of 256 images N = 256. Channel / K is the feature dimension e.g. for RGB images K = 3.
+
+
+template <typename DType>
 class Layer {
 
     public:
-        Layer   (  
-					std::string layerName = " ",
-					std::vector<std::string> topLayerNames = std::vector<std::string>(),
-					std::vector<std::string> bottomLayerNames = std::vector<std::string>(),
-					std::string  layerType = " ",
-					int numInputRows = 1,
-					int numInputCols = 1,
-					int inputDepth = 1,
-					int outputDepth = 1,
-					int numKernelRows = 1,
-					int numKernelCols = 1,
-					int stride = 1,
-					int padding = 0,
-					float *filterData = NULL,
-					float *biasData = NULL
-                );
-		virtual ~Layer();
-
-        virtual void ComputeLayer(Blob_t inputBlob) = 0;
-		virtual void ComputeLayerParam() = 0;
+           Layer  (  
+                            std::string layerName = " ",
+                            std::vector<std::string> topLayerNames = std::vector<std::string>(),
+                            std::vector<std::string> bottomLayerNames = std::vector<std::string>(),
+                            std::string layerType = " ",
+                            int numInputRows = 1,
+                            int numInputCols = 1,
+                            int inputDepth = 1,
+                            int outputDepth = 1,
+                            int numKernelRows = 1,
+                            int numKernelCols = 1,
+                            int stride = 1,
+                            int padding = 0,
+                            bool globalPooling = false,
+                            DType *filterData = NULL,
+                            DType *biasData = NULL,
+                            int group = 1,
+                            int localSize = 5,
+                            float alpha = 0.0001f,
+                            float beta = 0.75f,
+                            int fxPtLength = 32,
+                            int numFracBits = 16
+                        );
+            virtual ~Layer();
+            virtual void ComputeLayer() = 0;
+            virtual void ComputeLayerParam() = 0;
+            virtual void SetfxPtLength(int value);
+            virtual void SetnumFracBits(int value);
 
 		std::string m_layerName;
 		std::vector<std::string> m_topLayerNames;
@@ -65,11 +127,20 @@ class Layer {
 		int m_numKernels;
 		int m_stride;
 		int m_padding;
-		float *m_filterData;
-		float *m_biasData;
-		Blob_t m_blob;
-		std::vector<Layer*> m_topLayers;
-		std::vector<Layer*> m_bottomLayers;
+        bool m_globalPooling;
+		DType *m_filterData;
+		DType *m_biasData;
+        int m_group;
+        int m_fxPtLength;
+        int m_numFracBits;
+        int m_localSize;
+        float m_alpha;
+        float m_beta;
+        
+		Blob_t<DType> m_blob;
+		std::vector<Layer<DType>*> m_topLayers;
+		std::vector<Layer<DType>*> m_bottomLayers;
+
 
     protected:
 
