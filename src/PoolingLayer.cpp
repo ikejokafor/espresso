@@ -111,7 +111,7 @@ void PoolingLayer<FixedPoint>::ComputeLayerParam() {
 	this->m_blob.numCols = this->m_numOutputCols;
 	this->m_blob.data = (FixedPoint*)malloc(this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols * sizeof(FixedPoint));
     for(int i = 0; i < (this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols); i++) {
-        this->m_blob.data[i].SetParam(32, 16);
+        this->m_blob.data[i].SetParam(this->m_fxPtLength, this->m_numFracBits);
     }
 }
 
@@ -191,7 +191,7 @@ void PoolingLayer<FixedPoint>::ComputeLayer() {
 	// output
 	FixedPoint *dataout = this->m_topLayers[0]->m_blob.data;
     
-    FixedPoint fxPtMin(32, 16, 0x80000000, false);
+    FixedPoint fxPtMin(32, 16, 0x8000000000000000, false);
     
     // TODO: add support for average pooling and global pooling
     

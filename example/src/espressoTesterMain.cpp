@@ -74,25 +74,18 @@ void dataTransform(vector<espresso::layerInfo_t<FixedPoint>> &networkLayerInfo, 
         networkLayerInfo[i].group                 = caffeDataParserLayerInfo[i].group;   
         networkLayerInfo[i].globalPooling         = caffeDataParserLayerInfo[i].globalPooling;        
         if(caffeDataParserLayerInfo[i].layerType == "Convolution" || caffeDataParserLayerInfo[i].layerType == "InnerProduct") {
-            networkLayerInfo[i].filterData = new FixedPoint [    
-                                                                caffeDataParserLayerInfo[i].numKernelRows 
-                                                                * caffeDataParserLayerInfo[i].numKernelCols 
-                                                                * caffeDataParserLayerInfo[i].inputDepth 
-                                                                * caffeDataParserLayerInfo[i].outputDepth
-                                                            ];
-            int numFilterValues = caffeDataParserLayerInfo[i].numKernelRows 
-                                  * caffeDataParserLayerInfo[i].numKernelCols
-                                  * caffeDataParserLayerInfo[i].inputDepth 
-                                  * caffeDataParserLayerInfo[i].outputDepth;           
-            networkLayerInfo[i].biasData = new FixedPoint [caffeDataParserLayerInfo[i].outputDepth];
-            for(int j = 0; j < numFilterValues; j++) {
+            networkLayerInfo[i].filterData = new FixedPoint[caffeDataParserLayerInfo[i].numFilterValues]; 
+            for(int j = 0; j < caffeDataParserLayerInfo[i].numFilterValues; j++) {
                 networkLayerInfo[i].filterData[j] = caffeDataParserLayerInfo[i].filterData[j];
                 networkLayerInfo[i].filterData[j].SetParam(32, 16);
-            }
-            for(int j = 0; j < caffeDataParserLayerInfo[i].outputDepth; j++) {
+            }        
+            
+            networkLayerInfo[i].biasData = new FixedPoint[caffeDataParserLayerInfo[i].numBiasValues];
+            for(int j = 0; j < caffeDataParserLayerInfo[i].numBiasValues; j++) {
                 networkLayerInfo[i].biasData[j] = caffeDataParserLayerInfo[i].biasData[j];
                 networkLayerInfo[i].biasData[j].SetParam(32, 16);
             }
+            
         } else {
             networkLayerInfo[i].filterData = NULL;
             networkLayerInfo[i].biasData = NULL;
@@ -116,7 +109,7 @@ int main(int argc, char **argv) {
     // ./espressoTester ../../../../../caffe-master/models/vgg16/vgg16_deploy.prototxt ../../../../../caffe-master/models/vgg16/VGG_ILSVRC_16_layers.caffemodel ../../../scripts/image.png data prob 
     
     // VGG19
-    // ./espressoTester ../../../../../caffe-master/models/vgg19/vgg16_deploy.prototxt ../../../../../caffe-master/models/vgg19/VGG_ILSVRC_16_layers.caffemodel ../../../scripts/image.png data prob 
+    // ./espressoTester ../../../../../caffe-master/models/vgg19/vgg19_deploy.prototxt ../../../../../caffe-master/models/vgg19/VGG_ILSVRC_19_layers.caffemodel ../../../scripts/image.png data prob 
     
     // GoogleNet
     // ./espressoTester ../../../../../caffe-master/models/bvlc_googlenet/deploy.prototxt ../../../../../caffe-master/models/bvlc_googlenet/bvlc_googlenet.caffemodel ../../../scripts/image.png data prob 
@@ -173,100 +166,99 @@ int main(int argc, char **argv) {
 
     int beginLayerIdx = network->ReturnLayerIdx(beginLayer);   
     int endLayerIdx = network->ReturnLayerIdx(endLayer);
+    ofstream fd;
     
     if(endLayerIdx != -1 && beginLayerIdx != -1) {   
-        // Input Image, for dcNet remember to subtract 127 from each pixel value to compare results (float)
-        cout << "Doing Floating Point CNN" << endl;
-        inputBlob.data = new float[img.channels() * img.rows * img.cols]; 
-        inputBlob.depth = img.channels();
-        inputBlob.numRows = img.rows;
-        inputBlob.numCols = img.cols;    
-        for(int c = 0; c < img.channels(); c++) {
-            for(int i=0; i < img.rows; i++) {
-                for(int j = 0; j < img.cols; j++) { 
-                    int a = img.at<cv::Vec3b>(i,j)[c];
-                    //index3D(img.channels(), img.rows, img.cols, inputBlob.data, c, i, j) = (float)a - 127.0f;   // for dcNet
-                    index3D(img.channels(), img.rows, img.cols, inputBlob.data, c, i, j) = (float)a;
-                }
-            }
-        }  
-        network->m_cnn[0]->m_inputDepth     = inputBlob.depth;
-        network->m_cnn[0]->m_numInputRows   = inputBlob.numRows;
-        network->m_cnn[0]->m_numInputCols   = inputBlob.numCols;
-        network->m_cnn[0]->m_blob.data      = inputBlob.data;
-        network->Forward(beginLayer, endLayer);
-        
-        
-        // // Input Image, for dcNet remember to subtract 127 from each pixel value to compare results (fixedPoint)
-        // cout << "Doing Fixed Point CNN" << endl;
-        // inputBlob_fxPt.data = new FixedPoint[img.channels() * img.rows * img.cols]; 
-        // inputBlob_fxPt.depth = img.channels();
-        // inputBlob_fxPt.numRows = img.rows;
-        // inputBlob_fxPt.numCols = img.cols;    
+        // // Input Image, for dcNet remember to subtract 127 from each pixel value to compare results (float)
+        // cout << "Doing Floating Point CNN" << endl;
+        // inputBlob.data = new float[img.channels() * img.rows * img.cols]; 
+        // inputBlob.depth = img.channels();
+        // inputBlob.numRows = img.rows;
+        // inputBlob.numCols = img.cols;    
         // for(int c = 0; c < img.channels(); c++) {
         //     for(int i=0; i < img.rows; i++) {
         //         for(int j = 0; j < img.cols; j++) { 
         //             int a = img.at<cv::Vec3b>(i,j)[c];
-        //             //float b = (float)a - 127.0f; // for dcNet
-        //             float b = (float)a;
-        //             index3D(img.channels(), img.rows, img.cols, inputBlob_fxPt.data, c, i, j) = (float)b;
-        //             index3D(img.channels(), img.rows, img.cols, inputBlob_fxPt.data, c, i, j).SetParam(32, 16);
+        //             //index3D(img.channels(), img.rows, img.cols, inputBlob.data, c, i, j) = (float)a - 127.0f;   // for dcNet
+        //             index3D(img.channels(), img.rows, img.cols, inputBlob.data, c, i, j) = (float)a;
         //         }
         //     }
-        // } 
-        // network_fxPt->m_cnn[0]->m_inputDepth     = inputBlob_fxPt.depth;
-        // network_fxPt->m_cnn[0]->m_numInputRows   = inputBlob_fxPt.numRows;
-        // network_fxPt->m_cnn[0]->m_numInputCols   = inputBlob_fxPt.numCols;
-        // network_fxPt->m_cnn[0]->m_blob.data      = inputBlob_fxPt.data;
-        // network_fxPt->Forward(beginLayer, endLayer);
-    
-    
-        ofstream fd;
-        fd.open("output_espresso.txt");
-        if(network->m_cnn[endLayerIdx]->m_blob.depth > 1 && network->m_cnn[endLayerIdx]->m_blob.numRows > 1 && network->m_cnn[endLayerIdx]->m_blob.numCols > 1) {
-            for(int i = 0; i < network->m_cnn[endLayerIdx]->m_blob.depth; i++) {
-                for(int j = 0; j < network->m_cnn[endLayerIdx]->m_blob.numRows; j++) {
-                    for(int k = 0; k < network->m_cnn[endLayerIdx]->m_blob.numCols; k++) {
-                        fd << index3D(  
-                                        network->m_cnn[endLayerIdx]->m_blob.depth, 
-                                        network->m_cnn[endLayerIdx]->m_blob.numRows, 
-                                        network->m_cnn[endLayerIdx]->m_blob.numCols, 
-                                        network->m_cnn[endLayerIdx]->m_blob.data, i, j, k
-                                     ) << " ";
-                    }
-                    fd << endl;
-                }
-                fd << endl << endl << endl;
-            }
-        } else {
-            for(int i = 0; i < network->m_cnn[endLayerIdx]->m_blob.depth; i++) {
-                fd << network->m_cnn[endLayerIdx]->m_blob.data[i] << endl;
-            }
-        }
-        fd.close();
-        
-        // fd.open("output_espresso_fxPt.txt");
-        // if(network_fxPt->m_cnn[endLayerIdx]->m_blob.depth > 1 && network_fxPt->m_cnn[endLayerIdx]->m_blob.numRows > 1 && network_fxPt->m_cnn[endLayerIdx]->m_blob.numCols > 1) {
-        //     for(int i = 0; i < network_fxPt->m_cnn[endLayerIdx]->m_blob.depth; i++) {
-        //         for(int j = 0; j < network_fxPt->m_cnn[endLayerIdx]->m_blob.numRows; j++) {
-        //             for(int k = 0; k < network_fxPt->m_cnn[endLayerIdx]->m_blob.numCols; k++) {
+        // }  
+        // network->m_cnn[0]->m_inputDepth     = inputBlob.depth;
+        // network->m_cnn[0]->m_numInputRows   = inputBlob.numRows;
+        // network->m_cnn[0]->m_numInputCols   = inputBlob.numCols;
+        // network->m_cnn[0]->m_blob.data      = inputBlob.data;
+        // network->Forward(beginLayer, endLayer);
+        //
+        // fd.open("output_espresso.txt");
+        // if(network->m_cnn[endLayerIdx]->m_blob.depth > 1 && network->m_cnn[endLayerIdx]->m_blob.numRows > 1 && network->m_cnn[endLayerIdx]->m_blob.numCols > 1) {
+        //     for(int i = 0; i < network->m_cnn[endLayerIdx]->m_blob.depth; i++) {
+        //         for(int j = 0; j < network->m_cnn[endLayerIdx]->m_blob.numRows; j++) {
+        //             for(int k = 0; k < network->m_cnn[endLayerIdx]->m_blob.numCols; k++) {
         //                 fd << index3D(  
-        //                                 network_fxPt->m_cnn[endLayerIdx]->m_blob.depth, 
-        //                                 network_fxPt->m_cnn[endLayerIdx]->m_blob.numRows, 
-        //                                 network_fxPt->m_cnn[endLayerIdx]->m_blob.numCols, 
-        //                                 network_fxPt->m_cnn[endLayerIdx]->m_blob.data, i, j, k
-        //                              ).toFloat() << " ";
+        //                                 network->m_cnn[endLayerIdx]->m_blob.depth, 
+        //                                 network->m_cnn[endLayerIdx]->m_blob.numRows, 
+        //                                 network->m_cnn[endLayerIdx]->m_blob.numCols, 
+        //                                 network->m_cnn[endLayerIdx]->m_blob.data, i, j, k
+        //                              ) << " ";
         //             }
         //             fd << endl;
         //         }
         //         fd << endl << endl << endl;
         //     }
         // } else {
-        //     for(int i = 0; i < network_fxPt->m_cnn[endLayerIdx]->m_blob.depth; i++) {
-        //         fd << network_fxPt->m_cnn[endLayerIdx]->m_blob.data[i] << endl;
+        //     for(int i = 0; i < network->m_cnn[endLayerIdx]->m_blob.depth; i++) {
+        //         fd << network->m_cnn[endLayerIdx]->m_blob.data[i] << endl;
         //     }
         // }
         // fd.close();
+        
+        
+        // Input Image, for dcNet remember to subtract 127 from each pixel value to compare results (fixedPoint)
+        cout << "Doing Fixed Point CNN" << endl;
+        inputBlob_fxPt.data = new FixedPoint[img.channels() * img.rows * img.cols]; 
+        inputBlob_fxPt.depth = img.channels();
+        inputBlob_fxPt.numRows = img.rows;
+        inputBlob_fxPt.numCols = img.cols;    
+        for(int c = 0; c < img.channels(); c++) {
+            for(int i=0; i < img.rows; i++) {
+                for(int j = 0; j < img.cols; j++) { 
+                    int a = img.at<cv::Vec3b>(i,j)[c];
+                    //float b = (float)a - 127.0f; // for dcNet
+                    float b = (float)a;
+                    index3D(img.channels(), img.rows, img.cols, inputBlob_fxPt.data, c, i, j) = (float)b;
+                    index3D(img.channels(), img.rows, img.cols, inputBlob_fxPt.data, c, i, j).SetParam(32, 16);
+                }
+            }
+        } 
+        network_fxPt->m_cnn[0]->m_inputDepth     = inputBlob_fxPt.depth;
+        network_fxPt->m_cnn[0]->m_numInputRows   = inputBlob_fxPt.numRows;
+        network_fxPt->m_cnn[0]->m_numInputCols   = inputBlob_fxPt.numCols;
+        network_fxPt->m_cnn[0]->m_blob.data      = inputBlob_fxPt.data;
+        network_fxPt->Forward(beginLayer, endLayer);
+    
+        fd.open("output_espresso_fxPt.txt");
+        if(network_fxPt->m_cnn[endLayerIdx]->m_blob.depth > 1 && network_fxPt->m_cnn[endLayerIdx]->m_blob.numRows > 1 && network_fxPt->m_cnn[endLayerIdx]->m_blob.numCols > 1) {
+            for(int i = 0; i < network_fxPt->m_cnn[endLayerIdx]->m_blob.depth; i++) {
+                for(int j = 0; j < network_fxPt->m_cnn[endLayerIdx]->m_blob.numRows; j++) {
+                    for(int k = 0; k < network_fxPt->m_cnn[endLayerIdx]->m_blob.numCols; k++) {
+                        fd << index3D(  
+                                        network_fxPt->m_cnn[endLayerIdx]->m_blob.depth, 
+                                        network_fxPt->m_cnn[endLayerIdx]->m_blob.numRows, 
+                                        network_fxPt->m_cnn[endLayerIdx]->m_blob.numCols, 
+                                        network_fxPt->m_cnn[endLayerIdx]->m_blob.data, i, j, k
+                                     ).toFloat() << " ";
+                    }
+                    fd << endl;
+                }
+                fd << endl << endl << endl;
+            }
+        } else {
+            for(int i = 0; i < network_fxPt->m_cnn[endLayerIdx]->m_blob.depth; i++) {
+                fd << network_fxPt->m_cnn[endLayerIdx]->m_blob.data[i].toFloat() << endl;
+            }
+        }
+        fd.close();
     }
     
 

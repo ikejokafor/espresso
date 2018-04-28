@@ -111,8 +111,8 @@ void RELULayer<FixedPoint>::ComputeLayer() {
 
 	// output
 	FixedPoint *dataout = this->m_topLayers[0]->m_blob.data;
-    FixedPoint zero(32, 16, 0, false);
-   
+    FixedPoint zero(this->m_fxPtLength, this->m_numFracBits, 0, false);
+
 	for (int m = 0; m < this->m_outputDepth; m++) {
 		for (int x = 0; x < this->m_numOutputRows; x++) {
 			for(int y = 0; y < this->m_numOutputCols; y++) {

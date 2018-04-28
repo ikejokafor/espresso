@@ -104,7 +104,7 @@ void ConvolutionLayer<FixedPoint>::ComputeLayerParam() {
 	this->m_blob.numCols = this->m_numOutputCols;
 	this->m_blob.data = (FixedPoint*)malloc(this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols * sizeof(FixedPoint));
     for(int i = 0; i < (this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols); i++) {
-        this->m_blob.data[i].SetParam(32, 16);
+        this->m_blob.data[i].SetParam(this->m_fxPtLength, this->m_numFracBits);
     }
     
 }

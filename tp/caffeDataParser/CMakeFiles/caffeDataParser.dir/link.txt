@@ -1,0 +1,2 @@
+/usr/bin/ar qc libcaffeDataParser.a  CMakeFiles/caffeDataParser.dir/src/caffe.pb.cc.o CMakeFiles/caffeDataParser.dir/src/caffeDataParser.cpp.o
+/usr/bin/ranlib libcaffeDataParser.a

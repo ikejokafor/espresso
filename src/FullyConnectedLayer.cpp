@@ -80,6 +80,32 @@ void FullyConnectedLayer<DType>::ComputeLayerParam() {
 }
 
 
+template <>
+void FullyConnectedLayer<FixedPoint>::ComputeLayerParam() {
+	// input size
+	this->m_inputDepth = this->m_bottomLayers[0]->m_outputDepth;
+	this->m_numInputRows = this->m_bottomLayers[0]->m_numOutputRows;
+	this->m_numInputCols = this->m_bottomLayers[0]->m_numOutputCols;
+
+	// output size
+	this->m_numOutputRows = 1;
+	this->m_numOutputCols = 1;
+    
+    // kernel depth
+    this->m_kernelDepth = this->m_inputDepth * this->m_numInputRows * this->m_numInputCols;
+    this->m_numKernels = this->m_outputDepth;
+    
+	// create output blob
+	this->m_blob.depth = this->m_outputDepth;
+	this->m_blob.numRows = this->m_numOutputRows;
+	this->m_blob.numCols = this->m_numOutputCols;
+	this->m_blob.data = (FixedPoint*)malloc(this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols * sizeof(FixedPoint));
+    for(int i = 0; i < (this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols); i++) {
+        this->m_blob.data[i].SetParam(this->m_fxPtLength, this->m_numFracBits);
+    }
+}
+
+
 template <typename DType>
 void FullyConnectedLayer<DType>::ComputeLayer() {
 
@@ -98,25 +124,26 @@ void FullyConnectedLayer<DType>::ComputeLayer() {
 
 }
 
+
 template <>
 void FullyConnectedLayer<FixedPoint>::ComputeLayer() {
 
-    // TODO:
 	// get input
-	//DType *datain = this->m_bottomLayers[0]->m_blob.data;
-    //
-	//// output
-	//DType *dataout = this->m_topLayers[0]->m_blob.data;
-    //
-	//for (int m = 0; m < this->m_numKernels; m++) {
-    //    dataout[m] = this->m_biasData[m];
-    //    for (int k = 0; k < this->m_kernelDepth; k++) {
-    //        dataout[m] += datain[k] * index2D(this->m_numKernels, this->m_kernelDepth, this->m_filterData, m, k);
-    //    }
-	//}
+	FixedPoint *datain = this->m_bottomLayers[0]->m_blob.data;
+    
+	// output
+	FixedPoint *dataout = this->m_topLayers[0]->m_blob.data;
+    
+	for(int m = 0; m < this->m_numKernels; m++) {
+        dataout[m] = this->m_biasData[m];
+        for (int k = 0; k < this->m_kernelDepth; k++) {
+            FixedPoint product = datain[k] * index2D(this->m_numKernels, this->m_kernelDepth, this->m_filterData, m, k);
+            product.SetParam(this->m_fxPtLength, this->m_numFracBits);
+            dataout[m] += product;
+        }
+	}
 
 }
-
 
 template class FullyConnectedLayer<float>;
 template class FullyConnectedLayer<FixedPoint>;

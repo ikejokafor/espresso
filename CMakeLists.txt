@@ -115,7 +115,7 @@ add_dependencies(${TARGET_NAME} fixedPoint)
 
 # BEGIN Debug / Release Settings --------------------------------------------------------------------------------------------------------------------
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
+    set(CMAKE_BUILD_TYPE Release)
 endif()
 set(CMAKLE_CXX_FLAGS_DEBUG "-g")
 set(CMAKLE_CXX_FLAGS_RELEASE "-O3")
