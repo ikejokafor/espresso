@@ -27,6 +27,12 @@ struct Blob_t {
 };
 
 
+typedef enum {
+    FLOAT = 0,
+    FIXED = 1
+} precision_t;
+
+
 namespace espresso {
     //	LayerTypes:
     //		Input
@@ -38,7 +44,6 @@ namespace espresso {
     //		InnerProduct
     //		Softmax
     //		Concat
-    //      Split
     
     template <typename DType>
     struct layerInfo_t {
