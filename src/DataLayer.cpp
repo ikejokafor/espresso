@@ -4,50 +4,52 @@ using namespace std;
 
 template <typename DType>
 DataLayer<DType>::DataLayer	(
-                                    string layerName,
-                                    vector<string> topLayerNames,
-                                    vector<string> bottomLayerNames,
-                                    string layerType,
-                                    int numInputRows,
-                                    int numInputCols,
-                                    int inputDepth,
-                                    int outputDepth,
-                                    int numKernelRows,
-                                    int numKernelCols,
-                                    int stride,
-                                    int padding,
-                                    bool globalPooling,
-                                    DType *filterData,
-                                    DType *biasData,
-                                    int group,
-                                    int localSize,
-                                    float alpha,
-                                    float beta,
-                                    int fxPtLength,
-                                    int numFracBits
-                                ) : Layer<DType>	(	
-                                                        layerName,
-                                                        topLayerNames,
-                                                        bottomLayerNames,
-                                                        layerType,
-                                                        numInputRows,
-                                                        numInputCols,
-                                                        inputDepth,
-                                                        outputDepth,
-                                                        numKernelRows,
-                                                        numKernelCols,
-                                                        stride,
-                                                        padding,
-                                                        globalPooling,
-                                                        filterData,
-                                                        biasData,
-                                                        group,
-                                                        localSize,
-                                                        alpha,
-                                                        beta,
-                                                        fxPtLength,
-                                                        numFracBits
-                                                    ) {
+                                precision_t precision,
+                                string layerName,
+                                vector<string> topLayerNames,
+                                vector<string> bottomLayerNames,
+                                string layerType,
+                                int numInputRows,
+                                int numInputCols,
+                                int inputDepth,
+                                int outputDepth,
+                                int numKernelRows,
+                                int numKernelCols,
+                                int stride,
+                                int padding,
+                                bool globalPooling,
+                                DType *filterData,
+                                DType *biasData,
+                                int group,
+                                int localSize,
+                                float alpha,
+                                float beta,
+                                int fxPtLength,
+                                int numFracBits
+                            ) : Layer<DType>	(	
+                                                    precision,
+                                                    layerName,
+                                                    topLayerNames,
+                                                    bottomLayerNames,
+                                                    layerType,
+                                                    numInputRows,
+                                                    numInputCols,
+                                                    inputDepth,
+                                                    outputDepth,
+                                                    numKernelRows,
+                                                    numKernelCols,
+                                                    stride,
+                                                    padding,
+                                                    globalPooling,
+                                                    filterData,
+                                                    biasData,
+                                                    group,
+                                                    localSize,
+                                                    alpha,
+                                                    beta,
+                                                    fxPtLength,
+                                                    numFracBits
+                                                ) {
 }
 
 
@@ -73,4 +75,4 @@ void DataLayer<DType>::ComputeLayer() {}
 
 
 template class DataLayer<float>;
-template class DataLayer<FixedPoint>;
+template class DataLayer<FixedPoint_t>;

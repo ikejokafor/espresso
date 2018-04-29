@@ -68,6 +68,7 @@ namespace espresso {
         float beta;
         int fxPtLength;
         int fxPtnumFracBits;
+        precision_t precision;
     };
 }
 
@@ -88,6 +89,7 @@ class Layer {
 
     public:
            Layer  (  
+                            precision_t precision = FLOAT, 
                             std::string layerName = " ",
                             std::vector<std::string> topLayerNames = std::vector<std::string>(),
                             std::vector<std::string> bottomLayerNames = std::vector<std::string>(),
@@ -141,6 +143,7 @@ class Layer {
         int m_localSize;
         float m_alpha;
         float m_beta;
+        precision_t m_precision;
         
 		Blob_t<DType> m_blob;
 		std::vector<Layer<DType>*> m_topLayers;

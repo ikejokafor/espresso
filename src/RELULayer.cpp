@@ -3,51 +3,53 @@ using namespace std;
 
 
 template <typename DType>
-RELULayer<DType>::RELULayer(
-                                    string layerName,
-                                    vector<string> topLayerNames,
-                                    vector<string> bottomLayerNames,
-                                    string layerType,
-                                    int numInputRows,
-                                    int numInputCols,
-                                    int inputDepth,
-                                    int outputDepth,
-                                    int numKernelRows,
-                                    int numKernelCols,
-                                    int stride,
-                                    int padding,
-                                    bool globalPooling,
-                                    DType *filterData,
-                                    DType *biasData,
-                                    int group,
-                                    int localSize,
-                                    float alpha,
-                                    float beta,
-                                    int fxPtLength,
-                                    int numFracBits
-                                ) : Layer<DType>	(	
-                                                        layerName,
-                                                        topLayerNames,
-                                                        bottomLayerNames,
-                                                        layerType,
-                                                        numInputRows,
-                                                        numInputCols,
-                                                        inputDepth,
-                                                        outputDepth,
-                                                        numKernelRows,
-                                                        numKernelCols,
-                                                        stride,
-                                                        padding,
-                                                        globalPooling,
-                                                        filterData,
-                                                        biasData,
-                                                        group,
-                                                        localSize,
-                                                        alpha,
-                                                        beta,
-                                                        fxPtLength,
-                                                        numFracBits
-                                                    ) {
+RELULayer<DType>::RELULayer (
+                                precision_t precision,
+                                string layerName,
+                                vector<string> topLayerNames,
+                                vector<string> bottomLayerNames,
+                                string layerType,
+                                int numInputRows,
+                                int numInputCols,
+                                int inputDepth,
+                                int outputDepth,
+                                int numKernelRows,
+                                int numKernelCols,
+                                int stride,
+                                int padding,
+                                bool globalPooling,
+                                DType *filterData,
+                                DType *biasData,
+                                int group,
+                                int localSize,
+                                float alpha,
+                                float beta,
+                                int fxPtLength,
+                                int numFracBits  
+                            ) : Layer<DType>	(	
+                                                    precision,
+                                                    layerName,
+                                                    topLayerNames,
+                                                    bottomLayerNames,
+                                                    layerType,
+                                                    numInputRows,
+                                                    numInputCols,
+                                                    inputDepth,
+                                                    outputDepth,
+                                                    numKernelRows,
+                                                    numKernelCols,
+                                                    stride,
+                                                    padding,
+                                                    globalPooling,
+                                                    filterData,
+                                                    biasData,
+                                                    group,
+                                                    localSize,
+                                                    alpha,
+                                                    beta,
+                                                    fxPtLength,
+                                                    numFracBits
+                                                ) {
 }
 
 
@@ -100,31 +102,5 @@ void RELULayer<DType>::ComputeLayer() {
 }
 
 
-template <>
-void RELULayer<FixedPoint>::ComputeLayer() {
-
-	// get input
-	FixedPoint *datain = this->m_bottomLayers[0]->m_blob.data;
-	int numInputBlobRows = this->m_bottomLayers[0]->m_blob.numRows;
-	int numInputBlobCols = this->m_bottomLayers[0]->m_blob.numCols;
-	int inputBlobDepth = this->m_bottomLayers[0]->m_blob.depth;
-
-	// output
-	FixedPoint *dataout = this->m_topLayers[0]->m_blob.data;
-    FixedPoint zero(this->m_fxPtLength, this->m_numFracBits, 0, false);
-
-	for (int m = 0; m < this->m_outputDepth; m++) {
-		for (int x = 0; x < this->m_numOutputRows; x++) {
-			for(int y = 0; y < this->m_numOutputCols; y++) {
-				index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = (
-					index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, x, y) < zero 
-				) ? zero : index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, x, y);
-			}
-		}
-	}
-
-}
-
-
 template class RELULayer<float>;
-template class RELULayer<FixedPoint>;
+template class RELULayer<FixedPoint_t>;

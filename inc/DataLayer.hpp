@@ -10,6 +10,7 @@ class DataLayer : public Layer<DType> {
 	
 	public:
         DataLayer	(
+                            precision_t precision = FLOAT,  
                             std::string layerName = " ",
                             std::vector<std::string> topLayerNames = std::vector<std::string>(),
                             std::vector<std::string> bottomLayerNames = std::vector<std::string>(),
@@ -25,12 +26,12 @@ class DataLayer : public Layer<DType> {
                             bool globalPooling = false,
                             DType *filterData = NULL,
                             DType *biasData = NULL,
-                            int group = 1,                            
+                            int group = 1,
                             int localSize = 5,
                             float alpha = 0.0001f,
                             float beta = 0.75f,
                             int fxPtLength = 32,
-                            int numFracBits = 16
+                            int numFracBits = 16       
                     );
         ~DataLayer();               
         void ComputeLayerParam();

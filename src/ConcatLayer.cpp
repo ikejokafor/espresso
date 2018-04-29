@@ -4,6 +4,7 @@ using namespace std;
 
 template <typename DType>
 ConcatLayer<DType>::ConcatLayer (
+                                    precision_t precision,
                                     string layerName,
                                     vector<string> topLayerNames,
                                     vector<string> bottomLayerNames,
@@ -26,6 +27,7 @@ ConcatLayer<DType>::ConcatLayer (
                                     int fxPtLength,
                                     int numFracBits
                                 ) : Layer<DType>	(	
+                                                        precision,
                                                         layerName,
                                                         topLayerNames,
                                                         bottomLayerNames,
@@ -95,4 +97,4 @@ void ConcatLayer<DType>::ComputeLayer() {
 
 
 template class ConcatLayer<float>;
-template class ConcatLayer<FixedPoint>;
+template class ConcatLayer<FixedPoint_t>;

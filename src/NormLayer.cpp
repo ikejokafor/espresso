@@ -4,50 +4,52 @@ using namespace std;
 
 template <typename DType>
 NormLayer<DType>::NormLayer	(
-                                    string layerName,
-                                    vector<string> topLayerNames,
-                                    vector<string> bottomLayerNames,
-                                    string layerType,
-                                    int numInputRows,
-                                    int numInputCols,
-                                    int inputDepth,
-                                    int outputDepth,
-                                    int numKernelRows,
-                                    int numKernelCols,
-                                    int stride,
-                                    int padding,
-                                    bool globalPooling,
-                                    DType *filterData,
-                                    DType *biasData,
-                                    int group,
-                                    int localSize,
-                                    float alpha,
-                                    float beta,
-                                    int fxPtLength,
-                                    int numFracBits
-                                ) : Layer<DType>	(	
-                                                        layerName,
-                                                        topLayerNames,
-                                                        bottomLayerNames,
-                                                        layerType,
-                                                        numInputRows,
-                                                        numInputCols,
-                                                        inputDepth,
-                                                        outputDepth,
-                                                        numKernelRows,
-                                                        numKernelCols,
-                                                        stride,
-                                                        padding,
-                                                        globalPooling,
-                                                        filterData,
-                                                        biasData,
-                                                        group,
-                                                        localSize,
-                                                        alpha,
-                                                        beta,
-                                                        fxPtLength,
-                                                        numFracBits
-                                                    ) {
+                                precision_t precision,
+                                string layerName,
+                                vector<string> topLayerNames,
+                                vector<string> bottomLayerNames,
+                                string layerType,
+                                int numInputRows,
+                                int numInputCols,
+                                int inputDepth,
+                                int outputDepth,
+                                int numKernelRows,
+                                int numKernelCols,
+                                int stride,
+                                int padding,
+                                bool globalPooling,
+                                DType *filterData,
+                                DType *biasData,
+                                int group,
+                                int localSize,
+                                float alpha,
+                                float beta,
+                                int fxPtLength,
+                                int numFracBits  
+                            ) : Layer<DType>	(	
+                                                    precision,
+                                                    layerName,
+                                                    topLayerNames,
+                                                    bottomLayerNames,
+                                                    layerType,
+                                                    numInputRows,
+                                                    numInputCols,
+                                                    inputDepth,
+                                                    outputDepth,
+                                                    numKernelRows,
+                                                    numKernelCols,
+                                                    stride,
+                                                    padding,
+                                                    globalPooling,
+                                                    filterData,
+                                                    biasData,
+                                                    group,
+                                                    localSize,
+                                                    alpha,
+                                                    beta,
+                                                    fxPtLength,
+                                                    numFracBits
+                                                ) {
 }
 
 
@@ -130,13 +132,5 @@ void NormLayer<DType>::ComputeLayer() {
 }
 
 
-template <>
-void NormLayer<FixedPoint>::ComputeLayer() {
-
-
-
-}
-
-
 template class NormLayer<float>;
-template class NormLayer<FixedPoint>;
+template class NormLayer<FixedPoint_t>;

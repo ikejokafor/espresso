@@ -3,7 +3,8 @@ using namespace std;
 
 
 template <typename DType>
-SoftMaxLayer<DType>::SoftMaxLayer	(
+SoftMaxLayer<DType>::SoftMaxLayer   (
+                                    precision_t precision,
                                     string layerName,
                                     vector<string> topLayerNames,
                                     vector<string> bottomLayerNames,
@@ -24,30 +25,31 @@ SoftMaxLayer<DType>::SoftMaxLayer	(
                                     float alpha,
                                     float beta,
                                     int fxPtLength,
-                                    int numFracBits
+                                    int numFracBits  
                                 ) : Layer<DType>	(	
-                                                        layerName,
-                                                        topLayerNames,
-                                                        bottomLayerNames,
-                                                        layerType,
-                                                        numInputRows,
-                                                        numInputCols,
-                                                        inputDepth,
-                                                        outputDepth,
-                                                        numKernelRows,
-                                                        numKernelCols,
-                                                        stride,
-                                                        padding,
-                                                        globalPooling,
-                                                        filterData,
-                                                        biasData,
-                                                        group,
-                                                        localSize,
-                                                        alpha,
-                                                        beta,
-                                                        fxPtLength,
-                                                        numFracBits
-                                                    ) {
+                                                    precision,
+                                                    layerName,
+                                                    topLayerNames,
+                                                    bottomLayerNames,
+                                                    layerType,
+                                                    numInputRows,
+                                                    numInputCols,
+                                                    inputDepth,
+                                                    outputDepth,
+                                                    numKernelRows,
+                                                    numKernelCols,
+                                                    stride,
+                                                    padding,
+                                                    globalPooling,
+                                                    filterData,
+                                                    biasData,
+                                                    group,
+                                                    localSize,
+                                                    alpha,
+                                                    beta,
+                                                    fxPtLength,
+                                                    numFracBits
+                                                ) {
 }
 
 template <typename DType>
@@ -149,11 +151,5 @@ void SoftMaxLayer<DType>::ComputeLayer() { // made with dcNet in mind, may need 
 }
 
 
-template <>
-void SoftMaxLayer<FixedPoint>::ComputeLayer() { // made with dcNet in mind, may need to change for general Neural networks with common softmax layers
-
-}
-
-
 template class SoftMaxLayer<float>;
-template class SoftMaxLayer<FixedPoint>;
+template class SoftMaxLayer<FixedPoint_t>;

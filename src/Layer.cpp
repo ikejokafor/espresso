@@ -4,28 +4,30 @@ using namespace std;
 
 template <typename DType>
 Layer<DType>::Layer   (  
-					string layerName,
-					vector<string> topLayerNames,
-					vector<string> bottomLayerNames,
-					string layerType,
-					int numInputRows,
-					int numInputCols,
-					int inputDepth,
-					int outputDepth,
-					int numKernelRows,
-					int numKernelCols,
-					int stride,
-					int padding,
-                    bool globalPooling,
-					DType *filterData,
-					DType *biasData,
-                    int group,
-                    int localSize,
-                    float alpha,
-                    float beta,
-                    int fxPtLength,
-                    int numFracBits                    
+                        precision_t precision,
+                        string layerName,
+                        vector<string> topLayerNames,
+                        vector<string> bottomLayerNames,
+                        string layerType,
+                        int numInputRows,
+                        int numInputCols,
+                        int inputDepth,
+                        int outputDepth,
+                        int numKernelRows,
+                        int numKernelCols,
+                        int stride,
+                        int padding,
+                        bool globalPooling,
+                        DType *filterData,
+                        DType *biasData,
+                        int group,
+                        int localSize,
+                        float alpha,
+                        float beta,
+                        int fxPtLength,
+                        int numFracBits                 
                 ) {
+    m_precision         = precision;
     m_layerName         = layerName;      
     m_topLayerNames     = topLayerNames;
     m_bottomLayerNames  = bottomLayerNames; 
@@ -51,7 +53,6 @@ Layer<DType>::Layer   (
     m_blob.numRows		= 1;
     m_blob.numCols		= 1;
     m_blob.depth		= 1;
-
 }
 
 
@@ -98,4 +99,4 @@ void Layer<FixedPoint>::SetnumFracBits(int value) {
 
 
 template class Layer<float>;
-template class Layer<FixedPoint>;
+template class Layer<FixedPoint_t>;

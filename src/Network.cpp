@@ -13,6 +13,7 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 	for (uint32_t i = 0; i < layerInfo.size(); i++) {
 		if (layerInfo[i].layerType == "Input") {
 			m_cnn.push_back(new DataLayer<DType>(
+                layerInfo[i].precision,
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -23,6 +24,7 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 			));
 		} else if(layerInfo[i].layerType == "Convolution") {
 			m_cnn.push_back(new ConvolutionLayer<DType>(
+                layerInfo[i].precision,
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -42,6 +44,7 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 			));
 		} else if(layerInfo[i].layerType == "ReLU") {
 			m_cnn.push_back(new RELULayer<DType>(
+                layerInfo[i].precision,
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -60,6 +63,7 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 			));
         } else if(layerInfo[i].layerType == "LRN") {
 			m_cnn.push_back(new NormLayer<DType>(
+                layerInfo[i].precision,
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -82,6 +86,7 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 			));
 		} else if(layerInfo[i].layerType == "Pooling_MAX" || layerInfo[i].layerType == "Pooling_AVE") {
 			m_cnn.push_back(new PoolingLayer<DType>(
+                layerInfo[i].precision,
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -98,6 +103,7 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 			));
 		} else if(layerInfo[i].layerType == "InnerProduct") {
 			m_cnn.push_back(new FullyConnectedLayer<DType>(
+                layerInfo[i].precision,
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -116,6 +122,7 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 			));
         } else if(layerInfo[i].layerType == "Concat") {
 			m_cnn.push_back(new ConcatLayer<DType>(
+                layerInfo[i].precision,
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -123,6 +130,7 @@ Network<DType>::Network(vector<layerInfo_t<DType>> &layerInfo) {
 			));
 		} else if(layerInfo[i].layerType == "Softmax") {
 			m_cnn.push_back(new SoftMaxLayer<DType>(
+                layerInfo[i].precision,
 				layerInfo[i].layerName,
 				layerInfo[i].topLayerNames,
 				layerInfo[i].bottomLayerNames,
@@ -268,6 +276,28 @@ void Network<DType>::Forward(string start, string end) {
     // Forward Propagation
 	for (int i = startIdx; i < (endIdx + 1); i++) {
 		m_cnn[i]->ComputeLayer();
+        if(i > 0 && (m_cnn[i]->m_layerType == "Convolution" || m_cnn[i]->m_layerType == "InnerProduct")) {
+            FixedPoint::SetParam(   64, 
+                                    32, 
+                                    32, 
+                                    16, 
+                                    m_cnn[i]->m_blob.data,
+                                    m_cnn[i]->m_blob.numRows * m_cnn[i]->m_blob.numCols * m_cnn[i]->m_blob.depth
+                                );
+            
+
+            // if(m_cnn[i].m_precision == FIXED && m_cnn[i].m_topLayers[0].m_precision == FIXED
+            //     && m_cnn[i].m_fxPtLength != m_cnn[i].m_topLayers[0].m_fxPtLength && m_cnn[i].m_numFracBits != m_cnn[i].m_topLayers[0].m_numFracBits) {
+            //     FixedPoint::SetParam(   m_cnn[i]->m_fxPtLength, 
+            //                             m_cnn[i]->m_numFracBits, 
+            //                             m_cnn[i]->m_topLayers[0].m_fxPtLength, 
+            //                             m_cnn[i]->m_topLayers[0].m_numFracBits, 
+            //                             m_cnn[i]->m_blob.data,
+            //                             m_cnn[i]->m_blob.numRows * m_cnn[i].m_blob.numCols * m_cnn[i].m_blob.depth
+            //                         );
+        // }
+        }
+        
         cout << "Finished Layer" << " " << m_cnn[i]->m_layerName << endl;
 	}
 }
@@ -285,4 +315,4 @@ int Network<DType>::ReturnLayerIdx(string name) {
 
 
 template class Network<float>;
-template class Network<FixedPoint>;
+template class Network<FixedPoint_t>;

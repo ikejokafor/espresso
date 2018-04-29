@@ -10,6 +10,7 @@ class NormLayer : public Layer<DType> {
 	
 	public:
         NormLayer	(
+                            precision_t precision = FLOAT,  
                             std::string layerName = " ",
                             std::vector<std::string> topLayerNames = std::vector<std::string>(),
                             std::vector<std::string> bottomLayerNames = std::vector<std::string>(),
@@ -30,7 +31,7 @@ class NormLayer : public Layer<DType> {
                             float alpha = 0.0001f,
                             float beta = 0.75f,
                             int fxPtLength = 32,
-                            int numFracBits = 16                            
+                            int numFracBits = 16                                  
                     );  
         ~NormLayer();      
         void ComputeLayerParam();  
