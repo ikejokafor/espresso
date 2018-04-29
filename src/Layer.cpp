@@ -2,8 +2,7 @@
 using namespace std;
 
 
-template <typename DType>
-Layer<DType>::Layer   (  
+Layer::Layer   (  
                         precision_t precision,
                         string layerName,
                         vector<string> topLayerNames,
@@ -18,8 +17,10 @@ Layer<DType>::Layer   (
                         int stride,
                         int padding,
                         bool globalPooling,
-                        DType *filterData,
-                        DType *biasData,
+                        float *flFilterData,
+                        float *flBiasData,
+                        FixedPoint_t *fxFilterData,
+                        FixedPoint_t *fxBiasData,                        
                         int group,
                         int localSize,
                         float alpha,
@@ -43,8 +44,10 @@ Layer<DType>::Layer   (
     m_stride            = stride;
     m_padding           = padding;
     m_globalPooling     = globalPooling;
-    m_filterData        = filterData;
-    m_biasData          = biasData;
+    m_flFilterData      = flFilterData; 
+    m_flBiasData        = flBiasData;   
+    m_fxFilterData      = fxFilterData; 
+    m_fxBiasData        = fxBiasData;   
     m_group             = group;
     m_localSize         = localSize; 
     m_alpha             = alpha;     
@@ -53,53 +56,34 @@ Layer<DType>::Layer   (
     m_dinNumFracBits    = dinNumFracBits;
     m_whtFxPtLength     = whtFxPtLength;         
     m_whtNumFracBits    = whtNumFracBits;    
-    m_blob.data			= NULL;
+    m_blob.flData	    = NULL;
+    m_blob.fxData	    = NULL;
     m_blob.numRows		= 1;
     m_blob.numCols		= 1;
     m_blob.depth		= 1;
 }
 
 
-template <typename DType>
-Layer<DType>::~Layer() {
-	if(this->m_filterData) {
-		free(this->m_filterData);
-	}
-	if(this->m_biasData) {
-		free(this->m_biasData);
-	}
-}
-
-
-template <>
-Layer<FixedPoint>::~Layer() {
+Layer::~Layer() {
 
 }
 
 
-template <typename DType>
-void Layer<DType>::SetDinFxPtLength(int value) {
-    this->m_dinFxPtLength = value;
+void Layer::SetDinFxPtLength(int value) {
+    m_dinFxPtLength = value;
 }
 
 
-template <typename DType>
-void Layer<DType>::SetDinNumFracBits(int value) {
-    this->m_dinNumFracBits = value;
+void Layer::SetDinNumFracBits(int value) {
+    m_dinNumFracBits = value;
 }
 
 
-template <typename DType>
-void Layer<DType>::SetWhtFxPtLength(int value) {
-    this->m_whtFxPtLength = value;
+void Layer::SetWhtFxPtLength(int value) {
+    m_whtFxPtLength = value;
 }
 
 
-template <typename DType>
-void Layer<DType>::SetWhtNumFracBits(int value) {
-    this->m_whtNumFracBits = value;
+void Layer::SetWhtNumFracBits(int value) {
+    m_whtNumFracBits = value;
 }
-
-
-template class Layer<float>;
-template class Layer<FixedPoint_t>;

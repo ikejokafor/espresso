@@ -5,8 +5,7 @@
 #include "Layer.hpp"
 
 
-template <typename DType>
-class ConcatLayer : public Layer<DType> {
+class ConcatLayer : public Layer {
 	
 	public:
         ConcatLayer		(
@@ -24,8 +23,10 @@ class ConcatLayer : public Layer<DType> {
                             int stride = 1,
                             int padding = 0,
                             bool globalPooling = false,
-                            DType *filterData = NULL,
-                            DType *biasData = NULL,
+                            float *flFilterData = NULL,
+                            float *flBiasData = NULL,
+                            FixedPoint_t *fxFilterData = NULL,
+                            FixedPoint_t *fxBiasData = NULL,
                             int group = 1,
                             int localSize = 5,
                             float alpha = 0.0001f,

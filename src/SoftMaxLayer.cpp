@@ -2,108 +2,109 @@
 using namespace std;
 
 
-template <typename DType>
-SoftMaxLayer<DType>::SoftMaxLayer   (
-                                        precision_t precision,
-                                        string layerName,
-                                        vector<string> topLayerNames,
-                                        vector<string> bottomLayerNames,
-                                        string layerType,
-                                        int numInputRows,
-                                        int numInputCols,
-                                        int inputDepth,
-                                        int outputDepth,
-                                        int numKernelRows,
-                                        int numKernelCols,
-                                        int stride,
-                                        int padding,
-                                        bool globalPooling,
-                                        DType *filterData,
-                                        DType *biasData,
-                                        int group,
-                                        int localSize,
-                                        float alpha,
-                                        float beta,
-                                        int dinFxPtLength,
-                                        int dinNumFracBits,
-                                        int whtFxPtLength,
-                                        int whtNumFracBits
-                                    ) : Layer<DType>	(	
-                                                        precision,
-                                                        layerName,
-                                                        topLayerNames,
-                                                        bottomLayerNames,
-                                                        layerType,
-                                                        numInputRows,
-                                                        numInputCols,
-                                                        inputDepth,
-                                                        outputDepth,
-                                                        numKernelRows,
-                                                        numKernelCols,
-                                                        stride,
-                                                        padding,
-                                                        globalPooling,
-                                                        filterData,
-                                                        biasData,
-                                                        group,
-                                                        localSize,
-                                                        alpha,
-                                                        beta,
-                                                        dinFxPtLength,
-                                                        dinNumFracBits,
-                                                        whtFxPtLength,
-                                                        whtNumFracBits
-                                                    ) {
+SoftMaxLayer::SoftMaxLayer  (
+                                precision_t precision,
+                                string layerName,
+                                vector<string> topLayerNames,
+                                vector<string> bottomLayerNames,
+                                string layerType,
+                                int numInputRows,
+                                int numInputCols,
+                                int inputDepth,
+                                int outputDepth,
+                                int numKernelRows,
+                                int numKernelCols,
+                                int stride,
+                                int padding,
+                                bool globalPooling,
+                                float *flFilterData,
+                                float *flBiasData,  
+                                FixedPoint_t *fxFilterData,
+                                FixedPoint_t *fxBiasData,                                    
+                                int group,
+                                int localSize,
+                                float alpha,
+                                float beta,
+                                int dinFxPtLength,
+                                int dinNumFracBits,
+                                int whtFxPtLength,
+                                int whtNumFracBits
+                            ) : Layer	(	
+                                                    precision,
+                                                    layerName,
+                                                    topLayerNames,
+                                                    bottomLayerNames,
+                                                    layerType,
+                                                    numInputRows,
+                                                    numInputCols,
+                                                    inputDepth,
+                                                    outputDepth,
+                                                    numKernelRows,
+                                                    numKernelCols,
+                                                    stride,
+                                                    padding,
+                                                    globalPooling,
+                                                    flFilterData,
+                                                    flBiasData,                                                          
+                                                    fxFilterData,                                                        
+                                                    fxBiasData,                                                          
+                                                    group,
+                                                    localSize,
+                                                    alpha,
+                                                    beta,
+                                                    dinFxPtLength,
+                                                    dinNumFracBits,
+                                                    whtFxPtLength,
+                                                    whtNumFracBits
+                                                ) {
 }
 
-template <typename DType>
-SoftMaxLayer<DType>::~SoftMaxLayer() {
-    free(this->m_blob.data);
+
+SoftMaxLayer::~SoftMaxLayer() {
+    free(m_blob.flData);
 }
 
 
-template <typename DType>
-void SoftMaxLayer<DType>::ComputeLayerParam() {
+void SoftMaxLayer::ComputeLayerParam() {
 	// input size
-	this->m_inputDepth = this->m_bottomLayers[0]->m_outputDepth;
-	this->m_numInputRows = this->m_bottomLayers[0]->m_numOutputRows;
-	this->m_numInputCols = this->m_bottomLayers[0]->m_numOutputCols;
+	m_inputDepth = m_bottomLayers[0]->m_outputDepth;
+	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;
+	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
 
 	// output size
-	this->m_outputDepth   = this->m_inputDepth;
-	this->m_numOutputCols = this->m_numInputCols;
-	this->m_numOutputRows = this->m_numInputRows;
+	m_outputDepth   = m_inputDepth;
+	m_numOutputCols = m_numInputCols;
+	m_numOutputRows = m_numInputRows;
 
 	// create output blob
-	this->m_blob.depth = this->m_outputDepth;
-	this->m_blob.numRows = this->m_numOutputRows;
-	this->m_blob.numCols = this->m_numOutputCols;
-	this->m_blob.data = (DType*)malloc(this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols * sizeof(DType));
+	m_blob.depth = m_outputDepth;
+	m_blob.numRows = m_numOutputRows;
+	m_blob.numCols = m_numOutputCols;
+	m_blob.flData = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
 }
 
 
-template <typename DType>
-void SoftMaxLayer<DType>::ComputeLayer() { // made with dcNet in mind, may need to change for general Neural networks with common softmax layers
+void SoftMaxLayer::ComputeLayer() { // made with dcNet in mind, may need to change for general Neural networks with common softmax layers
 
 	// get input
-	DType *datain = this->m_bottomLayers[0]->m_blob.data;
-	int numInputBlobRows = this->m_bottomLayers[0]->m_blob.numRows;
-	int numInputBlobCols = this->m_bottomLayers[0]->m_blob.numCols;
-	int inputBlobDepth = this->m_bottomLayers[0]->m_blob.depth;
+	float *datain = m_bottomLayers[0]->m_blob.flData;
+	int numInputBlobRows = m_bottomLayers[0]->m_blob.numRows;
+	int numInputBlobCols = m_bottomLayers[0]->m_blob.numCols;
+	int inputBlobDepth = m_bottomLayers[0]->m_blob.depth;
 
 	// output
-	DType *dataout = this->m_topLayers[0]->m_blob.data;
+	float *dataout = m_topLayers[0]->m_blob.flData;
     
     // adpated from caffe softmax_layer.cpp; Code which sets outer_num_ and inner_num_ will need to change if a softmax layer specifies a softmax axis which is not 1
-    int channels = this->m_inputDepth;
+    int channels = m_inputDepth;
     int outer_num_ = 1;
     int inner_num_ = numInputBlobRows * numInputBlobCols;
     int dim = (inputBlobDepth * numInputBlobRows * numInputBlobCols) / outer_num_;
-    DType *maxs = (DType*)malloc(inner_num_ * sizeof(DType));
-    DType *sums = (DType*)malloc(inner_num_ * sizeof(DType));
+    float *maxs = (float*)malloc(inner_num_ * sizeof(float));
+    float *sums = (float*)malloc(inner_num_ * sizeof(float));
 
     for (int i = 0; i < outer_num_; ++i) {
-        memcpy(maxs, (datain + i * dim), sizeof(DType) * inner_num_);
+        memcpy(maxs, (datain + i * dim), sizeof(float) * inner_num_);
         for (int j = 0; j < channels; j++) {
             for (int k = 0; k < inner_num_; k++) {
                 maxs[k] = std::max(maxs[k],
@@ -112,10 +113,10 @@ void SoftMaxLayer<DType>::ComputeLayer() { // made with dcNet in mind, may need 
         }
     }
     
-    memcpy(dataout, datain, dim * sizeof(DType));
+    memcpy(dataout, datain, dim * sizeof(float));
     
     // subtraction
-    DType *ptr = (DType*)dataout;
+    float *ptr = (float*)dataout;
     for(int i = 0; i < channels; i++) {
         for(int j = 0; j < inner_num_; j++) {
             ptr[j] -= maxs[j];
@@ -124,14 +125,14 @@ void SoftMaxLayer<DType>::ComputeLayer() { // made with dcNet in mind, may need 
     }
     
     // exponentiation
-    ptr = (DType*)dataout;
+    ptr = (float*)dataout;
     for(int i = 0; i < (channels * inner_num_); i++) {
         ptr[i] = exp(ptr[i]);
     }    
     
     // sum after exp
-    ptr = (DType*)dataout;
-    memset(sums, 0,  numInputBlobRows * numInputBlobCols * sizeof(DType));
+    ptr = (float*)dataout;
+    memset(sums, 0,  numInputBlobRows * numInputBlobCols * sizeof(float));
     for(int i = 0; i < channels; i++) {
         for(int j = 0; j < inner_num_; j++) {
             sums[j] += ptr[j];
@@ -141,7 +142,7 @@ void SoftMaxLayer<DType>::ComputeLayer() { // made with dcNet in mind, may need 
     
     
     // division
-    ptr = (DType*)dataout;
+    ptr = (float*)dataout;
     for(int i = 0; i < channels; i++) {
         for(int j = 0; j < inner_num_; j++) {
             ptr[j] /= sums[j];
@@ -153,7 +154,3 @@ void SoftMaxLayer<DType>::ComputeLayer() { // made with dcNet in mind, may need 
     free(sums);
 
 }
-
-
-template class SoftMaxLayer<float>;
-template class SoftMaxLayer<FixedPoint_t>;

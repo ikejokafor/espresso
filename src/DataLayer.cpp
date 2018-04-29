@@ -2,8 +2,7 @@
 using namespace std;
 
 
-template <typename DType>
-DataLayer<DType>::DataLayer	(
+DataLayer::DataLayer	(
                                 precision_t precision,
                                 string layerName,
                                 vector<string> topLayerNames,
@@ -18,8 +17,10 @@ DataLayer<DType>::DataLayer	(
                                 int stride,
                                 int padding,
                                 bool globalPooling,
-                                DType *filterData,
-                                DType *biasData,
+                                float *flFilterData,
+                                float *flBiasData,  
+                                FixedPoint_t *fxFilterData,
+                                FixedPoint_t *fxBiasData, 
                                 int group,
                                 int localSize,
                                 float alpha,
@@ -28,7 +29,7 @@ DataLayer<DType>::DataLayer	(
                                 int dinNumFracBits,
                                 int whtFxPtLength,
                                 int whtNumFracBits
-                            ) : Layer<DType>	(	
+                            ) : Layer	(	
                                                     precision,
                                                     layerName,
                                                     topLayerNames,
@@ -43,8 +44,10 @@ DataLayer<DType>::DataLayer	(
                                                     stride,
                                                     padding,
                                                     globalPooling,
-                                                    filterData,
-                                                    biasData,
+                                                    flFilterData,
+                                                    flBiasData,
+                                                    fxFilterData,
+                                                    fxBiasData,                                                 
                                                     group,
                                                     localSize,
                                                     alpha,
@@ -57,26 +60,20 @@ DataLayer<DType>::DataLayer	(
 }
 
 
-template <typename DType>
-DataLayer<DType>::~DataLayer() {}
+
+DataLayer::~DataLayer() {}
 
 
-template <typename DType>
-void DataLayer<DType>::ComputeLayerParam() {
-	this->m_numOutputRows = this->m_numInputRows;
-	this->m_numOutputCols = this->m_numInputCols;
-	this->m_outputDepth = this->m_inputDepth;
+void DataLayer::ComputeLayerParam() {
+	m_numOutputRows = m_numInputRows;
+	m_numOutputCols = m_numInputCols;
+	m_outputDepth = m_inputDepth;
 
 	// create output blob
-	this->m_blob.depth = this->m_outputDepth;
-	this->m_blob.numRows = this->m_numOutputRows;
-	this->m_blob.numCols = this->m_numOutputCols;
+	m_blob.depth = m_outputDepth;
+	m_blob.numRows = m_numOutputRows;
+	m_blob.numCols = m_numOutputCols;
 }
 
 
-template <typename DType>
-void DataLayer<DType>::ComputeLayer() {}
-
-
-template class DataLayer<float>;
-template class DataLayer<FixedPoint_t>;
+void DataLayer::ComputeLayer() {}

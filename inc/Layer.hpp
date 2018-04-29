@@ -18,9 +18,10 @@
 #include "FixedPoint.hpp"
 
 
-template <typename DType>
+
 struct Blob_t {
-    DType *data;
+    float *flData;
+    FixedPoint_t *fxData;
 	int numRows;
     int numCols;
 	int depth;
@@ -45,8 +46,9 @@ namespace espresso {
     //		Softmax
     //		Concat
     
-    template <typename DType>
+    
     struct layerInfo_t {
+        precision_t precision;       
         std::string layerName;
         std::vector<std::string> topLayerNames;
         std::vector<std::string> bottomLayerNames;
@@ -60,15 +62,18 @@ namespace espresso {
         int stride;
         int padding;
         bool globalPooling;
-        DType *filterData;
-        DType *biasData;
+        float *flFilterData;
+        float *flBiasData;
+        FixedPoint_t *fxFilterData;
+        FixedPoint_t *fxBiasData;
         int group;
         int localSize;
         float alpha;
         float beta;
-        int fxPtLength;
-        int fxPtnumFracBits;
-        precision_t precision;
+        int dinFxPtLength;
+        int dinNumFracBits;
+        int whtFxPtLength;
+        int whtNumFracBits;             
     };
 }
 
@@ -84,7 +89,7 @@ namespace espresso {
 // For an ImageNet training batch of 256 images N = 256. Channel / K is the feature dimension e.g. for RGB images K = 3.
 
 
-template <typename DType>
+
 class Layer {
 
     public:
@@ -103,8 +108,10 @@ class Layer {
                         int stride = 1,
                         int padding = 0,
                         bool globalPooling = false,
-                        DType *filterData = NULL,
-                        DType *biasData = NULL,
+                        float *flFilterData = NULL,
+                        float *flBiasData = NULL,
+                        FixedPoint_t *fxFilterData = NULL,
+                        FixedPoint_t *fxBiasData = NULL,                        
                         int group = 1,
                         int localSize = 5,
                         float alpha = 0.0001f,
@@ -122,6 +129,7 @@ class Layer {
             virtual void SetWhtFxPtLength(int value);
             virtual void SetWhtNumFracBits(int value);
 
+        precision_t m_precision;
 		std::string m_layerName;
 		std::vector<std::string> m_topLayerNames;
 		std::vector<std::string> m_bottomLayerNames;
@@ -139,8 +147,10 @@ class Layer {
 		int m_stride;
 		int m_padding;
         bool m_globalPooling;
-		DType *m_filterData;
-		DType *m_biasData;
+		float *m_flFilterData;
+		float *m_flBiasData;
+		FixedPoint_t *m_fxFilterData;
+		FixedPoint_t *m_fxBiasData;        
         int m_group;
         int m_dinFxPtLength;
         int m_dinNumFracBits;
@@ -149,11 +159,11 @@ class Layer {
         int m_localSize;
         float m_alpha;
         float m_beta;
-        precision_t m_precision;
+
         
-		Blob_t<DType> m_blob;
-		std::vector<Layer<DType>*> m_topLayers;
-		std::vector<Layer<DType>*> m_bottomLayers;
+		Blob_t m_blob;
+		std::vector<Layer*> m_topLayers;
+		std::vector<Layer*> m_bottomLayers;
 
 
     protected:

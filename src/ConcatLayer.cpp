@@ -2,103 +2,128 @@
 using namespace std;
 
 
-template <typename DType>
-ConcatLayer<DType>::ConcatLayer (
-                                    precision_t precision,
-                                    string layerName,
-                                    vector<string> topLayerNames,
-                                    vector<string> bottomLayerNames,
-                                    string layerType,
-                                    int numInputRows,
-                                    int numInputCols,
-                                    int inputDepth,
-                                    int outputDepth,
-                                    int numKernelRows,
-                                    int numKernelCols,
-                                    int stride,
-                                    int padding,
-                                    bool globalPooling,
-                                    DType *filterData,
-                                    DType *biasData,
-                                    int group,
-                                    int localSize,
-                                    float alpha,
-                                    float beta,
-                                    int dinFxPtLength,
-                                    int dinNumFracBits,
-                                    int whtFxPtLength,
-                                    int whtNumFracBits
-                                ) : Layer<DType>	(	
-                                                        precision,
-                                                        layerName,
-                                                        topLayerNames,
-                                                        bottomLayerNames,
-                                                        layerType,
-                                                        numInputRows,
-                                                        numInputCols,
-                                                        inputDepth,
-                                                        outputDepth,
-                                                        numKernelRows,
-                                                        numKernelCols,
-                                                        stride,
-                                                        padding,
-                                                        globalPooling,
-                                                        filterData,
-                                                        biasData,
-                                                        group,
-                                                        localSize,
-                                                        alpha,
-                                                        beta,
-                                                        dinFxPtLength,
-                                                        dinNumFracBits,
-                                                        whtFxPtLength,
-                                                        whtNumFracBits
-                                                    ) {
+
+ConcatLayer::ConcatLayer    (
+                                precision_t precision,
+                                string layerName,
+                                vector<string> topLayerNames,
+                                vector<string> bottomLayerNames,
+                                string layerType,
+                                int numInputRows,
+                                int numInputCols,
+                                int inputDepth,
+                                int outputDepth,
+                                int numKernelRows,
+                                int numKernelCols,
+                                int stride,
+                                int padding,
+                                bool globalPooling,
+                                float *flFilterData,
+                                float *flBiasData,  
+                                FixedPoint_t *fxFilterData,
+                                FixedPoint_t *fxBiasData,                                    
+                                int group,
+                                int localSize,
+                                float alpha,
+                                float beta,
+                                int dinFxPtLength,
+                                int dinNumFracBits,
+                                int whtFxPtLength,
+                                int whtNumFracBits
+                            ) : Layer	(	
+                                                    precision,
+                                                    layerName,
+                                                    topLayerNames,
+                                                    bottomLayerNames,
+                                                    layerType,
+                                                    numInputRows,
+                                                    numInputCols,
+                                                    inputDepth,
+                                                    outputDepth,
+                                                    numKernelRows,
+                                                    numKernelCols,
+                                                    stride,
+                                                    padding,
+                                                    globalPooling,
+                                                    flFilterData,
+                                                    flBiasData,                                                          
+                                                    fxFilterData,                                                        
+                                                    fxBiasData,                                                          
+                                                    group,
+                                                    localSize,
+                                                    alpha,
+                                                    beta,
+                                                    dinFxPtLength,
+                                                    dinNumFracBits,
+                                                    whtFxPtLength,
+                                                    whtNumFracBits
+                                                ) {
 }
 
 
-template <typename DType>
-ConcatLayer<DType>::~ConcatLayer() {
-    free(this->m_blob.data);
+
+ConcatLayer::~ConcatLayer() {
+    if(m_precision == FLOAT) {
+        free(m_blob.flData);
+    } else {
+        free(m_blob.fxData);
+    }
 }
 
 
-template <typename DType>
-void ConcatLayer<DType>::ComputeLayerParam() {
+
+void ConcatLayer::ComputeLayerParam() {
 	// input size
-	this->m_inputDepth = this->m_bottomLayers[0]->m_outputDepth;
-	this->m_numInputRows = this->m_bottomLayers[0]->m_numOutputRows;
-	this->m_numInputCols = this->m_bottomLayers[0]->m_numOutputCols;
+	m_inputDepth = m_bottomLayers[0]->m_outputDepth;
+	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;
+	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
 
 	// output size;
-	this->m_numOutputRows = this->m_numInputRows;
-	this->m_numOutputCols = this->m_numInputCols;
-	this->m_outputDepth	= this->m_bottomLayers[0]->m_outputDepth;
-	for (uint32_t i = 1; i < this->m_bottomLayers.size(); i++) {
-		this->m_outputDepth += this->m_bottomLayers[i]->m_outputDepth;
+	m_numOutputRows = m_numInputRows;
+	m_numOutputCols = m_numInputCols;
+	m_outputDepth	= m_bottomLayers[0]->m_outputDepth;
+	for (uint32_t i = 1; i < m_bottomLayers.size(); i++) {
+		m_outputDepth += m_bottomLayers[i]->m_outputDepth;
 	}
 
 	// create output blob
-	this->m_blob.depth = this->m_outputDepth;
-	this->m_blob.numRows = this->m_numOutputRows;
-	this->m_blob.numCols = this->m_numOutputCols;
-	this->m_blob.data = (DType*)malloc(this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols * sizeof(DType));
+	m_blob.depth = m_outputDepth;
+	m_blob.numRows = m_numOutputRows;
+	m_blob.numCols = m_numOutputCols;
+    if(m_precision == FLOAT) {
+        m_blob.flData = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
+    } else {
+        m_blob.fxData = (FixedPoint_t*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(FixedPoint_t));
+    }
 }
 
 
-template <typename DType>
-void ConcatLayer<DType>::ComputeLayer() {
 
-	// output
-	DType *dataout = this->m_topLayers[0]->m_blob.data;
+void ConcatLayer::ComputeLayer() {
 
-	for (uint32_t i = 0; i < this->m_bottomLayers.size(); i++) {
-		memcpy(dataout, this->m_bottomLayers[i]->m_blob.data, this->m_bottomLayers[i]->m_blob.depth * this->m_bottomLayers[i]->m_blob.numRows * this->m_bottomLayers[i]->m_blob.numCols * sizeof(DType));
-		dataout += (this->m_bottomLayers[i]->m_blob.depth * this->m_bottomLayers[i]->m_blob.numRows * this->m_bottomLayers[i]->m_blob.numCols);
-	}
+    if(m_precision == FLOAT) {
+        
+        // Begin Code -------------------------------------------------------------------------------------------------------------------------------       
+        // output
+        float *dataout = m_topLayers[0]->m_blob.flData;
 
+        for (uint32_t i = 0; i < m_bottomLayers.size(); i++) {
+            memcpy(dataout, m_bottomLayers[i]->m_blob.flData, m_bottomLayers[i]->m_blob.depth * m_bottomLayers[i]->m_blob.numRows * m_bottomLayers[i]->m_blob.numCols * sizeof(float));
+            dataout += (m_bottomLayers[i]->m_blob.depth * m_bottomLayers[i]->m_blob.numRows * m_bottomLayers[i]->m_blob.numCols);
+        }
+        // End Code ---------------------------------------------------------------------------------------------------------------------------------
+
+    } else {
+        
+        // Begin Code -------------------------------------------------------------------------------------------------------------------------------
+        // output
+        FixedPoint_t *dataout = m_topLayers[0]->m_blob.fxData;
+
+        for (uint32_t i = 0; i < m_bottomLayers.size(); i++) {
+            memcpy(dataout, m_bottomLayers[i]->m_blob.fxData, m_bottomLayers[i]->m_blob.depth * m_bottomLayers[i]->m_blob.numRows * m_bottomLayers[i]->m_blob.numCols * sizeof(FixedPoint_t));
+            dataout += (m_bottomLayers[i]->m_blob.depth * m_bottomLayers[i]->m_blob.numRows * m_bottomLayers[i]->m_blob.numCols);
+        }
+        // End Code ---------------------------------------------------------------------------------------------------------------------------------
+        
+    }
 }
-
-
-template class ConcatLayer<float>;
-template class ConcatLayer<FixedPoint_t>;

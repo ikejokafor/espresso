@@ -7,88 +7,103 @@
 using namespace std;
 using namespace cv;
 
-void dataTransform(vector<espresso::layerInfo_t<float>> &networkLayerInfo, vector<caffeDataParser::layerInfo_t> caffeDataParserLayerInfo) {
+
+void dataTransform(vector<espresso::layerInfo_t> &networkLayerInfo, vector<caffeDataParser::layerInfo_t> caffeDataParserLayerInfo, precision_t precision) {
     
-    for(uint32_t i = 0; i < caffeDataParserLayerInfo.size(); i++) {
-        networkLayerInfo[i].layerName               = caffeDataParserLayerInfo[i].layerName;     
-        networkLayerInfo[i].topLayerNames           = caffeDataParserLayerInfo[i].topLayerNames;    
-        networkLayerInfo[i].bottomLayerNames        = caffeDataParserLayerInfo[i].bottomLayerNames; 
-        networkLayerInfo[i].layerType               = caffeDataParserLayerInfo[i].layerType;       
-        networkLayerInfo[i].numInputRows            = caffeDataParserLayerInfo[i].numInputRows;     
-        networkLayerInfo[i].numInputCols            = caffeDataParserLayerInfo[i].numInputCols;     
-        networkLayerInfo[i].inputDepth              = caffeDataParserLayerInfo[i].inputDepth;       
-        networkLayerInfo[i].outputDepth             = caffeDataParserLayerInfo[i].outputDepth;      
-        networkLayerInfo[i].numKernelRows           = caffeDataParserLayerInfo[i].numKernelRows;    
-        networkLayerInfo[i].numKernelCols           = caffeDataParserLayerInfo[i].numKernelCols;    
-        networkLayerInfo[i].stride                  = caffeDataParserLayerInfo[i].stride;          
-        networkLayerInfo[i].padding                 = caffeDataParserLayerInfo[i].padding;
-        networkLayerInfo[i].globalPooling           = caffeDataParserLayerInfo[i].globalPooling;
-        networkLayerInfo[i].group                   = caffeDataParserLayerInfo[i].group;
-        networkLayerInfo[i].localSize               = caffeDataParserLayerInfo[i].localSize;
-        networkLayerInfo[i].alpha                   = caffeDataParserLayerInfo[i].alpha;
-        networkLayerInfo[i].beta                    = caffeDataParserLayerInfo[i].beta;     
-        if(caffeDataParserLayerInfo[i].layerType == "Convolution" || caffeDataParserLayerInfo[i].layerType == "InnerProduct") {
-            networkLayerInfo[i].filterData = (float*)malloc(    caffeDataParserLayerInfo[i].numFilterValues
+    if(precision == FLOAT) {
+        
+        // Begin Code -------------------------------------------------------------------------------------------------------------------------------
+        for(uint32_t i = 0; i < caffeDataParserLayerInfo.size(); i++) {
+            networkLayerInfo[i].precision               = FLOAT; 
+            networkLayerInfo[i].layerName               = caffeDataParserLayerInfo[i].layerName;     
+            networkLayerInfo[i].topLayerNames           = caffeDataParserLayerInfo[i].topLayerNames;    
+            networkLayerInfo[i].bottomLayerNames        = caffeDataParserLayerInfo[i].bottomLayerNames; 
+            networkLayerInfo[i].layerType               = caffeDataParserLayerInfo[i].layerType;       
+            networkLayerInfo[i].numInputRows            = caffeDataParserLayerInfo[i].numInputRows;     
+            networkLayerInfo[i].numInputCols            = caffeDataParserLayerInfo[i].numInputCols;     
+            networkLayerInfo[i].inputDepth              = caffeDataParserLayerInfo[i].inputDepth;       
+            networkLayerInfo[i].outputDepth             = caffeDataParserLayerInfo[i].outputDepth;      
+            networkLayerInfo[i].numKernelRows           = caffeDataParserLayerInfo[i].numKernelRows;    
+            networkLayerInfo[i].numKernelCols           = caffeDataParserLayerInfo[i].numKernelCols;    
+            networkLayerInfo[i].stride                  = caffeDataParserLayerInfo[i].stride;          
+            networkLayerInfo[i].padding                 = caffeDataParserLayerInfo[i].padding;
+            networkLayerInfo[i].globalPooling           = caffeDataParserLayerInfo[i].globalPooling;
+            networkLayerInfo[i].group                   = caffeDataParserLayerInfo[i].group;
+            networkLayerInfo[i].localSize               = caffeDataParserLayerInfo[i].localSize;
+            networkLayerInfo[i].alpha                   = caffeDataParserLayerInfo[i].alpha;
+            networkLayerInfo[i].beta                    = caffeDataParserLayerInfo[i].beta;
+            
+            if(caffeDataParserLayerInfo[i].layerType == "Convolution" || caffeDataParserLayerInfo[i].layerType == "InnerProduct") {
+                networkLayerInfo[i].flFilterData = (float*)malloc(    caffeDataParserLayerInfo[i].numFilterValues
+                                                                    * sizeof(float)
+                                                               );
+                memcpy  (   networkLayerInfo[i].flFilterData, 
+                            caffeDataParserLayerInfo[i].filterData,
+                            caffeDataParserLayerInfo[i].numFilterValues                                 
+                            * sizeof(float)                    
+                        );
+
+                networkLayerInfo[i].flBiasData = (float*)malloc(  caffeDataParserLayerInfo[i].numBiasValues 
                                                                 * sizeof(float)
-                                                           );
-            memcpy  (   networkLayerInfo[i].filterData, 
-                        caffeDataParserLayerInfo[i].filterData,
-                        caffeDataParserLayerInfo[i].numFilterValues                                 
-                        * sizeof(float)                    
-                    );
-
-            networkLayerInfo[i].biasData = (float*)malloc(  caffeDataParserLayerInfo[i].numBiasValues 
-                                                            * sizeof(float)
-                                                         );
-            memcpy  (   networkLayerInfo[i].biasData, 
-                        caffeDataParserLayerInfo[i].biasData, 
-                        caffeDataParserLayerInfo[i].numBiasValues
-                        * sizeof(float)
-                    );
-        } else {
-            networkLayerInfo[i].filterData = NULL;
-            networkLayerInfo[i].biasData = NULL;
-        }
-    }
-}
-
-
-void dataTransform(vector<espresso::layerInfo_t<FixedPoint_t>> &networkLayerInfo, vector<caffeDataParser::layerInfo_t> caffeDataParserLayerInfo) {
-    
-    for(uint32_t i = 0; i < caffeDataParserLayerInfo.size(); i++) {
-        networkLayerInfo[i].precision             = FIXED;    
-        networkLayerInfo[i].layerName             = caffeDataParserLayerInfo[i].layerName;     
-        networkLayerInfo[i].topLayerNames         = caffeDataParserLayerInfo[i].topLayerNames;    
-        networkLayerInfo[i].bottomLayerNames      = caffeDataParserLayerInfo[i].bottomLayerNames; 
-        networkLayerInfo[i].layerType             = caffeDataParserLayerInfo[i].layerType;       
-        networkLayerInfo[i].numInputRows          = caffeDataParserLayerInfo[i].numInputRows;     
-        networkLayerInfo[i].numInputCols          = caffeDataParserLayerInfo[i].numInputCols;     
-        networkLayerInfo[i].inputDepth            = caffeDataParserLayerInfo[i].inputDepth;       
-        networkLayerInfo[i].outputDepth           = caffeDataParserLayerInfo[i].outputDepth;      
-        networkLayerInfo[i].numKernelRows         = caffeDataParserLayerInfo[i].numKernelRows;    
-        networkLayerInfo[i].numKernelCols         = caffeDataParserLayerInfo[i].numKernelCols;    
-        networkLayerInfo[i].stride                = caffeDataParserLayerInfo[i].stride;          
-        networkLayerInfo[i].padding               = caffeDataParserLayerInfo[i].padding;
-        networkLayerInfo[i].localSize             = caffeDataParserLayerInfo[i].localSize;
-        networkLayerInfo[i].alpha                 = caffeDataParserLayerInfo[i].alpha;
-        networkLayerInfo[i].beta                  = caffeDataParserLayerInfo[i].beta;  
-        networkLayerInfo[i].group                 = caffeDataParserLayerInfo[i].group;   
-        networkLayerInfo[i].globalPooling         = caffeDataParserLayerInfo[i].globalPooling;        
-        if(caffeDataParserLayerInfo[i].layerType == "Convolution" || caffeDataParserLayerInfo[i].layerType == "InnerProduct") {
-            networkLayerInfo[i].filterData = new FixedPoint_t[caffeDataParserLayerInfo[i].numFilterValues]; 
-            for(int j = 0; j < caffeDataParserLayerInfo[i].numFilterValues; j++) {
-                networkLayerInfo[i].filterData[j] = FixedPoint::create(16, caffeDataParserLayerInfo[i].filterData[j]);
-            }        
-            
-            networkLayerInfo[i].biasData = new FixedPoint_t[caffeDataParserLayerInfo[i].numBiasValues];
-            for(int j = 0; j < caffeDataParserLayerInfo[i].numBiasValues; j++) {
-                networkLayerInfo[i].biasData[j] = FixedPoint::create(32, caffeDataParserLayerInfo[i].filterData[j]);
+                                                             );
+                memcpy  (   networkLayerInfo[i].flBiasData, 
+                            caffeDataParserLayerInfo[i].biasData, 
+                            caffeDataParserLayerInfo[i].numBiasValues
+                            * sizeof(float)
+                        );
+            } else {
+                networkLayerInfo[i].flFilterData = NULL;
+                networkLayerInfo[i].flBiasData = NULL;
             }
-            
-        } else {
-            networkLayerInfo[i].filterData = NULL;
-            networkLayerInfo[i].biasData = NULL;
         }
+        // End Code ---------------------------------------------------------------------------------------------------------------------------------     
+
+    } else {
+        
+        // Begin Code -------------------------------------------------------------------------------------------------------------------------------
+
+        for(uint32_t i = 0; i < caffeDataParserLayerInfo.size(); i++) {
+            if(caffeDataParserLayerInfo[i].layerType == "LRN" || caffeDataParserLayerInfo[i].layerType == "SoftMax") {
+                networkLayerInfo[i].precision = FLOAT; 
+            } else {
+                networkLayerInfo[i].precision = FIXED; 
+            }
+            networkLayerInfo[i].precision             = FIXED;    
+            networkLayerInfo[i].layerName             = caffeDataParserLayerInfo[i].layerName;     
+            networkLayerInfo[i].topLayerNames         = caffeDataParserLayerInfo[i].topLayerNames;    
+            networkLayerInfo[i].bottomLayerNames      = caffeDataParserLayerInfo[i].bottomLayerNames; 
+            networkLayerInfo[i].layerType             = caffeDataParserLayerInfo[i].layerType;       
+            networkLayerInfo[i].numInputRows          = caffeDataParserLayerInfo[i].numInputRows;     
+            networkLayerInfo[i].numInputCols          = caffeDataParserLayerInfo[i].numInputCols;     
+            networkLayerInfo[i].inputDepth            = caffeDataParserLayerInfo[i].inputDepth;       
+            networkLayerInfo[i].outputDepth           = caffeDataParserLayerInfo[i].outputDepth;      
+            networkLayerInfo[i].numKernelRows         = caffeDataParserLayerInfo[i].numKernelRows;    
+            networkLayerInfo[i].numKernelCols         = caffeDataParserLayerInfo[i].numKernelCols;    
+            networkLayerInfo[i].stride                = caffeDataParserLayerInfo[i].stride;          
+            networkLayerInfo[i].padding               = caffeDataParserLayerInfo[i].padding;
+            networkLayerInfo[i].localSize             = caffeDataParserLayerInfo[i].localSize;
+            networkLayerInfo[i].alpha                 = caffeDataParserLayerInfo[i].alpha;
+            networkLayerInfo[i].beta                  = caffeDataParserLayerInfo[i].beta;  
+            networkLayerInfo[i].group                 = caffeDataParserLayerInfo[i].group;   
+            networkLayerInfo[i].globalPooling         = caffeDataParserLayerInfo[i].globalPooling;        
+            if(caffeDataParserLayerInfo[i].layerType == "Convolution" || caffeDataParserLayerInfo[i].layerType == "InnerProduct") {
+                networkLayerInfo[i].fxFilterData = new FixedPoint_t[caffeDataParserLayerInfo[i].numFilterValues]; 
+                for(int j = 0; j < caffeDataParserLayerInfo[i].numFilterValues; j++) {
+                    networkLayerInfo[i].fxFilterData[j] = FixedPoint::create(16, caffeDataParserLayerInfo[i].filterData[j]);
+                }        
+                
+                networkLayerInfo[i].fxBiasData = new FixedPoint_t[caffeDataParserLayerInfo[i].numBiasValues];
+                for(int j = 0; j < caffeDataParserLayerInfo[i].numBiasValues; j++) {
+                    networkLayerInfo[i].fxBiasData[j] = FixedPoint::create(32, caffeDataParserLayerInfo[i].filterData[j]);
+                }
+                
+            } else {
+                networkLayerInfo[i].fxFilterData = NULL;
+                networkLayerInfo[i].fxBiasData = NULL;
+            }
+        }
+        // End Code ---------------------------------------------------------------------------------------------------------------------------------     
+        
     }
 }
 
@@ -121,12 +136,14 @@ int main(int argc, char **argv) {
     
     // printModelProtocalBuffer(argv[1], argv[2]);
     // exit(0);
-       
+
+    
     if(argc < 4) {
         cout << "Need more args" << endl;
         exit(0);
     }
-       
+
+    
     string protoTxt = argv[1];
     string model = argv[2];
     Mat img = imread(argv[3], IMREAD_COLOR);
@@ -141,21 +158,21 @@ int main(int argc, char **argv) {
     }
    
     // Read in model
-    Blob_t<float> inputBlob;
-    Blob_t<FixedPoint_t> inputBlob_fxPt;
-    vector<espresso::layerInfo_t<float>> networkLayerInfo;
-    vector<espresso::layerInfo_t<FixedPoint_t>> networkLayerInfo_fxPt;
+    Blob_t inputBlob;
+    Blob_t inputBlob_fxPt;
+    vector<espresso::layerInfo_t> networkLayerInfo;
+    vector<espresso::layerInfo_t> networkLayerInfo_fxPt;
     
 	vector<caffeDataParser::layerInfo_t> caffeDataParserLayerInfo = parseCaffeData(protoTxt, model);
     
     networkLayerInfo.resize(caffeDataParserLayerInfo.size());
     networkLayerInfo_fxPt.resize(caffeDataParserLayerInfo.size());
     
-    dataTransform(networkLayerInfo, caffeDataParserLayerInfo);
-    dataTransform(networkLayerInfo_fxPt, caffeDataParserLayerInfo);
+    dataTransform(networkLayerInfo, caffeDataParserLayerInfo, FLOAT);
+    dataTransform(networkLayerInfo_fxPt, caffeDataParserLayerInfo, FIXED);
     
-	Network<float> *network = new Network<float>(networkLayerInfo);
-    Network<FixedPoint_t> *network_fxPt = new Network<FixedPoint_t>(networkLayerInfo_fxPt);
+	Network *network = new Network(networkLayerInfo);
+    Network *network_fxPt = new Network(networkLayerInfo_fxPt);
     for(uint32_t i = 0; i < caffeDataParserLayerInfo.size(); i++) {
         if(caffeDataParserLayerInfo[i].layerType == "Convolution" || caffeDataParserLayerInfo[i].layerType == "InnerProduct") {
             free(caffeDataParserLayerInfo[i].filterData);
@@ -169,7 +186,7 @@ int main(int argc, char **argv) {
     
     if(endLayerIdx != -1 && beginLayerIdx != -1) {   
         //// Input Image, for dcNet remember to subtract 127 from each pixel value to compare results (float)
-        //inputBlob.data = new float[img.channels() * img.rows * img.cols]; 
+        //inputBlob.flData = new float[img.channels() * img.rows * img.cols]; 
         //inputBlob.depth = img.channels();
         //inputBlob.numRows = img.rows;
         //inputBlob.numCols = img.cols;    
@@ -177,15 +194,15 @@ int main(int argc, char **argv) {
         //    for(int i=0; i < img.rows; i++) {
         //        for(int j = 0; j < img.cols; j++) { 
         //            int a = img.at<cv::Vec3b>(i,j)[c];
-        //            //index3D(img.channels(), img.rows, img.cols, inputBlob.data, c, i, j) = (float)a - 127.0f;   // for dcNet
-        //            index3D(img.channels(), img.rows, img.cols, inputBlob.data, c, i, j) = (float)a;
+        //            //index3D(img.channels(), img.rows, img.cols, inputBlob.flData, c, i, j) = (float)a - 127.0f;   // for dcNet
+        //            index3D(img.channels(), img.rows, img.cols, inputBlob.flData, c, i, j) = (float)a;
         //        }
         //    }
         //}  
         //network->m_cnn[0]->m_inputDepth     = inputBlob.depth;
         //network->m_cnn[0]->m_numInputRows   = inputBlob.numRows;
         //network->m_cnn[0]->m_numInputCols   = inputBlob.numCols;
-        //network->m_cnn[0]->m_blob.data      = inputBlob.data;
+        //network->m_cnn[0]->m_blob.flData    = inputBlob.flData;
         //network->Forward(beginLayer, endLayer);
         //
         //fd.open("output_espresso.txt");
@@ -197,7 +214,7 @@ int main(int argc, char **argv) {
         //                                network->m_cnn[endLayerIdx]->m_blob.depth, 
         //                                network->m_cnn[endLayerIdx]->m_blob.numRows, 
         //                                network->m_cnn[endLayerIdx]->m_blob.numCols, 
-        //                                network->m_cnn[endLayerIdx]->m_blob.data, i, j, k
+        //                                network->m_cnn[endLayerIdx]->m_blob.flData, i, j, k
         //                             ) << " ";
         //            }
         //            fd << endl;
@@ -206,14 +223,14 @@ int main(int argc, char **argv) {
         //    }
         //} else {
         //    for(int i = 0; i < network->m_cnn[endLayerIdx]->m_blob.depth; i++) {
-        //        fd << network->m_cnn[endLayerIdx]->m_blob.data[i] << endl;
+        //        fd << network->m_cnn[endLayerIdx]->m_blob.flData[i] << endl;
         //    }
         //}
         //fd.close();
         
         
         // Input Image, for dcNet remember to subtract 127 from each pixel value to compare results (fixedPoint)
-        inputBlob_fxPt.data = new FixedPoint_t[img.channels() * img.rows * img.cols]; 
+        inputBlob_fxPt.fxData = new FixedPoint_t[img.channels() * img.rows * img.cols]; 
         inputBlob_fxPt.depth = img.channels();
         inputBlob_fxPt.numRows = img.rows;
         inputBlob_fxPt.numCols = img.cols;    
@@ -222,14 +239,14 @@ int main(int argc, char **argv) {
                 for(int j = 0; j < img.cols; j++) { 
                     int a = img.at<cv::Vec3b>(i,j)[c];
                     //float b = (float)a - 127.0f; // for dcNet
-                    index3D(img.channels(), img.rows, img.cols, inputBlob_fxPt.data, c, i, j) = FixedPoint::create(16, a);
+                    index3D(img.channels(), img.rows, img.cols, inputBlob_fxPt.fxData, c, i, j) = FixedPoint::create(16, a);
                 }
             }
         } 
         network_fxPt->m_cnn[0]->m_inputDepth     = inputBlob_fxPt.depth;
         network_fxPt->m_cnn[0]->m_numInputRows   = inputBlob_fxPt.numRows;
         network_fxPt->m_cnn[0]->m_numInputCols   = inputBlob_fxPt.numCols;
-        network_fxPt->m_cnn[0]->m_blob.data      = inputBlob_fxPt.data;
+        network_fxPt->m_cnn[0]->m_blob.fxData    = inputBlob_fxPt.fxData;
         network_fxPt->Forward(beginLayer, endLayer);
         
         fd.open("output_espresso_fxPt.txt");
@@ -241,7 +258,7 @@ int main(int argc, char **argv) {
                                                         network_fxPt->m_cnn[endLayerIdx]->m_blob.depth, 
                                                         network_fxPt->m_cnn[endLayerIdx]->m_blob.numRows, 
                                                         network_fxPt->m_cnn[endLayerIdx]->m_blob.numCols, 
-                                                        network_fxPt->m_cnn[endLayerIdx]->m_blob.data, i, j, k)
+                                                        network_fxPt->m_cnn[endLayerIdx]->m_blob.fxData, i, j, k)
                                                      ) << " ";
                     }
                     fd << endl;
@@ -250,7 +267,7 @@ int main(int argc, char **argv) {
             }
         } else {
             for(int i = 0; i < network_fxPt->m_cnn[endLayerIdx]->m_blob.depth; i++) {
-                fd << FixedPoint::toFloat(16, network_fxPt->m_cnn[endLayerIdx]->m_blob.data[i]) << endl;
+                fd << FixedPoint::toFloat(16, network_fxPt->m_cnn[endLayerIdx]->m_blob.fxData[i]) << endl;
             }
         }
         fd.close();

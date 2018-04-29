@@ -2,33 +2,35 @@
 using namespace std;
 
 
-template <typename DType>
-PoolingLayer<DType>::PoolingLayer   (
-                                        precision_t precision,
-                                        string layerName,
-                                        vector<string> topLayerNames,
-                                        vector<string> bottomLayerNames,
-                                        string layerType,
-                                        int numInputRows,
-                                        int numInputCols,
-                                        int inputDepth,
-                                        int outputDepth,
-                                        int numKernelRows,
-                                        int numKernelCols,
-                                        int stride,
-                                        int padding,
-                                        bool globalPooling,
-                                        DType *filterData,
-                                        DType *biasData,
-                                        int group,
-                                        int localSize,
-                                        float alpha,
-                                        float beta,
-                                        int dinFxPtLength,
-                                        int dinNumFracBits,
-                                        int whtFxPtLength,
-                                        int whtNumFracBits
-                                    ) : Layer<DType>	(	
+
+PoolingLayer::PoolingLayer   (
+                                    precision_t precision,
+                                    string layerName,
+                                    vector<string> topLayerNames,
+                                    vector<string> bottomLayerNames,
+                                    string layerType,
+                                    int numInputRows,
+                                    int numInputCols,
+                                    int inputDepth,
+                                    int outputDepth,
+                                    int numKernelRows,
+                                    int numKernelCols,
+                                    int stride,
+                                    int padding,
+                                    bool globalPooling,
+                                    float *flFilterData,
+                                    float *flBiasData,  
+                                    FixedPoint_t *fxFilterData,
+                                    FixedPoint_t *fxBiasData,                                    
+                                    int group,
+                                    int localSize,
+                                    float alpha,
+                                    float beta,
+                                    int dinFxPtLength,
+                                    int dinNumFracBits,
+                                    int whtFxPtLength,
+                                    int whtNumFracBits
+                                ) : Layer	(	
                                                         precision,
                                                         layerName,
                                                         topLayerNames,
@@ -43,8 +45,10 @@ PoolingLayer<DType>::PoolingLayer   (
                                                         stride,
                                                         padding,
                                                         globalPooling,
-                                                        filterData,
-                                                        biasData,
+                                                        flFilterData,
+                                                        flBiasData,                                                          
+                                                        fxFilterData,                                                        
+                                                        fxBiasData,                                                          
                                                         group,
                                                         localSize,
                                                         alpha,
@@ -57,109 +61,174 @@ PoolingLayer<DType>::PoolingLayer   (
 }
 
 
-template <typename DType>
-PoolingLayer<DType>::~PoolingLayer() {
-    free(this->m_blob.data);
+PoolingLayer::~PoolingLayer() {
+    if(m_precision == FLOAT) {
+        free(m_blob.flData);
+    } else {
+        free(m_blob.fxData);
+    }
 }
 
 
-template <typename DType>
-void PoolingLayer<DType>::ComputeLayerParam() {
+void PoolingLayer::ComputeLayerParam() {
 	// input size
-	this->m_inputDepth = this->m_bottomLayers[0]->m_outputDepth;
-	this->m_numInputRows = this->m_bottomLayers[0]->m_numOutputRows;
-	this->m_numInputCols = this->m_bottomLayers[0]->m_numOutputCols;
+	m_inputDepth = m_bottomLayers[0]->m_outputDepth;
+	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;
+	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
 
     // output size
-    this->m_outputDepth = this->m_inputDepth;
-    if(this->m_globalPooling) {
-        this->m_numOutputRows = 1;
-        this->m_numOutputCols = 1;
+    m_outputDepth = m_inputDepth;
+    if(m_globalPooling) {
+        m_numOutputRows = 1;
+        m_numOutputCols = 1;
     } else {
-        this->m_numOutputRows = int(ceil(float(this->m_numInputRows - this->m_numKernelRows + 2.0f * this->m_padding) / float(this->m_stride))) + 1;
-        this->m_numOutputCols = int(ceil(float(this->m_numInputCols - this->m_numKernelCols + 2.0f * this->m_padding) / float(this->m_stride))) + 1;
+        m_numOutputRows = int(ceil(float(m_numInputRows - m_numKernelRows + 2.0f * m_padding) / float(m_stride))) + 1;
+        m_numOutputCols = int(ceil(float(m_numInputCols - m_numKernelCols + 2.0f * m_padding) / float(m_stride))) + 1;
     }
 
 	// create output blob
-	this->m_blob.depth = this->m_outputDepth;
-	this->m_blob.numRows = this->m_numOutputRows;
-	this->m_blob.numCols = this->m_numOutputCols;
-	this->m_blob.data = (DType*)malloc(this->m_outputDepth * this->m_numOutputRows * this->m_numOutputCols * sizeof(DType));
-}
-
-
-template <typename DType>
-void PoolingLayer<DType>::ComputeLayer() {
-
-	// get input
-	DType *datain = this->m_bottomLayers[0]->m_blob.data;
-	int numInputBlobRows = this->m_bottomLayers[0]->m_blob.numRows;
-	int numInputBlobCols = this->m_bottomLayers[0]->m_blob.numCols;
-	int inputBlobDepth = this->m_bottomLayers[0]->m_blob.depth;
-
-	// output
-	DType *dataout = this->m_topLayers[0]->m_blob.data;
-    
-    DType minValue;
-    if(this->m_precision == FLOAT) {
-        minValue = -FLT_MAX;
-    } else if(this->m_precision == FIXED) {
-        minValue = 0x8000000000000000;
-    }
-    
-    
-    if(this->m_globalPooling) {
-        if(this->m_layerType == "Pooling_MAX") {
-            // TODO
-        } else if(this->m_layerType == "Pooling_AVE") { 
-            // TODO
-        }
+	m_blob.depth = m_outputDepth;
+	m_blob.numRows = m_numOutputRows;
+	m_blob.numCols = m_numOutputCols;
+    if(m_precision == FLOAT) {
+        m_blob.flData = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
     } else {
-        if(this->m_layerType == "Pooling_MAX") {
-            for (int m = 0; m < this->m_outputDepth; m++) {
-                for (int x = 0, a = 0; x < this->m_numOutputRows; x++, a += this->m_stride) {
-                    for (int y = 0, b = 0; y < this->m_numOutputCols; y++, b += this->m_stride) {
-                        index3D(m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = minValue;
-                        for (int i = a - this->m_padding, kr = 0; kr < this->m_numKernelRows; i++, kr++) {
-                            for (int j = b - this->m_padding, kc = 0; kc < this->m_numKernelCols; j++, kc++) {
-                                if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding
-                                    index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = (
-                                        index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) 
-                                            < index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
-                                        ) ? index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
-                                        : index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y);
-                                } else {
-                                    index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = (
-                                        index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) 
-                                            < minValue
-                                        ) ? minValue
-                                        : index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y);
+        m_blob.fxData = (FixedPoint_t*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(FixedPoint_t));
+    }  
+}
+
+
+void PoolingLayer::ComputeLayer() {
+
+    if(m_precision == FLOAT) {
+        
+        // Begin Code -------------------------------------------------------------------------------------------------------------------------------       
+        // get input
+        float *datain = m_bottomLayers[0]->m_blob.flData;
+        int numInputBlobRows = m_bottomLayers[0]->m_blob.numRows;
+        int numInputBlobCols = m_bottomLayers[0]->m_blob.numCols;
+        int inputBlobDepth = m_bottomLayers[0]->m_blob.depth;
+
+        // output
+        float *dataout = m_topLayers[0]->m_blob.flData;     
+        float minValue = -FLT_MAX;
+      
+        if(m_globalPooling) {
+            if(m_layerType == "Pooling_MAX") {
+                // TODO
+            } else if(m_layerType == "Pooling_AVE") { 
+                // TODO
+            }
+        } else {
+            if(m_layerType == "Pooling_MAX") {
+                for (int m = 0; m < m_outputDepth; m++) {
+                    for (int x = 0, a = 0; x < m_numOutputRows; x++, a += m_stride) {
+                        for (int y = 0, b = 0; y < m_numOutputCols; y++, b += m_stride) {
+                            index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = minValue;
+                            for (int i = a - m_padding, kr = 0; kr < m_numKernelRows; i++, kr++) {
+                                for (int j = b - m_padding, kc = 0; kc < m_numKernelCols; j++, kc++) {
+                                    if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding
+                                        index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = (
+                                            index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) 
+                                                < index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
+                                            ) ? index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
+                                            : index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y);
+                                    } else {
+                                        index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = (
+                                            index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) 
+                                                < minValue
+                                            ) ? minValue
+                                            : index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y);
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-        } else if(this->m_layerType == "Pooling_AVE") { 
-            for (int m = 0; m < this->m_outputDepth; m++) {
-                for (int x = 0, a = 0; x < this->m_numOutputRows; x++, a += this->m_stride) {
-                    for (int y = 0, b = 0; y < this->m_numOutputCols; y++, b += this->m_stride) {
-                        DType ave = 0.0f;
-                        for (int i = a - this->m_padding, kr = 0; kr < this->m_numKernelRows; i++, kr++) {
-                            for (int j = b - this->m_padding, kc = 0; kc < this->m_numKernelCols; j++, kc++) {
-                                if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding
-                                    ave += index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j);
+            } else if(m_layerType == "Pooling_AVE") { 
+                for (int m = 0; m < m_outputDepth; m++) {
+                    for (int x = 0, a = 0; x < m_numOutputRows; x++, a += m_stride) {
+                        for (int y = 0, b = 0; y < m_numOutputCols; y++, b += m_stride) {
+                            float ave = 0.0f;
+                            for (int i = a - m_padding, kr = 0; kr < m_numKernelRows; i++, kr++) {
+                                for (int j = b - m_padding, kc = 0; kc < m_numKernelCols; j++, kc++) {
+                                    if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding
+                                        ave += index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j);
+                                    }
                                 }
                             }
+                            index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = ave / float(m_numKernelRows * m_numKernelCols);
                         }
-                        index3D(this->m_outputDepth, this->m_numOutputRows, this->m_numOutputCols, dataout, m, x, y) = ave / DType(this->m_numKernelRows * this->m_numKernelCols);
                     }
                 }
             }
         }
+        // End Code ---------------------------------------------------------------------------------------------------------------------------------        
+        
+    } else {
+        
+        // Begin Code -------------------------------------------------------------------------------------------------------------------------------       
+        // get input
+        FixedPoint_t *datain = m_bottomLayers[0]->m_blob.fxData;
+        int numInputBlobRows = m_bottomLayers[0]->m_blob.numRows;
+        int numInputBlobCols = m_bottomLayers[0]->m_blob.numCols;
+        int inputBlobDepth = m_bottomLayers[0]->m_blob.depth;
+
+        // output
+        FixedPoint_t *dataout = m_topLayers[0]->m_blob.fxData;        
+        FixedPoint_t minValue = 0x8000000000000000;
+            
+        if(m_globalPooling) {
+            if(m_layerType == "Pooling_MAX") {
+                // TODO
+            } else if(m_layerType == "Pooling_AVE") { 
+                // TODO
+            }
+        } else {
+            if(m_layerType == "Pooling_MAX") {
+                for (int m = 0; m < m_outputDepth; m++) {
+                    for (int x = 0, a = 0; x < m_numOutputRows; x++, a += m_stride) {
+                        for (int y = 0, b = 0; y < m_numOutputCols; y++, b += m_stride) {
+                            index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = minValue;
+                            for (int i = a - m_padding, kr = 0; kr < m_numKernelRows; i++, kr++) {
+                                for (int j = b - m_padding, kc = 0; kc < m_numKernelCols; j++, kc++) {
+                                    if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding
+                                        index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = (
+                                            index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) 
+                                                < index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
+                                            ) ? index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
+                                            : index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y);
+                                    } else {
+                                        index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = (
+                                            index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) 
+                                                < minValue
+                                            ) ? minValue
+                                            : index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if(m_layerType == "Pooling_AVE") { 
+                for (int m = 0; m < m_outputDepth; m++) {
+                    for (int x = 0, a = 0; x < m_numOutputRows; x++, a += m_stride) {
+                        for (int y = 0, b = 0; y < m_numOutputCols; y++, b += m_stride) {
+                            FixedPoint_t ave = 0;
+                            for (int i = a - m_padding, kr = 0; kr < m_numKernelRows; i++, kr++) {
+                                for (int j = b - m_padding, kc = 0; kc < m_numKernelCols; j++, kc++) {
+                                    if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding
+                                        ave += index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j);
+                                    }
+                                }
+                            }
+                            index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = ave / FixedPoint_t(m_numKernelRows * m_numKernelCols);
+                        }
+                    }
+                }
+            }
+        }
+        // End Code ---------------------------------------------------------------------------------------------------------------------------------                
+        
     }
 }
-
-
-template class PoolingLayer<float>;
-template class PoolingLayer<FixedPoint_t>;
