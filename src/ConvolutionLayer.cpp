@@ -4,29 +4,31 @@ using namespace std;
 
 template <typename DType>
 ConvolutionLayer<DType>::ConvolutionLayer  (
-                                                precision_t precision,
-                                                string layerName,
-                                                vector<string> topLayerNames,
-                                                vector<string> bottomLayerNames,
-                                                string layerType,
-                                                int numInputRows,
-                                                int numInputCols,
-                                                int inputDepth,
-                                                int outputDepth,
-                                                int numKernelRows,
-                                                int numKernelCols,
-                                                int stride,
-                                                int padding,
-                                                bool globalPooling,
-                                                DType *filterData,
-                                                DType *biasData,
-                                                int group,
-                                                int localSize,
-                                                float alpha,
-                                                float beta,
-                                                int fxPtLength,
-                                                int numFracBits
-                                            ) : Layer<DType>	(	
+                                    precision_t precision,
+                                    string layerName,
+                                    vector<string> topLayerNames,
+                                    vector<string> bottomLayerNames,
+                                    string layerType,
+                                    int numInputRows,
+                                    int numInputCols,
+                                    int inputDepth,
+                                    int outputDepth,
+                                    int numKernelRows,
+                                    int numKernelCols,
+                                    int stride,
+                                    int padding,
+                                    bool globalPooling,
+                                    DType *filterData,
+                                    DType *biasData,
+                                    int group,
+                                    int localSize,
+                                    float alpha,
+                                    float beta,
+                                    int dinFxPtLength,
+                                    int dinNumFracBits,
+                                    int whtFxPtLength,
+                                    int whtNumFracBits
+                                ) : Layer<DType>	(	
                                                         precision,
                                                         layerName,
                                                         topLayerNames,
@@ -47,8 +49,10 @@ ConvolutionLayer<DType>::ConvolutionLayer  (
                                                         localSize,
                                                         alpha,
                                                         beta,
-                                                        fxPtLength,
-                                                        numFracBits
+                                                        dinFxPtLength,
+                                                        dinNumFracBits,
+                                                        whtFxPtLength,
+                                                        whtNumFracBits
                                                     ) {
 }
 

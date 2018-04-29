@@ -88,35 +88,39 @@ template <typename DType>
 class Layer {
 
     public:
-           Layer  (  
-                            precision_t precision = FLOAT, 
-                            std::string layerName = " ",
-                            std::vector<std::string> topLayerNames = std::vector<std::string>(),
-                            std::vector<std::string> bottomLayerNames = std::vector<std::string>(),
-                            std::string layerType = " ",
-                            int numInputRows = 1,
-                            int numInputCols = 1,
-                            int inputDepth = 1,
-                            int outputDepth = 1,
-                            int numKernelRows = 1,
-                            int numKernelCols = 1,
-                            int stride = 1,
-                            int padding = 0,
-                            bool globalPooling = false,
-                            DType *filterData = NULL,
-                            DType *biasData = NULL,
-                            int group = 1,
-                            int localSize = 5,
-                            float alpha = 0.0001f,
-                            float beta = 0.75f,
-                            int fxPtLength = 32,
-                            int numFracBits = 16
-                        );
+           Layer    (  
+                        precision_t precision = FLOAT, 
+                        std::string layerName = " ",
+                        std::vector<std::string> topLayerNames = std::vector<std::string>(),
+                        std::vector<std::string> bottomLayerNames = std::vector<std::string>(),
+                        std::string layerType = " ",
+                        int numInputRows = 1,
+                        int numInputCols = 1,
+                        int inputDepth = 1,
+                        int outputDepth = 1,
+                        int numKernelRows = 1,
+                        int numKernelCols = 1,
+                        int stride = 1,
+                        int padding = 0,
+                        bool globalPooling = false,
+                        DType *filterData = NULL,
+                        DType *biasData = NULL,
+                        int group = 1,
+                        int localSize = 5,
+                        float alpha = 0.0001f,
+                        float beta = 0.75f,
+                        int dinFxPtLength = 32,
+                        int dinNumFracBits = 16,
+                        int whtFxPtLength = 32,
+                        int whtNumFracBits = 16
+                    );
             virtual ~Layer();
             virtual void ComputeLayer() = 0;
             virtual void ComputeLayerParam() = 0;
-            virtual void SetfxPtLength(int value);
-            virtual void SetnumFracBits(int value);
+            virtual void SetDinFxPtLength(int value);
+            virtual void SetDinNumFracBits(int value);
+            virtual void SetWhtFxPtLength(int value);
+            virtual void SetWhtNumFracBits(int value);
 
 		std::string m_layerName;
 		std::vector<std::string> m_topLayerNames;
@@ -138,8 +142,10 @@ class Layer {
 		DType *m_filterData;
 		DType *m_biasData;
         int m_group;
-        int m_fxPtLength;
-        int m_numFracBits;
+        int m_dinFxPtLength;
+        int m_dinNumFracBits;
+        int m_whtFxPtLength;
+        int m_whtNumFracBits;       
         int m_localSize;
         float m_alpha;
         float m_beta;

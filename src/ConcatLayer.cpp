@@ -24,8 +24,10 @@ ConcatLayer<DType>::ConcatLayer (
                                     int localSize,
                                     float alpha,
                                     float beta,
-                                    int fxPtLength,
-                                    int numFracBits
+                                    int dinFxPtLength,
+                                    int dinNumFracBits,
+                                    int whtFxPtLength,
+                                    int whtNumFracBits
                                 ) : Layer<DType>	(	
                                                         precision,
                                                         layerName,
@@ -47,8 +49,10 @@ ConcatLayer<DType>::ConcatLayer (
                                                         localSize,
                                                         alpha,
                                                         beta,
-                                                        fxPtLength,
-                                                        numFracBits
+                                                        dinFxPtLength,
+                                                        dinNumFracBits,
+                                                        whtFxPtLength,
+                                                        whtNumFracBits
                                                     ) {
 }
 

@@ -24,8 +24,10 @@ Layer<DType>::Layer   (
                         int localSize,
                         float alpha,
                         float beta,
-                        int fxPtLength,
-                        int numFracBits                 
+                        int dinFxPtLength,
+                        int dinNumFracBits,
+                        int whtFxPtLength,
+                        int whtNumFracBits                           
                 ) {
     m_precision         = precision;
     m_layerName         = layerName;      
@@ -47,8 +49,10 @@ Layer<DType>::Layer   (
     m_localSize         = localSize; 
     m_alpha             = alpha;     
     m_beta              = beta;
-    m_fxPtLength        = fxPtLength;         
-    m_numFracBits       = numFracBits;
+    m_dinFxPtLength     = dinFxPtLength;         
+    m_dinNumFracBits    = dinNumFracBits;
+    m_whtFxPtLength     = whtFxPtLength;         
+    m_whtNumFracBits    = whtNumFracBits;    
     m_blob.data			= NULL;
     m_blob.numRows		= 1;
     m_blob.numCols		= 1;
@@ -74,28 +78,27 @@ Layer<FixedPoint>::~Layer() {
 
 
 template <typename DType>
-void Layer<DType>::SetfxPtLength(int value) {
-    this->m_fxPtLength = value;
-}
-
-
-template <>
-void Layer<FixedPoint>::SetfxPtLength(int value) {
-    this->m_fxPtLength = value;
+void Layer<DType>::SetDinFxPtLength(int value) {
+    this->m_dinFxPtLength = value;
 }
 
 
 template <typename DType>
-void Layer<DType>::SetnumFracBits(int value) {
-    this->m_numFracBits = value;
+void Layer<DType>::SetDinNumFracBits(int value) {
+    this->m_dinNumFracBits = value;
 }
 
 
-template <>
-void Layer<FixedPoint>::SetnumFracBits(int value) {
-    this->m_numFracBits = value;
+template <typename DType>
+void Layer<DType>::SetWhtFxPtLength(int value) {
+    this->m_whtFxPtLength = value;
 }
 
+
+template <typename DType>
+void Layer<DType>::SetWhtNumFracBits(int value) {
+    this->m_whtNumFracBits = value;
+}
 
 
 template class Layer<float>;
