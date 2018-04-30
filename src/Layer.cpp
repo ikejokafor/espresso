@@ -28,7 +28,9 @@ Layer::Layer   (
                         int dinFxPtLength,
                         int dinNumFracBits,
                         int whtFxPtLength,
-                        int whtNumFracBits                           
+                        int whtNumFracBits,
+                        int doutFxPtLength,
+                        int doutNumFracBits                        
                 ) {
     m_precision         = precision;
     m_layerName         = layerName;      
@@ -55,7 +57,9 @@ Layer::Layer   (
     m_dinFxPtLength     = dinFxPtLength;         
     m_dinNumFracBits    = dinNumFracBits;
     m_whtFxPtLength     = whtFxPtLength;         
-    m_whtNumFracBits    = whtNumFracBits;    
+    m_whtNumFracBits    = whtNumFracBits; 
+    m_doutFxPtLength    = doutFxPtLength; 
+    m_doutNumFracBits   = doutNumFracBits;
     m_blob.flData	    = NULL;
     m_blob.fxData	    = NULL;
     m_blob.numRows		= 1;

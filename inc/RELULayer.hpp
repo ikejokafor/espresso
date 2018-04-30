@@ -34,7 +34,9 @@ class RELULayer : public Layer {
                             int dinFxPtLength = 32,
                             int dinNumFracBits = 16,
                             int whtFxPtLength = 32,
-                            int whtNumFracBits = 16                     
+                            int whtNumFracBits = 16,
+                            int doutFxPtLength = 32,
+                            int doutNumFracBits = 16                      
                     );  
         ~RELULayer();      
         void ComputeLayerParam();  

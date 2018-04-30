@@ -2,7 +2,6 @@
 using namespace std;
 
 
-
 ConcatLayer::ConcatLayer    (
                                 precision_t precision,
                                 string layerName,
@@ -29,44 +28,45 @@ ConcatLayer::ConcatLayer    (
                                 int dinFxPtLength,
                                 int dinNumFracBits,
                                 int whtFxPtLength,
-                                int whtNumFracBits
+                                int whtNumFracBits,
+                                int doutFxPtLength,
+                                int doutNumFracBits
                             ) : Layer	(	
-                                                    precision,
-                                                    layerName,
-                                                    topLayerNames,
-                                                    bottomLayerNames,
-                                                    layerType,
-                                                    numInputRows,
-                                                    numInputCols,
-                                                    inputDepth,
-                                                    outputDepth,
-                                                    numKernelRows,
-                                                    numKernelCols,
-                                                    stride,
-                                                    padding,
-                                                    globalPooling,
-                                                    flFilterData,
-                                                    flBiasData,                                                          
-                                                    fxFilterData,                                                        
-                                                    fxBiasData,                                                          
-                                                    group,
-                                                    localSize,
-                                                    alpha,
-                                                    beta,
-                                                    dinFxPtLength,
-                                                    dinNumFracBits,
-                                                    whtFxPtLength,
-                                                    whtNumFracBits
-                                                ) {
+                                            precision,
+                                            layerName,
+                                            topLayerNames,
+                                            bottomLayerNames,
+                                            layerType,
+                                            numInputRows,
+                                            numInputCols,
+                                            inputDepth,
+                                            outputDepth,
+                                            numKernelRows,
+                                            numKernelCols,
+                                            stride,
+                                            padding,
+                                            globalPooling,
+                                            flFilterData,
+                                            flBiasData,                                                          
+                                            fxFilterData,                                                        
+                                            fxBiasData,                                                          
+                                            group,
+                                            localSize,
+                                            alpha,
+                                            beta,
+                                            dinFxPtLength,
+                                            dinNumFracBits,
+                                            whtFxPtLength,
+                                            whtNumFracBits,
+                                            doutFxPtLength,
+                                            doutNumFracBits
+                                        ) {
 }
 
 
 ConcatLayer::~ConcatLayer() {
-    if(m_precision == FLOAT) {
-        free(m_blob.flData);
-    } else {
-        free(m_blob.fxData);
-    }
+    free(m_blob.flData);
+    free(m_blob.fxData);
 }
 
 
@@ -134,7 +134,6 @@ void ConcatLayer::ComputeLayer() {
         // output
         FixedPoint_t *dataout = m_topLayers[0]->m_blob.fxData;
         
-
         for (uint32_t i = 0; i < m_bottomLayers.size(); i++) {
             memcpy(dataout, m_bottomLayers[i]->m_blob.fxData, m_bottomLayers[i]->m_blob.depth * m_bottomLayers[i]->m_blob.numRows * m_bottomLayers[i]->m_blob.numCols * sizeof(FixedPoint_t));
             dataout += (m_bottomLayers[i]->m_blob.depth * m_bottomLayers[i]->m_blob.numRows * m_bottomLayers[i]->m_blob.numCols);

@@ -119,7 +119,9 @@ class Layer {
                         int dinFxPtLength = 32,
                         int dinNumFracBits = 16,
                         int whtFxPtLength = 32,
-                        int whtNumFracBits = 16
+                        int whtNumFracBits = 16,
+                        int doutFxPtLength = 32,
+                        int doutNumFracBits = 16
                     );
             virtual ~Layer();
             virtual void ComputeLayer() = 0;
@@ -155,7 +157,9 @@ class Layer {
         int m_dinFxPtLength;
         int m_dinNumFracBits;
         int m_whtFxPtLength;
-        int m_whtNumFracBits;       
+        int m_whtNumFracBits;  
+        int m_doutFxPtLength;
+        int m_doutNumFracBits;        
         int m_localSize;
         float m_alpha;
         float m_beta;

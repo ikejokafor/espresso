@@ -28,7 +28,9 @@ SoftMaxLayer::SoftMaxLayer  (
                                 int dinFxPtLength,
                                 int dinNumFracBits,
                                 int whtFxPtLength,
-                                int whtNumFracBits
+                                int whtNumFracBits,
+                                int doutFxPtLength,
+                                int doutNumFracBits
                             ) : Layer	(	
                                                     precision,
                                                     layerName,
@@ -55,7 +57,9 @@ SoftMaxLayer::SoftMaxLayer  (
                                                     dinFxPtLength,
                                                     dinNumFracBits,
                                                     whtFxPtLength,
-                                                    whtNumFracBits
+                                                    whtNumFracBits,
+                                                    doutFxPtLength,
+                                                    doutNumFracBits
                                                 ) {
 }
 

@@ -28,35 +28,39 @@ FullyConnectedLayer::FullyConnectedLayer    (
                                                 int dinFxPtLength,
                                                 int dinNumFracBits,
                                                 int whtFxPtLength,
-                                                int whtNumFracBits
+                                                int whtNumFracBits,
+                                                int doutFxPtLength,
+                                                int doutNumFracBits
                                             ) : Layer	(	
-                                                        precision,
-                                                        layerName,
-                                                        topLayerNames,
-                                                        bottomLayerNames,
-                                                        layerType,
-                                                        numInputRows,
-                                                        numInputCols,
-                                                        inputDepth,
-                                                        outputDepth,
-                                                        numKernelRows,
-                                                        numKernelCols,
-                                                        stride,
-                                                        padding,
-                                                        globalPooling,
-                                                        flFilterData,
-                                                        flBiasData,                                                          
-                                                        fxFilterData,                                                        
-                                                        fxBiasData,                                                          
-                                                        group,
-                                                        localSize,
-                                                        alpha,
-                                                        beta,
-                                                        dinFxPtLength,
-                                                        dinNumFracBits,
-                                                        whtFxPtLength,
-                                                        whtNumFracBits
-                                                    ) {
+                                                            precision,
+                                                            layerName,
+                                                            topLayerNames,
+                                                            bottomLayerNames,
+                                                            layerType,
+                                                            numInputRows,
+                                                            numInputCols,
+                                                            inputDepth,
+                                                            outputDepth,
+                                                            numKernelRows,
+                                                            numKernelCols,
+                                                            stride,
+                                                            padding,
+                                                            globalPooling,
+                                                            flFilterData,
+                                                            flBiasData,                                                          
+                                                            fxFilterData,                                                        
+                                                            fxBiasData,                                                          
+                                                            group,
+                                                            localSize,
+                                                            alpha,
+                                                            beta,
+                                                            dinFxPtLength,
+                                                            dinNumFracBits,
+                                                            whtFxPtLength,
+                                                            whtNumFracBits,
+                                                            doutFxPtLength,
+                                                            doutNumFracBits
+                                                        ) {
 }
 
 
@@ -144,10 +148,12 @@ void FullyConnectedLayer::ComputeLayer() {
             }
         }
         
-        FixedPoint::SetParam(   64, 
-                                32, 
-                                32, 
-                                16, 
+        int resFxPtLength  = m_dinFxPtLength + m_whtFxPtLength;
+        int resNumFracBits = m_dinNumFracBits + m_whtNumFracBits;
+        FixedPoint::SetParam(   resFxPtLength, 
+                                resNumFracBits, 
+                                m_doutFxPtLength, 
+                                m_doutNumFracBits, 
                                 m_topLayers[0]->m_blob.fxData,
                                 m_topLayers[0]->m_blob.blobSize
                             );

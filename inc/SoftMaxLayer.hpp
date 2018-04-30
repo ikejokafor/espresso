@@ -23,10 +23,10 @@ class SoftMaxLayer : public Layer {
                             int stride = 1,
                             int padding = 0,
                             bool globalPooling = false,
-                                float *flFilterData = NULL,
-                                float *flBiasData = NULL,
-                                FixedPoint_t *fxFilterData = NULL,
-                                FixedPoint_t *fxBiasData = NULL,
+                            float *flFilterData = NULL,
+                            float *flBiasData = NULL,
+                            FixedPoint_t *fxFilterData = NULL,
+                            FixedPoint_t *fxBiasData = NULL,
                             int group = 1,
                             int localSize = 5,
                             float alpha = 0.0001f,
@@ -34,7 +34,9 @@ class SoftMaxLayer : public Layer {
                             int dinFxPtLength = 32,
                             int dinNumFracBits = 16,
                             int whtFxPtLength = 32,
-                            int whtNumFracBits = 16                         
+                            int whtNumFracBits = 16,
+                            int doutFxPtLength = 32,
+                            int doutNumFracBits = 16                          
                         );
         ~SoftMaxLayer();
         void ComputeLayerParam();   

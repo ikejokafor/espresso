@@ -2,6 +2,7 @@
 using namespace std;
 using namespace espresso;
 
+
 Network::Network() {}
 
 
@@ -259,10 +260,6 @@ void Network::Forward(string start, string end) {
         } else {                                                            
             cout << "\t precision:  \t\t\t"   << "FIXED"                      << endl;
         }
-        cout << "\t dinFxPtLength:  \t\t"   << m_cnn[i]->m_dinFxPtLength     << endl;
-		cout << "\t dinNumFracBits: \t\t"   << m_cnn[i]->m_dinNumFracBits    << endl;
-        cout << "\t whtFxPtLength:  \t\t"   << m_cnn[i]->m_whtFxPtLength     << endl;
-        cout << "\t whtNumFracBits: \t\t"   << m_cnn[i]->m_whtNumFracBits    << endl;
         if(m_cnn[i]->m_layerType == "Convolution" || m_cnn[i]->m_layerType == "InnerProduct") {
             cout << "\t Stride:             \t\t" << m_cnn[i]->m_stride << endl;
             cout << "\t Padding:            \t\t" << m_cnn[i]->m_padding << endl;
@@ -285,6 +282,12 @@ void Network::Forward(string start, string end) {
             cout << "\t Padding:            \t\t" << m_cnn[i]->m_padding << endl;
             cout << "\t Kernel Size:        \t\t" << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
         }
+        cout << "\t dinFxPtLength:   \t\t"   << m_cnn[i]->m_dinFxPtLength     << endl;
+		cout << "\t dinNumFracBits:  \t\t"   << m_cnn[i]->m_dinNumFracBits    << endl;
+        cout << "\t whtFxPtLength:   \t\t"   << m_cnn[i]->m_whtFxPtLength     << endl;
+        cout << "\t whtNumFracBits:  \t\t"   << m_cnn[i]->m_whtNumFracBits    << endl;
+        cout << "\t doutFxPtLength:  \t\t"   << m_cnn[i]->m_doutFxPtLength    << endl;
+        cout << "\t doutNumFracBits: \t\t"   << m_cnn[i]->m_doutNumFracBits   << endl;        
 	}
    
     // Forward Propagation

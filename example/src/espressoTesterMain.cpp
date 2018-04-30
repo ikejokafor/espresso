@@ -110,9 +110,8 @@
 //  Norm:
 //  Fully Connected + Softmax:
 //      ./espressoTester ../../../../../caffe-master/models/dcNet/deploy_sqz_2.prototxt ../../../../../caffe-master/models/dcNet/sqz_rework_iter_100000.caffemodel ../../../../../detector_test_kitti/temp.png data objectness0_soft
-
-
-
+//
+//
 #include "Network.hpp"
 #include "caffeDataParser.hpp"
 #include <opencv2/core/core.hpp>
@@ -317,6 +316,10 @@ int main(int argc, char **argv) {
         //}
         //fd.close();
         
+        
+        // VGG16
+        //network_fxPt->m_cnn[0]->m_dinFxPtLength  = 
+        //network_fxPt->m_cnn[0]->m_dinNumFracBits =         
         
         // Input Image, for dcNet remember to subtract 127 from each pixel value to compare results (fixedPoint)
         inputBlob_fxPt.fxData = new FixedPoint_t[img.channels() * img.rows * img.cols]; 
