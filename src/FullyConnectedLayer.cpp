@@ -61,11 +61,8 @@ FullyConnectedLayer::FullyConnectedLayer    (
 
 
 FullyConnectedLayer::~FullyConnectedLayer() {
-    if(m_precision == FLOAT) {
-        free(m_blob.flData);
-    } else {
-        free(m_blob.fxData);
-    }
+    free(m_blob.flData);
+    free(m_blob.fxData);
 }
 
 
@@ -87,11 +84,9 @@ void FullyConnectedLayer::ComputeLayerParam() {
 	m_blob.depth = m_outputDepth;
 	m_blob.numRows = m_numOutputRows;
 	m_blob.numCols = m_numOutputCols;
-    if(m_precision == FLOAT) {
-        m_blob.flData = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
-    } else {
-        m_blob.fxData = (FixedPoint_t*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(FixedPoint_t));
-    }
+    m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
+    m_blob.flData = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
+    m_blob.fxData = (FixedPoint_t*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(FixedPoint_t));
 }
 
 
@@ -99,7 +94,17 @@ void FullyConnectedLayer::ComputeLayer() {
 
     if(m_precision == FLOAT) {
         
-        // Begin Code -------------------------------------------------------------------------------------------------------------------------------        
+        // Begin Code -------------------------------------------------------------------------------------------------------------------------------
+        if(m_bottomLayers[0]->m_precision == FIXED) {
+            int dinNumFracBits   = m_bottomLayers[0]->m_dinNumFracBits;
+            int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
+            FixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
+            float        *flData = m_bottomLayers[0]->m_blob.flData;
+            for(int i = 0; i < blobSize; i++) {
+                flData[i] = FixedPoint::toFloat(dinNumFracBits, fxData[i]);
+            }
+        }
+        
         // get input
         float *datain = m_bottomLayers[0]->m_blob.flData;
         
@@ -111,24 +116,41 @@ void FullyConnectedLayer::ComputeLayer() {
             for (int k = 0; k < m_kernelDepth; k++) {
                 dataout[m] += datain[k] * index2D(m_numKernels, m_kernelDepth, m_flFilterData, m, k);
             }
-        }
+        }  
         // End Code ---------------------------------------------------------------------------------------------------------------------------------        
 
-    } else {
+    } else if(m_precision == FIXED) {
         
-        // Begin Code -------------------------------------------------------------------------------------------------------------------------------               
+        // Begin Code -------------------------------------------------------------------------------------------------------------------------------
+        if(m_bottomLayers[0]->m_precision == FLOAT) {
+            int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
+            FixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
+            float        *flData = m_bottomLayers[0]->m_blob.flData;
+            for(int i = 0; i < blobSize; i++) {
+                fxData[i] = FixedPoint::create(m_dinNumFracBits, flData[i]);
+            }
+        } 
+        
         // get input
         FixedPoint_t *datain = m_bottomLayers[0]->m_blob.fxData;
         
         // output
         FixedPoint_t *dataout = m_topLayers[0]->m_blob.fxData;
-        
+  
         for (int m = 0; m < m_numKernels; m++) {
             dataout[m] = m_fxBiasData[m];
             for (int k = 0; k < m_kernelDepth; k++) {
                 dataout[m] += datain[k] * index2D(m_numKernels, m_kernelDepth, m_fxFilterData, m, k);
             }
-        } 
+        }
+        
+        FixedPoint::SetParam(   64, 
+                                32, 
+                                32, 
+                                16, 
+                                m_topLayers[0]->m_blob.fxData,
+                                m_topLayers[0]->m_blob.blobSize
+                            );
         // End Code ---------------------------------------------------------------------------------------------------------------------------------        
         
     }

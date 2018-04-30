@@ -61,7 +61,6 @@ ConcatLayer::ConcatLayer    (
 }
 
 
-
 ConcatLayer::~ConcatLayer() {
     if(m_precision == FLOAT) {
         free(m_blob.flData);
@@ -69,7 +68,6 @@ ConcatLayer::~ConcatLayer() {
         free(m_blob.fxData);
     }
 }
-
 
 
 void ConcatLayer::ComputeLayerParam() {
@@ -90,11 +88,9 @@ void ConcatLayer::ComputeLayerParam() {
 	m_blob.depth = m_outputDepth;
 	m_blob.numRows = m_numOutputRows;
 	m_blob.numCols = m_numOutputCols;
-    if(m_precision == FLOAT) {
-        m_blob.flData = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
-    } else {
-        m_blob.fxData = (FixedPoint_t*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(FixedPoint_t));
-    }
+    m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
+    m_blob.flData = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
+    m_blob.fxData = (FixedPoint_t*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(FixedPoint_t));
 }
 
 
@@ -103,7 +99,17 @@ void ConcatLayer::ComputeLayer() {
 
     if(m_precision == FLOAT) {
         
-        // Begin Code -------------------------------------------------------------------------------------------------------------------------------       
+        // Begin Code -------------------------------------------------------------------------------------------------------------------------------  
+        if(m_bottomLayers[0]->m_precision == FIXED) {
+            int dinNumFracBits   = m_bottomLayers[0]->m_dinNumFracBits;
+            int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
+            FixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
+            float        *flData = m_bottomLayers[0]->m_blob.flData;
+            for(int i = 0; i < blobSize; i++) {
+                flData[i] = FixedPoint::toFloat(dinNumFracBits, fxData[i]);
+            }
+        }
+        
         // output
         float *dataout = m_topLayers[0]->m_blob.flData;
 
@@ -113,11 +119,21 @@ void ConcatLayer::ComputeLayer() {
         }
         // End Code ---------------------------------------------------------------------------------------------------------------------------------
 
-    } else {
+    } else if(m_precision == FIXED) {
         
         // Begin Code -------------------------------------------------------------------------------------------------------------------------------
+        if(m_bottomLayers[0]->m_precision == FLOAT) {
+            int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
+            FixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
+            float        *flData = m_bottomLayers[0]->m_blob.flData;
+            for(int i = 0; i < blobSize; i++) {
+                fxData[i] = FixedPoint::create(m_dinNumFracBits, flData[i]);
+            }
+        }        
+        
         // output
         FixedPoint_t *dataout = m_topLayers[0]->m_blob.fxData;
+        
 
         for (uint32_t i = 0; i < m_bottomLayers.size(); i++) {
             memcpy(dataout, m_bottomLayers[i]->m_blob.fxData, m_bottomLayers[i]->m_blob.depth * m_bottomLayers[i]->m_blob.numRows * m_bottomLayers[i]->m_blob.numCols * sizeof(FixedPoint_t));
@@ -126,4 +142,5 @@ void ConcatLayer::ComputeLayer() {
         // End Code ---------------------------------------------------------------------------------------------------------------------------------
         
     }
+ 
 }

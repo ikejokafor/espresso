@@ -150,7 +150,7 @@ Network::Network(vector<layerInfo_t> &layerInfo) {
         cout << "[ESPRESSO]: Loaded Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
 	}
     
-    // look for top layers first and insert split clones if needed
+    // look for top layers first and insert 
    	for (uint32_t i = 0; i < m_cnn.size(); i++) {	// for every layer
 		if (m_cnn[i]->m_layerType != "Input") {
 			for (uint32_t j = 0; j < m_cnn[i]->m_topLayerNames.size(); j++) { // for every top layer of the current cnn layer
@@ -289,31 +289,7 @@ void Network::Forward(string start, string end) {
    
     // Forward Propagation
 	for (int i = startIdx; i < (endIdx + 1); i++) {
-		m_cnn[i]->ComputeLayer();
-        if(i > 0 && (m_cnn[i]->m_layerType == "Convolution" || m_cnn[i]->m_layerType == "InnerProduct")) {
-            if(m_cnn[i]->m_precision == FIXED) {
-                FixedPoint::SetParam(   64, 
-                                        32, 
-                                        32, 
-                                        16, 
-                                        m_cnn[i]->m_blob.fxData,
-                                        m_cnn[i]->m_blob.numRows * m_cnn[i]->m_blob.numCols * m_cnn[i]->m_blob.depth
-                                    );
-                
-
-                // if(m_cnn[i].m_precision == FIXED && m_cnn[i].m_topLayers[0].m_precision == FIXED
-                //     && m_cnn[i].m_fxPtLength != m_cnn[i].m_topLayers[0].m_fxPtLength && m_cnn[i].m_numFracBits != m_cnn[i].m_topLayers[0].m_numFracBits) {
-                //     FixedPoint::SetParam(   m_cnn[i]->m_fxPtLength, 
-                //                             m_cnn[i]->m_numFracBits, 
-                //                             m_cnn[i]->m_topLayers[0].m_fxPtLength, 
-                //                             m_cnn[i]->m_topLayers[0].m_numFracBits, 
-                //                             m_cnn[i]->m_blob.data,
-                //                             m_cnn[i]->m_blob.numRows * m_cnn[i].m_blob.numCols * m_cnn[i].m_blob.depth
-                //                         );
-                // }
-            }
-        }
-        
+		m_cnn[i]->ComputeLayer();        
         cout << "Finished Layer" << " " << m_cnn[i]->m_layerName << endl;
 	}
 }

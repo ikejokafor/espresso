@@ -61,6 +61,7 @@ Layer::Layer   (
     m_blob.numRows		= 1;
     m_blob.numCols		= 1;
     m_blob.depth		= 1;
+    m_blob.blobSize     = 1;  
 }
 
 

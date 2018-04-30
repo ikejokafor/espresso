@@ -18,10 +18,10 @@
 #include "FixedPoint.hpp"
 
 
-
 struct Blob_t {
     float *flData;
     FixedPoint_t *fxData;
+    int blobSize;
 	int numRows;
     int numCols;
 	int depth;

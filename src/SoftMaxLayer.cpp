@@ -80,11 +80,23 @@ void SoftMaxLayer::ComputeLayerParam() {
 	m_blob.depth = m_outputDepth;
 	m_blob.numRows = m_numOutputRows;
 	m_blob.numCols = m_numOutputCols;
+    m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
 	m_blob.flData = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
+    m_blob.fxData = (FixedPoint_t*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(FixedPoint_t));
 }
 
 
 void SoftMaxLayer::ComputeLayer() { // made with dcNet in mind, may need to change for general Neural networks with common softmax layers
+
+    if(m_bottomLayers[0]->m_precision == FIXED) {
+        int dinNumFracBits   = m_bottomLayers[0]->m_dinNumFracBits;
+        int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
+        FixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
+        float        *flData = m_bottomLayers[0]->m_blob.flData;
+        for(int i = 0; i < blobSize; i++) {
+            flData[i] = FixedPoint::toFloat(dinNumFracBits, fxData[i]);
+        }
+    }
 
 	// get input
 	float *datain = m_bottomLayers[0]->m_blob.flData;

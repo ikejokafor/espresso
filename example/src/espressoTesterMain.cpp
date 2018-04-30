@@ -1,3 +1,118 @@
+//  ___________OverFeat________________________
+//  Convolutions:
+//  Pool:
+//  Max Pooling:
+//  Global Pooling:
+//  Average Pooling:
+//  Strides:
+//  Padding:
+//  Norm:
+//  Fully Connected + Softmax:
+//
+//
+// ______________SSD_______________________
+//  Convolutions:
+//  Pool:
+//  Max Pooling:
+//  Global Pooling:
+//  Average Pooling:
+//  Strides:
+//  Padding:
+//  Norm:
+//  Fully Connected + Softmax:
+// 
+//
+//  _______________YOLO__________________________
+//  Convolutions:
+//  Pool:
+//  Max Pooling:
+//  Global Pooling:
+//  Average Pooling:
+//  Strides:
+//  Padding:
+//  Norm:
+//  Fully Connected + Softmax:
+//
+//
+//  _________________Squeezenet________________________
+//  Convolutions:
+//  Pool:
+//  Max Pooling:
+//  Global Pooling: Yes
+//  Average Pooling:
+//  Strides:
+//  Padding:
+//  Norm: No
+//  Fully Connected + Softmax:
+//      ./espressoTester ../../../../../caffe-master/models/squeezenet/deploy.prototxt ../../../../../caffe-master/models/squeezenet/squeezenet_v1.1.caffemodel ../../../scripts/image.png data prob
+// 
+//
+//  ________VGG16_____________________
+//  Convolutions: 3x3
+//  Pool: 2x2
+//  Max Pooling: Yes
+//  Global Pooling: No
+//  Average Pooling: No
+//  Strides: 1, 2
+//  Padding: 0, 1
+//  Norm: No
+//  Fully Connected + Softmax: Yes
+//      ./espressoTester ../../../../../caffe-master/models/vgg16/vgg16_deploy.prototxt ../../../../../caffe-master/models/vgg16/VGG_ILSVRC_16_layers.caffemodel ../../../scripts/image.png data prob 
+// 
+//
+//  ______________VGG19______________________________
+//  Convolutions: 3x3
+//  Pool: 2x2
+//  Max Pooling: Yes
+//  Global Pooling: No
+//  Average Pooling: No
+//  Strides: 1, 2
+//  Padding: 0, 1
+//  Norm: No
+//  Fully Connected + Softmax: Yes
+//      ./espressoTester ../../../../../caffe-master/models/vgg19/vgg19_deploy.prototxt ../../../../../caffe-master/models/vgg19/VGG_ILSVRC_19_layers.caffemodel ../../../scripts/image.png data prob 
+// 
+//
+//  _______________________GoogleNet_________________________
+//  Convolutions: 1x1. 3x3, 5x5, 7x7
+//  Pool: 2, 7
+//  Max Pooling: Yes
+//  Global Pooling: No
+//  Average Pooling: Yes
+//  Strides: 1, 2
+//  Padding: 0, 1, 2, 3
+//  Norm: Yes
+//  Fully Connected + Softmax: Yes
+//      ./espressoTester ../../../../../caffe-master/models/bvlc_googlenet/deploy.prototxt ../../../../../caffe-master/models/bvlc_googlenet/bvlc_googlenet.caffemodel ../../../scripts/image.png data prob 
+// 
+//
+//  _____________Alexnet_____________
+//  Convolutions: 3x3, 5x5, 11x11
+//  Pool: 3x3
+//  Max Pooling: Yes
+//  Global Pooling: No
+//  Average Pooling: No
+//  Strides: 1, 2, 4
+//  Padding: 0, 1, 2
+//  Norm: LRN
+//  Fully Connected + Softmax: Yes
+//      ./espressoTester ../../../../../caffe-master/models/bvlc_alexnet/deploy.prototxt ../../../../../caffe-master/models/bvlc_alexnet/bvlc_alexnet.caffemodel ../../../scripts/image.png data prob 
+//   
+//
+//  _________________dcNet____________________________
+//  Convolutions:
+//  Pool:
+//  Max Pooling:
+//  Global Pooling:
+//  Average Pooling:
+//  Strides:
+//  Padding:
+//  Norm:
+//  Fully Connected + Softmax:
+//      ./espressoTester ../../../../../caffe-master/models/dcNet/deploy_sqz_2.prototxt ../../../../../caffe-master/models/dcNet/sqz_rework_iter_100000.caffemodel ../../../../../detector_test_kitti/temp.png data objectness0_soft
+
+
+
 #include "Network.hpp"
 #include "caffeDataParser.hpp"
 #include <opencv2/core/core.hpp>
@@ -58,7 +173,7 @@ void dataTransform(vector<espresso::layerInfo_t> &networkLayerInfo, vector<caffe
         }
         // End Code ---------------------------------------------------------------------------------------------------------------------------------     
 
-    } else {
+    } else if(precision == FIXED) {
         
         // Begin Code -------------------------------------------------------------------------------------------------------------------------------
 
@@ -68,7 +183,6 @@ void dataTransform(vector<espresso::layerInfo_t> &networkLayerInfo, vector<caffe
             } else {
                 networkLayerInfo[i].precision = FIXED; 
             }
-            networkLayerInfo[i].precision             = FIXED;    
             networkLayerInfo[i].layerName             = caffeDataParserLayerInfo[i].layerName;     
             networkLayerInfo[i].topLayerNames         = caffeDataParserLayerInfo[i].topLayerNames;    
             networkLayerInfo[i].bottomLayerNames      = caffeDataParserLayerInfo[i].bottomLayerNames; 
@@ -94,9 +208,8 @@ void dataTransform(vector<espresso::layerInfo_t> &networkLayerInfo, vector<caffe
                 
                 networkLayerInfo[i].fxBiasData = new FixedPoint_t[caffeDataParserLayerInfo[i].numBiasValues];
                 for(int j = 0; j < caffeDataParserLayerInfo[i].numBiasValues; j++) {
-                    networkLayerInfo[i].fxBiasData[j] = FixedPoint::create(32, caffeDataParserLayerInfo[i].filterData[j]);
-                }
-                
+                    networkLayerInfo[i].fxBiasData[j] = FixedPoint::create(32, caffeDataParserLayerInfo[i].biasData[j]);
+                }              
             } else {
                 networkLayerInfo[i].fxFilterData = NULL;
                 networkLayerInfo[i].fxBiasData = NULL;
@@ -109,30 +222,6 @@ void dataTransform(vector<espresso::layerInfo_t> &networkLayerInfo, vector<caffe
 
 
 int main(int argc, char **argv) {
-    
-    // OverFeat
-
-    //SSD
-    
-    // YOLO
-    
-    // Squeezenet
-    // ./espressoTester ../../../../../caffe-master/models/squeezenet/deploy.prototxt ../../../../../caffe-master/models/squeezenet/squeezenet_v1.1.caffemodel ../../../scripts/image.png data prob
-    
-    // VGG16
-    // ./espressoTester ../../../../../caffe-master/models/vgg16/vgg16_deploy.prototxt ../../../../../caffe-master/models/vgg16/VGG_ILSVRC_16_layers.caffemodel ../../../scripts/image.png data prob 
-    
-    // VGG19
-    // ./espressoTester ../../../../../caffe-master/models/vgg19/vgg19_deploy.prototxt ../../../../../caffe-master/models/vgg19/VGG_ILSVRC_19_layers.caffemodel ../../../scripts/image.png data prob 
-    
-    // GoogleNet
-    // ./espressoTester ../../../../../caffe-master/models/bvlc_googlenet/deploy.prototxt ../../../../../caffe-master/models/bvlc_googlenet/bvlc_googlenet.caffemodel ../../../scripts/image.png data prob 
-    
-    // Alexnet
-    // ./espressoTester ../../../../../caffe-master/models/bvlc_alexnet/deploy.prototxt ../../../../../caffe-master/models/bvlc_alexnet/bvlc_alexnet.caffemodel ../../../scripts/image.png data prob 
-
-    // dcNet
-    // ./espressoTester ../../../../../caffe-master/models/dcNet/deploy_sqz_2.prototxt ../../../../../caffe-master/models/dcNet/sqz_rework_iter_100000.caffemodel ../../../../../detector_test_kitti/temp.png data objectness0_soft 
     
     // printModelProtocalBuffer(argv[1], argv[2]);
     // exit(0);

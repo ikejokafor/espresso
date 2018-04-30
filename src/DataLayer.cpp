@@ -73,6 +73,7 @@ void DataLayer::ComputeLayerParam() {
 	m_blob.depth = m_outputDepth;
 	m_blob.numRows = m_numOutputRows;
 	m_blob.numCols = m_numOutputCols;
+    m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
 }
 
 
