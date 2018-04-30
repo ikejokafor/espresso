@@ -65,7 +65,7 @@ NormLayer::NormLayer    (
 
 
 NormLayer::~NormLayer() {
-    free(m_blob.flData);
+    free(m_blob.flData); 
     free(m_blob.fxData);
 }
 
