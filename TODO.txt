@@ -1,0 +1,22 @@
+So you dont have this-> everywhere in source code, layer class must be pure abstract class, look at caffe's implementation for more details
+
+Networks which work successfully in floating point:
+	DcNet
+	GoogleNet
+	Vgg16
+	
+
+Networks which still need work in floating point:
+	AlexNet     Output is verifed up to before fully connected layers
+    SqueezeNet  (Needs global Pooling)
+    
+    
+Networks which work successfully in fixed point:
+	DcNet
+	Vgg16
+	
+
+Networks which still need work in fixed point:
+    GoogleNet   fix norm layer
+	AlexNet     fix norm layer
+    SqueezeNet  (Needs global Pooling)
