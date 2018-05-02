@@ -1,2 +1,0 @@
-/usr/bin/ar qc libespresso.a  CMakeFiles/espresso.dir/src/ConcatLayer.cpp.o CMakeFiles/espresso.dir/src/ConvolutionLayer.cpp.o CMakeFiles/espresso.dir/src/DataLayer.cpp.o CMakeFiles/espresso.dir/src/FullyConnectedLayer.cpp.o CMakeFiles/espresso.dir/src/Layer.cpp.o CMakeFiles/espresso.dir/src/Network.cpp.o CMakeFiles/espresso.dir/src/NormLayer.cpp.o CMakeFiles/espresso.dir/src/PoolingLayer.cpp.o CMakeFiles/espresso.dir/src/RELULayer.cpp.o CMakeFiles/espresso.dir/src/SoftMaxLayer.cpp.o
-/usr/bin/ranlib libespresso.a
