@@ -113,16 +113,29 @@ void RELULayer::ComputeLayer() {
 
         // output
         float *dataout = m_topLayers[0]->m_blob.flData;
-       
-        for (int m = 0; m < m_outputDepth; m++) {
-            for (int x = 0; x < m_numOutputRows; x++) {
-                for(int y = 0; y < m_numOutputCols; y++) {
-                    index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = (
-                        index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, x, y) < 0 
-                    ) ? 0 : index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, x, y);
-                }
-            }
-        }
+#ifdef HIGH_PERF
+	    int nthreads = std::thread::hardware_concurrency();
+#else
+	    int nthreads = 1;
+#endif
+	    vector<thread> threads(nthreads);
+
+	    
+	    for (int t = 0; t < nthreads; t++) {
+		    threads[t] = std::thread(std::bind(
+		    [&](const int bi_m, const int ei_m, const int t) {       
+			    for (int m = bi_m; m < ei_m; m++) {
+				    for (int x = 0; x < m_numOutputRows; x++) {
+					    for (int y = 0; y < m_numOutputCols; y++) {
+						    index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = (
+						    	index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, x, y) < 0 
+					    	) ? 0 : index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, x, y);
+					    }
+				    }
+			    }
+		    }, t * m_outputDepth / nthreads, (t + 1) == nthreads ? m_outputDepth : (t + 1) * m_outputDepth / nthreads, t));
+	    }
+	    for_each(threads.begin(), threads.end(), [](std::thread& x){x.join(); });
         // End Code ---------------------------------------------------------------------------------------------------------------------------------
         
     } else if(m_precision == FIXED) {       

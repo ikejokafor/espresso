@@ -123,6 +123,12 @@ void PoolingLayer::ComputeLayer() {
         // output
         float *dataout = m_topLayers[0]->m_blob.flData;     
         float minValue = -FLT_MAX;
+#ifdef HIGH_PERF
+	    int nthreads = std::thread::hardware_concurrency();
+#else
+	    int nthreads = 1;
+#endif
+	    vector<thread> threads(nthreads);
       
         if(m_globalPooling) {
             if(m_layerType == "Pooling_MAX") {
@@ -131,31 +137,39 @@ void PoolingLayer::ComputeLayer() {
                 // TODO
             }
         } else {
-            if(m_layerType == "Pooling_MAX") {
-                for (int m = 0; m < m_outputDepth; m++) {
-                    for (int x = 0, a = 0; x < m_numOutputRows; x++, a += m_stride) {
-                        for (int y = 0, b = 0; y < m_numOutputCols; y++, b += m_stride) {
-                            index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = minValue;
-                            for (int i = a - m_padding, kr = 0; kr < m_numKernelRows; i++, kr++) {
-                                for (int j = b - m_padding, kc = 0; kc < m_numKernelCols; j++, kc++) {
-                                    if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding
-                                        index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = (
-                                            index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) 
-                                                < index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
-                                            ) ? index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
-                                            : index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y);
-                                    } else {
-                                        index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = (
-                                            index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) 
-                                                < minValue
-                                            ) ? minValue
-                                            : index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            if(m_layerType == "Pooling_MAX") {            
+	            for (int t = 0; t < nthreads; t++) {
+		            threads[t] = std::thread(std::bind(
+		            [&](const int bi_m, const int ei_m, const int t) {
+			            for (int m = bi_m; m < ei_m; m++) {
+				            for (int x = 0, a = 0; x < m_numOutputRows; x++, a += m_stride) {
+					            for (int y = 0, b = 0; y < m_numOutputCols; y++, b += m_stride) {
+						            index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = minValue;
+						            for (int i = a - m_padding, kr = 0; kr < m_numKernelRows; i++, kr++) {
+							            for (int j = b - m_padding, kc = 0; kc < m_numKernelCols; j++, kc++) {
+								            if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {
+									            	// in valid region, assuming zero padding
+								            	index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = (
+								            		index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) 
+								            			< index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
+							            			) ? index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, m, i, j)
+							            			: index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y);
+								            }
+								            else {
+									            index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = (
+									            	index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) 
+									            		< minValue
+								            		) ? minValue
+								            		: index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y);
+								            }
+							            }
+						            }
+					            }
+				            }
+			            }
+		            }, t * m_outputDepth / nthreads, (t + 1) == nthreads ? m_outputDepth : (t + 1) * m_outputDepth / nthreads, t));
+	            }
+	            for_each(threads.begin(), threads.end(), [](std::thread& x){x.join(); });
             } else if(m_layerType == "Pooling_AVE") { 
                 for (int m = 0; m < m_outputDepth; m++) {
                     for (int x = 0, a = 0; x < m_numOutputRows; x++, a += m_stride) {

@@ -2,19 +2,20 @@ Networks which work successfully in floating point:
 	DcNet
 	GoogleNet
 	Vgg16
-    AlexNet
+
 	
+Networks which work successfully in fixed point:
+	DcNet
+	GoogleNet
+	Vgg16
+
 
 Networks which still need work in floating point:
     SqueezeNet  (Needs global Pooling)
     
     
-Networks which work successfully in fixed point:
-	DcNet
-	GoogleNet
-	Vgg16
-    AlexNet
-	
-
 Networks which still need work in fixed point:
     SqueezeNet  (Needs global Pooling)
+
+Other issues:
+	Check softmax alexnet output

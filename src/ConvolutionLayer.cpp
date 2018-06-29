@@ -120,33 +120,43 @@ void ConvolutionLayer::ComputeLayer() {
         // output
         float *dataout = m_topLayers[0]->m_blob.flData;
         float *filters = m_flFilterData;
+#ifdef HIGH_PERF
+	    int nthreads = std::thread::hardware_concurrency();
+#else
+	    int nthreads = 1;
+#endif
+	    vector<thread> threads(nthreads);
         
         
-        
-        for(int g = 0; g < m_group; g++) {
-            for (int m = 0; m < (m_numKernels / m_group); m++) {
-                for (int x = 0, a = 0; x < m_numOutputRows; x++, a += m_stride) {
-                    for(int y = 0, b = 0; y < m_numOutputCols; y++, b += m_stride) {
-                        index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = m_flBiasData[m];
-                        for (int k = 0; k < m_kernelDepth; k++) {
-                            for (int i = a - m_padding, kr = 0; kr < m_numKernelRows; i++, kr++) {
-                                for (int j = b - m_padding, kc = 0; kc < m_numKernelCols; j++, kc++) {
-                                    if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding                        
-                                        index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) += (
-                                            index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, k, i, j)
-                                            * index4D(m_numKernels, m_kernelDepth, m_numKernelRows, m_numKernelCols, filters, m, k, kr, kc)
-                                        );
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            dataout += ((m_outputDepth / m_group) * m_numOutputRows * m_numOutputCols);
-            datain  += ((inputBlobDepth / m_group) * numInputBlobRows * numInputBlobCols); 
-            filters += ((m_numKernels / m_group) * m_kernelDepth * m_numKernelRows * m_numKernelCols);
-        }
+	    for (int t = 0; t < nthreads; t++) {
+			threads[t] = std::thread(std::bind(
+			[&](const int bi_m, const int ei_m, const int t) {
+				for (int m = bi_m; m < ei_m; m++) {
+					for (int x = 0, a = 0; x < m_numOutputRows; x++, a += m_stride) {
+						for(int y = 0, b = 0; y < m_numOutputCols; y++, b += m_stride) {
+							index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = m_flBiasData[m];
+							for (int k = 0; k < m_kernelDepth; k++) {
+								for (int i = a - m_padding, kr = 0; kr < m_numKernelRows; i++, kr++) {
+									for (int j = b - m_padding, kc = 0; kc < m_numKernelCols; j++, kc++) {
+										if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding                        
+											index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) += (
+												index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, k, i, j)
+												* index4D(m_numKernels, m_kernelDepth, m_numKernelRows, m_numKernelCols, filters, m, k, kr, kc)
+											);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}, t * m_numKernels / nthreads, (t + 1) == nthreads ? m_numKernels : (t + 1) * m_numKernels / nthreads, t));
+		}
+	    for_each(threads.begin(), threads.end(), [](std::thread& x){x.join(); });
+		// dataout += ((m_outputDepth / m_group) * m_numOutputRows * m_numOutputCols);
+		// datain  += ((inputBlobDepth / m_group) * numInputBlobRows * numInputBlobCols); 
+		// filters += ((m_numKernels / m_group) * m_kernelDepth * m_numKernelRows * m_numKernelCols);
+
         // End Code ---------------------------------------------------------------------------------------------------------------------------------        
         
     } else if(m_precision == FIXED) {

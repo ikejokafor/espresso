@@ -2,21 +2,23 @@
 #define __LAYER_HPP__
 
 
-#define index2D(ROW, COL, A, r, c)                                  A[r * COL + c]
-#define index3D(DEPTH, ROW, COL, A, d, r, c)                        A[(d * ROW + r) * COL + c]
-#define index4D(DEPTH1, DEPTH0, ROW, COL, A, d1, d0, r, c)          A[((d1 * DEPTH0 + d0) * ROW + r) * COL + c]
-#define ESPRO_DEF_FXPT_LEN                                          32
-#define ESPRO_DEF_NUM_FRAC_BITS                                     16
+#define ESPRO_DEF_FXPT_LEN          32
+#define ESPRO_DEF_NUM_FRAC_BITS		16
+#undef  HIGH_PERF
 
 
 #include <string>
 #include <cstring>
 #include <vector>
+#include <thread>
 #include <random>
 #include <float.h>
 #include <iostream>
 #include <fstream>
 #include <stack>
+#include <algorithm>
+
+#include "util.hpp"
 #include "FixedPoint.hpp"
 
 

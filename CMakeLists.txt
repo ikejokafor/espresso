@@ -110,6 +110,7 @@ ADD_LIBRARY(${TARGET_NAME} STATIC ${TARGET_SRCS} ${TARGET_HEADERS})
 
 # BEGIN Build dependencies --------------------------------------------------------------------------------------------------------------------------
 add_dependencies(${TARGET_NAME} fixedPoint)
+add_dependencies(${TARGET_NAME} util)
 # END Build dependencies ----------------------------------------------------------------------------------------------------------------------------
 
 
@@ -135,6 +136,7 @@ TARGET_COMPILE_OPTIONS(${TARGET_NAME} PUBLIC
 TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
     ${PROJECT_SOURCE_DIR}/inc/
     ${PROJECT_SOURCE_DIR}/../fixedPoint/inc/
+    ${PROJECT_SOURCE_DIR}/../util/inc/
 )
 # END Include directories ---------------------------------------------------------------------------------------------------------------------------
 
@@ -145,14 +147,16 @@ TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
 #       WINDOWS: PATH env variable includes path(s) to dll's
 #       LINUX:  LD_LIBRARY_PATH env variablel includes path(s) to so's
 if(WIN32)
-TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
+    TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
 
-)
+    )
 else()
-TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
-    -L/usr/local/lib/
-    -L/usr/lib/
-)
+    TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
+        -L/usr/local/lib/
+        -L/usr/lib/
+		-lpthread
+        util
+    )
 endif()
 # END Library Settings ------------------------------------------------------------------------------------------------------------------------------
 
