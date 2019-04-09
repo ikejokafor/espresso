@@ -2,9 +2,9 @@
 #define __LAYER_HPP__
 
 
-#define ESPRO_DEF_FXPT_LEN          32
-#define ESPRO_DEF_NUM_FRAC_BITS		16
-#undef  HIGH_PERF
+#define ESPRO_DEF_FXPT_LEN          16
+#define ESPRO_DEF_NUM_FRAC_BITS		14
+#define HIGH_PERF
 
 
 #include <string>
@@ -19,12 +19,13 @@
 #include <algorithm>
 
 #include "util.hpp"
-#include "FixedPoint.hpp"
+#include "fixedPoint.hpp"
+#include <functional>
 
 
 struct Blob_t {
     float *flData;
-    FixedPoint_t *fxData;
+    fixedPoint_t *fxData;
     int blobSize;
 	int numRows;
     int numCols;
@@ -32,26 +33,85 @@ struct Blob_t {
 };
 
 
-typedef enum {
-    FLOAT = 0,
-    FIXED = 1
-} precision_t;
-
-
 namespace espresso {
+	typedef enum {
+		FLOAT = 0,
+		FIXED = 1
+	} precision_t;
+
+
+	typedef enum {
+		LEAKY = 0,
+		RELU  = 1,
+		LINEAR = 2
+	} activation_t;
+	
     //	LayerTypes:
     //		Input
     //		Convolution
-    //		ReLU
+    //		Activation
     //      LRN
     //		Pooling_MAX
-    //		Pooling_AVE
+    //		Pooling_AVG
     //		InnerProduct
     //		Softmax
     //		Concat
-    
+	//		Residual
+	//		YOLO
+	//		UpSample
+	
     
     struct layerInfo_t {
+		layerInfo_t() :
+		    precision(espresso::FLOAT), 
+			layerName(" "),
+			topLayerNames(std::vector<std::string>()),
+			bottomLayerNames(std::vector<std::string>()),
+			layerType(" "),
+			numInputRows(1),
+			numInputCols(1),
+			inputDepth(1),
+			outputDepth(1),
+			dinFxPtLength(ESPRO_DEF_FXPT_LEN),
+			dinNumFracBits(ESPRO_DEF_NUM_FRAC_BITS),
+			whtFxPtLength(ESPRO_DEF_FXPT_LEN),
+			whtNumFracBits(ESPRO_DEF_NUM_FRAC_BITS),
+			doutFxPtLength(ESPRO_DEF_FXPT_LEN),
+			doutNumFracBits(ESPRO_DEF_NUM_FRAC_BITS),	
+			biasFxPtLength(ESPRO_DEF_FXPT_LEN),
+			biasNumFracBits(ESPRO_DEF_NUM_FRAC_BITS),
+			scaleBiasFxPtLength(ESPRO_DEF_FXPT_LEN),
+			scaleBiasNumFracBits(ESPRO_DEF_NUM_FRAC_BITS),
+		    leakyFxPtLength(ESPRO_DEF_FXPT_LEN),
+		    leakyNumFracBits(ESPRO_DEF_NUM_FRAC_BITS),
+			numKernelRows(1),
+			numKernelCols(1),
+			stride(1),
+			padding(0),
+			globalPooling(false),
+		    numFilterValues(1),
+			flFilterData(NULL),
+			flBiasData(NULL),
+			flScaleBiasData(NULL),
+			fxFilterData(NULL),
+			fxBiasData(NULL),
+			fxScaleBiasData(NULL),
+			group(1),
+			localSize(5),
+			alpha(0.0001f),
+			flBeta(0.75f),
+		    fxBeta(0.000001f),
+			activation(espresso::RELU),
+		    flMeanData(NULL),
+		    fxMeanData(NULL),
+		    flVarianceData(NULL),
+		    fxVarianceData(NULL),
+		    darknetNormScaleBias(false),
+		    darknetAct(false),
+		    darknet_n_param(0),
+			darknet_classes_param(0),
+		    darknet_outputs_param(0)
+		    {}
         precision_t precision;       
         std::string layerName;
         std::vector<std::string> topLayerNames;
@@ -66,21 +126,40 @@ namespace espresso {
         int whtFxPtLength;
         int whtNumFracBits;
         int doutFxPtLength;
-        int doutNumFracBits;       
+        int doutNumFracBits;	    
+	    int biasFxPtLength;
+        int biasNumFracBits;
+	    int scaleBiasFxPtLength;
+        int scaleBiasNumFracBits;	 
+	    int leakyFxPtLength;
+	    int	leakyNumFracBits;
         int numKernelRows;
         int numKernelCols;
         int stride;
         int padding;
         bool globalPooling;
+        int numFilterValues;	    
         float *flFilterData;
         float *flBiasData;
-        int numFilterValues;
-        FixedPoint_t *fxFilterData;
-        FixedPoint_t *fxBiasData;
+	    float *flScaleBiasData;
+        fixedPoint_t *fxFilterData;
+        fixedPoint_t *fxBiasData;
+		fixedPoint_t *fxScaleBiasData;	    
         int group;
         int localSize;
         float alpha;
-        float beta;            
+        float flBeta;
+	    float fxBeta;
+		espresso::activation_t activation;
+		float *flMeanData;
+		float *flVarianceData;
+		fixedPoint_t *fxMeanData;
+		fixedPoint_t *fxVarianceData;
+	    bool darknetNormScaleBias;
+	    bool darknetAct;
+	    int darknet_n_param;
+	    int darknet_classes_param;
+	    int darknet_outputs_param;
     };
 }
 
@@ -100,43 +179,15 @@ namespace espresso {
 class Layer {
 
     public:
-           Layer    (
-                        precision_t precision = FLOAT, 
-                        std::string layerName = " ",
-                        std::vector<std::string> topLayerNames = std::vector<std::string>(),
-                        std::vector<std::string> bottomLayerNames = std::vector<std::string>(),
-                        std::string layerType = " ",
-                        int numInputRows = 1,
-                        int numInputCols = 1,
-                        int inputDepth = 1,
-                        int outputDepth = 1,
-                        int dinFxPtLength = ESPRO_DEF_FXPT_LEN,
-                        int dinNumFracBits = ESPRO_DEF_NUM_FRAC_BITS,
-                        int whtFxPtLength = ESPRO_DEF_FXPT_LEN,
-                        int whtNumFracBits = ESPRO_DEF_NUM_FRAC_BITS,
-                        int doutFxPtLength = ESPRO_DEF_FXPT_LEN,
-                        int doutNumFracBits = ESPRO_DEF_NUM_FRAC_BITS,                               
-                        int numKernelRows = 1,
-                        int numKernelCols = 1,
-                        int stride = 1,
-                        int padding = 0,
-                        bool globalPooling = false,
-                        float *flFilterData = NULL,
-                        float *flBiasData = NULL,
-                        FixedPoint_t *fxFilterData = NULL,
-                        FixedPoint_t *fxBiasData = NULL,
-                        int numFilterValues = 1,
-                        int group = 1,
-                        int localSize = 5,
-                        float alpha = 0.0001f,
-                        float beta = 0.75f                      
-                    );
-            virtual ~Layer();
-            virtual void ComputeLayer() = 0;
-            virtual void ComputeLayerParam() = 0;
+        Layer(espresso::layerInfo_t layerInfo = espresso::layerInfo_t());
+        virtual ~Layer();
+        virtual void ComputeLayerParam() = 0;
+        virtual void ComputeLayer() = 0;
+	    virtual void ComputeLayer_FlPt() = 0;
+        virtual void ComputeLayer_FxPt() = 0;
 
 
-        precision_t m_precision;
+		espresso::precision_t m_precision;
 		std::string m_layerName;
 		std::vector<std::string> m_topLayerNames;
 		std::vector<std::string> m_bottomLayerNames;
@@ -152,7 +203,13 @@ class Layer {
         int m_whtFxPtLength;
         int m_whtNumFracBits;  
         int m_doutFxPtLength;
-        int m_doutNumFracBits;         
+        int m_doutNumFracBits;
+		int m_biasFxPtLength;
+		int m_biasNumFracBit;
+		int m_scaleBiasFxPtLength;
+		int m_scaleBiasNumFracBits;
+	    int m_leakyFxPtLength;
+	    int	m_leakyNumFracBits;
 		int m_numKernelRows;
 		int m_numKernelCols;
 		int m_kernelDepth;
@@ -160,16 +217,29 @@ class Layer {
 		int m_stride;
 		int m_padding;
         bool m_globalPooling;
+	    int m_numFilterValues;
 		float *m_flFilterData;
 		float *m_flBiasData;
-		FixedPoint_t *m_fxFilterData;
-		FixedPoint_t *m_fxBiasData;
-        int m_numFilterValues;
+		float *m_flScaleBiasData;
+		fixedPoint_t *m_fxFilterData;
+		fixedPoint_t *m_fxBiasData;
+		fixedPoint_t *m_fxScaleBiasData;
         int m_group;      
         int m_localSize;
         float m_alpha;
-        float m_beta;
-
+        float m_flBeta;
+	    float m_fxBeta;
+		espresso::activation_t m_activation;
+		float *m_flMeanData;
+		float *m_flVarianceData;
+		fixedPoint_t *m_fxMeanData;
+		fixedPoint_t *m_fxVarianceData;
+		bool m_darknetNormScaleBias;
+		bool m_darknetAct;
+		int m_darknet_n_param;
+	    int m_darknet_classes_param;
+		int m_darknet_outputs_param;
+	
         
 		Blob_t m_blob;
 		std::vector<Layer*> m_topLayers;

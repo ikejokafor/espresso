@@ -1,70 +1,9 @@
 #include "DataLayer.hpp"
 using namespace std;
+using namespace espresso;
 
 
-DataLayer::DataLayer	(
-                            precision_t precision,
-                            string layerName,
-                            vector<string> topLayerNames,
-                            vector<string> bottomLayerNames,
-                            string layerType,
-                            int numInputRows,
-                            int numInputCols,
-                            int inputDepth,
-                            int outputDepth,
-                            int dinFxPtLength,
-                            int dinNumFracBits,
-                            int whtFxPtLength,
-                            int whtNumFracBits,
-                            int doutFxPtLength,
-                            int doutNumFracBits,                            
-                            int numKernelRows,
-                            int numKernelCols,
-                            int stride,
-                            int padding,
-                            bool globalPooling,
-                            float *flFilterData,
-                            float *flBiasData,  
-                            FixedPoint_t *fxFilterData,
-                            FixedPoint_t *fxBiasData,
-                            int numFilterValues,                                        
-                            int group,
-                            int localSize,
-                            float alpha,
-                            float beta
-                        ) : Layer	(	
-                                        precision,
-                                        layerName,
-                                        topLayerNames,
-                                        bottomLayerNames,
-                                        layerType,
-                                        numInputRows,
-                                        numInputCols,
-                                        inputDepth,
-                                        outputDepth,
-                                        dinFxPtLength,
-                                        dinNumFracBits,
-                                        whtFxPtLength,
-                                        whtNumFracBits,
-                                        doutFxPtLength,
-                                        doutNumFracBits,
-                                        numKernelRows,
-                                        numKernelCols,
-                                        stride,
-                                        padding,
-                                        globalPooling,
-                                        flFilterData,
-                                        flBiasData,                                                          
-                                        fxFilterData,                                                        
-                                        fxBiasData, 
-                                        numFilterValues,
-                                        group,
-                                        localSize,
-                                        alpha,
-                                        beta
-                                    ) {
-}
-
+DataLayer::DataLayer(layerInfo_t layerInfo) : Layer(layerInfo) {}
 
 
 DataLayer::~DataLayer() {}
@@ -84,3 +23,9 @@ void DataLayer::ComputeLayerParam() {
 
 
 void DataLayer::ComputeLayer() {}
+
+
+void DataLayer::ComputeLayer_FlPt() {}
+
+
+void DataLayer::ComputeLayer_FxPt() {}

@@ -1,73 +1,95 @@
 #include "Layer.hpp"
 using namespace std;
+using namespace espresso;
 
 
 Layer::Layer   (  
-                        precision_t precision,
-                        string layerName,
-                        vector<string> topLayerNames,
-                        vector<string> bottomLayerNames,
-                        string layerType,
-                        int numInputRows,
-                        int numInputCols,
-                        int inputDepth,
-                        int outputDepth,
-                        int dinFxPtLength,
-                        int dinNumFracBits,
-                        int whtFxPtLength,
-                        int whtNumFracBits,
-                        int doutFxPtLength,
-                        int doutNumFracBits, 
-                        int numKernelRows,
-                        int numKernelCols,
-                        int stride,
-                        int padding,
-                        bool globalPooling,
-                        float *flFilterData,
-                        float *flBiasData,
-                        FixedPoint_t *fxFilterData,
-                        FixedPoint_t *fxBiasData,
-                        int numFilterValues,
-                        int group,
-                        int localSize,
-                        float alpha,
-                        float beta    
+						layerInfo_t layerInfo
                 ) {
-    m_precision             = precision;
-    m_layerName             = layerName;      
-    m_topLayerNames         = topLayerNames;
-    m_bottomLayerNames      = bottomLayerNames; 
-    m_layerType             = layerType;
-    m_numInputRows          = numInputRows;
-    m_numInputCols          = numInputCols;
-    m_inputDepth            = inputDepth;
-    m_outputDepth           = outputDepth;
-    m_dinFxPtLength         = dinFxPtLength;         
-    m_dinNumFracBits        = dinNumFracBits;
-    m_whtFxPtLength         = whtFxPtLength;         
-    m_whtNumFracBits        = whtNumFracBits; 
-    m_doutFxPtLength        = doutFxPtLength; 
-    m_doutNumFracBits       = doutNumFracBits;      
-    m_numKernelRows         = numKernelRows;
-    m_numKernelCols         = numKernelCols;
-    m_stride                = stride;
-    m_padding               = padding;
-    m_globalPooling         = globalPooling;
-    m_flFilterData          = flFilterData; 
-    m_flBiasData            = flBiasData;   
-    m_fxFilterData          = fxFilterData; 
-    m_fxBiasData            = fxBiasData;
-    m_numFilterValues       = numFilterValues;    
-    m_group                 = group;
-    m_localSize             = localSize; 
-    m_alpha                 = alpha;     
-    m_beta                  = beta;
+    m_precision					= layerInfo.precision;
+    m_layerName					= layerInfo.layerName;      
+    m_topLayerNames				= layerInfo.topLayerNames;
+    m_bottomLayerNames			= layerInfo.bottomLayerNames; 
+    m_layerType					= layerInfo.layerType;
+    m_numInputRows				= layerInfo.numInputRows;
+    m_numInputCols				= layerInfo.numInputCols;
+    m_inputDepth				= layerInfo.inputDepth;
+    m_outputDepth				= layerInfo.outputDepth;
+    m_dinFxPtLength				= layerInfo.dinFxPtLength;         
+    m_dinNumFracBits			= layerInfo.dinNumFracBits;
+    m_whtFxPtLength				= layerInfo.whtFxPtLength;         
+    m_whtNumFracBits			= layerInfo.whtNumFracBits; 
+    m_doutFxPtLength			= layerInfo.doutFxPtLength; 
+    m_doutNumFracBits			= layerInfo.doutNumFracBits;              
+	m_biasFxPtLength			= layerInfo.biasFxPtLength;
+	m_biasNumFracBit			= layerInfo.biasNumFracBits;
+	m_scaleBiasFxPtLength		= layerInfo.scaleBiasFxPtLength;
+	m_scaleBiasNumFracBits		= layerInfo.scaleBiasNumFracBits;
+	m_leakyFxPtLength			= layerInfo.leakyFxPtLength;
+	m_leakyNumFracBits			= layerInfo.leakyNumFracBits;
+    m_numKernelRows				= layerInfo.numKernelRows;
+    m_numKernelCols				= layerInfo.numKernelCols;
+    m_stride					= layerInfo.stride;
+    m_padding					= layerInfo.padding;
+    m_globalPooling				= layerInfo.globalPooling;
+	m_numFilterValues			= layerInfo.numFilterValues;
+	m_darknet_n_param   		= layerInfo.darknet_n_param;
+	m_darknet_classes_param		= layerInfo.darknet_classes_param;
+	m_darknet_outputs_param		= layerInfo.darknet_outputs_param;
+	if(layerInfo.flFilterData) {
+		m_flFilterData = (float*)malloc(m_numFilterValues * sizeof(float));
+		memcpy(m_flFilterData, layerInfo.flFilterData, m_numFilterValues * sizeof(float));
+	}
+	if(layerInfo.flBiasData) {
+		m_flBiasData = (float*)malloc(m_outputDepth * sizeof(float));
+		memcpy(m_flBiasData, layerInfo.flBiasData, m_outputDepth * sizeof(float));
+	}
+	if(layerInfo.flScaleBiasData) {
+		m_flScaleBiasData = (float*)malloc(m_outputDepth * sizeof(float));
+		memcpy(m_flScaleBiasData, layerInfo.flScaleBiasData, m_outputDepth * sizeof(float));
+	}      
+	if(layerInfo.fxFilterData) {
+		m_fxFilterData = (fixedPoint_t*)malloc(m_numFilterValues * sizeof(fixedPoint_t));
+		memcpy(m_fxFilterData, layerInfo.fxFilterData, m_numFilterValues * sizeof(fixedPoint_t));
+	}
+	if(layerInfo.fxBiasData) {
+		m_fxBiasData = (fixedPoint_t*)malloc(m_outputDepth * sizeof(fixedPoint_t));
+		memcpy(m_fxBiasData, layerInfo.fxBiasData, m_outputDepth * sizeof(fixedPoint_t));
+	}
+	if(layerInfo.fxScaleBiasData) {
+		m_fxScaleBiasData = (fixedPoint_t*)malloc(m_outputDepth * sizeof(fixedPoint_t));
+		memcpy(m_fxScaleBiasData, layerInfo.fxScaleBiasData, m_outputDepth * sizeof(fixedPoint_t));
+	}   
+    m_group						= layerInfo.group;
+    m_localSize					= layerInfo.localSize; 
+    m_alpha						= layerInfo.alpha;
+	m_flBeta					= layerInfo.flBeta;
+	m_fxBeta					= layerInfo.fxBeta;
+	m_activation				= layerInfo.activation;
+    m_darknetNormScaleBias		= layerInfo.darknetNormScaleBias;
+	m_darknetAct				= layerInfo.darknetAct;
+	if(layerInfo.flMeanData) {
+		m_flMeanData = (float*)malloc(m_outputDepth * sizeof(float));
+		memcpy(m_flMeanData, layerInfo.flMeanData, m_outputDepth * sizeof(float));
+	}
+	if(layerInfo.flVarianceData) {
+		m_flVarianceData = (float*)malloc(m_outputDepth * sizeof(float));
+		memcpy(m_flVarianceData, layerInfo.flVarianceData, m_outputDepth * sizeof(float));
+	}
+	if(layerInfo.fxMeanData) {
+		m_fxMeanData = (fixedPoint_t*)malloc(m_outputDepth * sizeof(fixedPoint_t));
+		memcpy(m_fxMeanData, layerInfo.fxMeanData, m_outputDepth * sizeof(fixedPoint_t));
+	}
+	if(layerInfo.fxVarianceData) {
+		m_fxVarianceData = (fixedPoint_t*)malloc(m_outputDepth * sizeof(fixedPoint_t));
+		memcpy(m_fxVarianceData, layerInfo.fxVarianceData, m_outputDepth * sizeof(fixedPoint_t));
+	}
     m_blob.flData	        = NULL;
     m_blob.fxData	        = NULL;
     m_blob.numRows		    = 1;
     m_blob.numCols		    = 1;
     m_blob.depth		    = 1;
-    m_blob.blobSize         = 1;  
+    m_blob.blobSize         = 1;
 }
 
 

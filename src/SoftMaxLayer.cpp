@@ -1,73 +1,15 @@
 #include "SoftMaxLayer.hpp"
 using namespace std;
+using namespace espresso;
 
 
-SoftMaxLayer::SoftMaxLayer  (
-                                precision_t precision,
-                                string layerName,
-                                vector<string> topLayerNames,
-                                vector<string> bottomLayerNames,
-                                string layerType,
-                                int numInputRows,
-                                int numInputCols,
-                                int inputDepth,
-                                int outputDepth,
-                                int dinFxPtLength,
-                                int dinNumFracBits,
-                                int whtFxPtLength,
-                                int whtNumFracBits,
-                                int doutFxPtLength,
-                                int doutNumFracBits,                               
-                                int numKernelRows,
-                                int numKernelCols,
-                                int stride,
-                                int padding,
-                                bool globalPooling,
-                                float *flFilterData,
-                                float *flBiasData,  
-                                FixedPoint_t *fxFilterData,
-                                FixedPoint_t *fxBiasData,
-                                int numFilterValues,                                      
-                                int group,
-                                int localSize,
-                                float alpha,
-                                float beta
-                            ) : Layer	(	
-                                            precision,
-                                            layerName,
-                                            topLayerNames,
-                                            bottomLayerNames,
-                                            layerType,
-                                            numInputRows,
-                                            numInputCols,
-                                            inputDepth,
-                                            outputDepth,
-                                            dinFxPtLength,
-                                            dinNumFracBits,
-                                            whtFxPtLength,
-                                            whtNumFracBits,
-                                            doutFxPtLength,
-                                            doutNumFracBits,                                            
-                                            numKernelRows,
-                                            numKernelCols,
-                                            stride,
-                                            padding,
-                                            globalPooling,
-                                            flFilterData,
-                                            flBiasData,                                                          
-                                            fxFilterData,                                                        
-                                            fxBiasData, 
-                                            numFilterValues,
-                                            group,
-                                            localSize,
-                                            alpha,
-                                            beta
-                                        ) {
-}
+SoftMaxLayer::SoftMaxLayer(layerInfo_t layerInfo) : Layer(layerInfo) {}
 
 
 SoftMaxLayer::~SoftMaxLayer() {
-    free(m_blob.flData);
+	if (m_blob.flData) {
+		free(m_blob.flData);
+	}
 }
 
 
@@ -88,19 +30,23 @@ void SoftMaxLayer::ComputeLayerParam() {
 	m_blob.numCols = m_numOutputCols;
     m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
 	m_blob.flData = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
-    m_blob.fxData = (FixedPoint_t*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(FixedPoint_t));
+    m_blob.fxData = (fixedPoint_t*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(fixedPoint_t));
 }
 
 
-void SoftMaxLayer::ComputeLayer() { // made with dcNet in mind, may need to change for general Neural networks with common softmax layers
+void SoftMaxLayer::ComputeLayer() { 
+	ComputeLayer_FlPt();
+}
 
-    if(m_bottomLayers[0]->m_precision == FIXED) {
+
+void SoftMaxLayer::ComputeLayer_FlPt() { // made with dcNet in mind, may need to change for general Neural networks with common softmax layers
+	if(m_bottomLayers[0]->m_precision == FIXED) {
         int dinNumFracBits   = m_bottomLayers[0]->m_dinNumFracBits;
         int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
-        FixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
+        fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
         float        *flData = m_bottomLayers[0]->m_blob.flData;
         for(int i = 0; i < blobSize; i++) {
-            flData[i] = FixedPoint::toFloat(dinNumFracBits, fxData[i]);
+            flData[i] = fixedPoint::toFloat(dinNumFracBits, fxData[i]);
         }
     }
 
@@ -169,6 +115,8 @@ void SoftMaxLayer::ComputeLayer() { // made with dcNet in mind, may need to chan
     }
 
     free(maxs);
-    free(sums);
-
 }
+
+
+void SoftMaxLayer::ComputeLayer_FxPt() {}
+

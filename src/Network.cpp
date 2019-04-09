@@ -6,173 +6,31 @@ using namespace espresso;
 Network::Network() {}
 
 
-Network::Network(vector<layerInfo_t> &layerInfo) {
+Network::Network(vector<layerInfo_t> &layerInfo, vector<int> &outputLayers) {
 	
 	for (uint32_t i = 0; i < layerInfo.size(); i++) {
 		if (layerInfo[i].layerType == "Input") {
-			m_cnn.push_back(new DataLayer(
-                layerInfo[i].precision,
-				layerInfo[i].layerName,
-				layerInfo[i].topLayerNames,
-				layerInfo[i].bottomLayerNames,
-				layerInfo[i].layerType,
-				layerInfo[i].numInputRows,
-				layerInfo[i].numInputCols,
-				layerInfo[i].inputDepth,
-                layerInfo[i].outputDepth,
-                layerInfo[i].dinFxPtLength,
-                layerInfo[i].dinNumFracBits,
-                layerInfo[i].whtFxPtLength,
-                layerInfo[i].whtNumFracBits,
-                layerInfo[i].doutFxPtLength,
-                layerInfo[i].doutNumFracBits
-			));
+			m_cnn.push_back(new DataLayer(layerInfo[i]));
 		} else if(layerInfo[i].layerType == "Convolution") {
-			m_cnn.push_back(new ConvolutionLayer(
-                layerInfo[i].precision,
-				layerInfo[i].layerName,
-				layerInfo[i].topLayerNames,
-				layerInfo[i].bottomLayerNames,
-				layerInfo[i].layerType,
-				layerInfo[i].numInputRows,
-				layerInfo[i].numInputCols,
-				layerInfo[i].inputDepth,
-				layerInfo[i].outputDepth,
-                layerInfo[i].dinFxPtLength,
-                layerInfo[i].dinNumFracBits,
-                layerInfo[i].whtFxPtLength,
-                layerInfo[i].whtNumFracBits,
-                layerInfo[i].doutFxPtLength,
-                layerInfo[i].doutNumFracBits,                
-				layerInfo[i].numKernelRows,
-				layerInfo[i].numKernelCols,
-				layerInfo[i].stride,
-				layerInfo[i].padding,
-                layerInfo[i].globalPooling,
-				layerInfo[i].flFilterData,
-				layerInfo[i].flBiasData,
-				layerInfo[i].fxFilterData,
-				layerInfo[i].fxBiasData,
-                layerInfo[i].numFilterValues,
-                layerInfo[i].group
-			));
-		} else if(layerInfo[i].layerType == "ReLU") {
-			m_cnn.push_back(new RELULayer(
-                layerInfo[i].precision,
-				layerInfo[i].layerName,
-				layerInfo[i].topLayerNames,
-				layerInfo[i].bottomLayerNames,
-				layerInfo[i].layerType,
-				layerInfo[i].numInputRows,
-				layerInfo[i].numInputCols,
-				layerInfo[i].inputDepth,
-				layerInfo[i].outputDepth,
-                layerInfo[i].dinFxPtLength,
-                layerInfo[i].dinNumFracBits,
-                layerInfo[i].whtFxPtLength,
-                layerInfo[i].whtNumFracBits,
-                layerInfo[i].doutFxPtLength,
-                layerInfo[i].doutNumFracBits
-			));
+			m_cnn.push_back(new ConvolutionLayer(layerInfo[i]));
+		} else if(layerInfo[i].layerType == "Activation") {
+			m_cnn.push_back(new ActivationLayer(layerInfo[i]));
         } else if(layerInfo[i].layerType == "LRN") {
-			m_cnn.push_back(new NormLayer(
-                layerInfo[i].precision,
-				layerInfo[i].layerName,
-				layerInfo[i].topLayerNames,
-				layerInfo[i].bottomLayerNames,
-				layerInfo[i].layerType,
-				layerInfo[i].numInputRows,
-				layerInfo[i].numInputCols,
-				layerInfo[i].inputDepth,
-				layerInfo[i].outputDepth,
-                layerInfo[i].dinFxPtLength,
-                layerInfo[i].dinNumFracBits,
-                layerInfo[i].whtFxPtLength,
-                layerInfo[i].whtNumFracBits,
-                layerInfo[i].doutFxPtLength,
-                layerInfo[i].doutNumFracBits,               
-				layerInfo[i].numKernelRows,
-				layerInfo[i].numKernelCols,
-				layerInfo[i].stride,
-				layerInfo[i].padding,
-                layerInfo[i].globalPooling,
-				layerInfo[i].flFilterData,
-				layerInfo[i].flBiasData,
-				layerInfo[i].fxFilterData,
-				layerInfo[i].fxBiasData,
-                layerInfo[i].numFilterValues,                
-                layerInfo[i].group,
-                layerInfo[i].localSize,
-                layerInfo[i].alpha,
-                layerInfo[i].beta
-			));
-		} else if(layerInfo[i].layerType == "Pooling_MAX" || layerInfo[i].layerType == "Pooling_AVE") {
-			m_cnn.push_back(new PoolingLayer(
-                layerInfo[i].precision,
-				layerInfo[i].layerName,
-				layerInfo[i].topLayerNames,
-				layerInfo[i].bottomLayerNames,
-				layerInfo[i].layerType,
-				layerInfo[i].numInputRows,
-				layerInfo[i].numInputCols,
-				layerInfo[i].inputDepth,
-				layerInfo[i].outputDepth,
-                layerInfo[i].dinFxPtLength,
-                layerInfo[i].dinNumFracBits,
-                layerInfo[i].whtFxPtLength,
-                layerInfo[i].whtNumFracBits,
-                layerInfo[i].doutFxPtLength,
-                layerInfo[i].doutNumFracBits,                
-				layerInfo[i].numKernelRows,
-				layerInfo[i].numKernelCols,
-				layerInfo[i].stride,
-				layerInfo[i].padding,
-                layerInfo[i].globalPooling
-			));
+			m_cnn.push_back(new NormLayer(layerInfo[i]));
+		} else if(layerInfo[i].layerType == "Pooling_MAX" || layerInfo[i].layerType == "Pooling_AVG") {
+			m_cnn.push_back(new PoolingLayer(layerInfo[i]));
 		} else if(layerInfo[i].layerType == "InnerProduct") {
-			m_cnn.push_back(new FullyConnectedLayer(
-                layerInfo[i].precision,
-				layerInfo[i].layerName,
-				layerInfo[i].topLayerNames,
-				layerInfo[i].bottomLayerNames,
-				layerInfo[i].layerType,
-				layerInfo[i].numInputRows,
-				layerInfo[i].numInputCols,
-				layerInfo[i].inputDepth,
-				layerInfo[i].outputDepth,
-                layerInfo[i].dinFxPtLength,
-                layerInfo[i].dinNumFracBits,
-                layerInfo[i].whtFxPtLength,
-                layerInfo[i].whtNumFracBits,
-                layerInfo[i].doutFxPtLength,
-                layerInfo[i].doutNumFracBits,
-				layerInfo[i].numKernelRows,
-				layerInfo[i].numKernelCols,
-				layerInfo[i].stride,
-				layerInfo[i].padding,
-                layerInfo[i].globalPooling,
-				layerInfo[i].flFilterData,
-				layerInfo[i].flBiasData,
-				layerInfo[i].fxFilterData,
-				layerInfo[i].fxBiasData,
-                layerInfo[i].numFilterValues
-			));
+			m_cnn.push_back(new FullyConnectedLayer(layerInfo[i]));
         } else if(layerInfo[i].layerType == "Concat") {
-			m_cnn.push_back(new ConcatLayer(
-                layerInfo[i].precision,
-				layerInfo[i].layerName,
-				layerInfo[i].topLayerNames,
-				layerInfo[i].bottomLayerNames,
-				layerInfo[i].layerType
-			));
+			m_cnn.push_back(new ConcatLayer(layerInfo[i]));
 		} else if(layerInfo[i].layerType == "Softmax") {
-			m_cnn.push_back(new SoftMaxLayer(
-                layerInfo[i].precision,
-				layerInfo[i].layerName,
-				layerInfo[i].topLayerNames,
-				layerInfo[i].bottomLayerNames,
-				layerInfo[i].layerType
-			));
+			m_cnn.push_back(new SoftMaxLayer(layerInfo[i]));
+		} else if(layerInfo[i].layerType == "YOLO") {
+			m_cnn.push_back(new YOLOLayer(layerInfo[i]));
+		} else if(layerInfo[i].layerType == "UpSample") {
+			m_cnn.push_back(new UpSampleLayer(layerInfo[i]));
+		} else if(layerInfo[i].layerType == "Residual") {
+			m_cnn.push_back(new ResidualLayer(layerInfo[i]));
 		} else {
             cout << "[ESPRESSO]: " << "Skipped Loading Layer: " << layerInfo[i].layerName << endl;
         }
@@ -211,31 +69,37 @@ Network::Network(vector<layerInfo_t> &layerInfo) {
 	}
 
 
-    // get output layers
-    stack<Layer*> outputLayers;
-    for(uint32_t i = 0; i < m_cnn.size(); i ++) {
-        if(m_cnn[i]->m_layerType != "ReLU") {   // ReLU is in place      
-            outputLayers.push(m_cnn[i]);
-            for(uint32_t j = 0; j < m_cnn.size(); j++) {
-                for(uint32_t k = 0; k < m_cnn[j]->m_bottomLayers.size(); k++) {
-                    if(m_cnn[i]->m_layerName == m_cnn[j]->m_bottomLayers[k]->m_layerName) {
-                        outputLayers.pop();
-                        goto end;
-                    }
-                }
-            }
-        }
-        end:
-        continue;
-    }
-    m_outputLayers.resize(outputLayers.size());
-    m_outputLayers[outputLayers.size() - 1] = outputLayers.top();
-    outputLayers.pop();
-    for(uint32_t i = outputLayers.size() - 1; ((int)i) >= 0; i--) {
-        m_outputLayers[i] = outputLayers.top();
-        outputLayers.pop();
-    } 
-    
+	// get output layers
+	if(outputLayers.size() != 0) {
+		for (uint32_t i = 0; i < outputLayers.size(); i++) {
+			m_outputLayers.push_back(m_cnn[outputLayers[i]]);
+		}
+	} else {
+		stack<Layer*> outputLayers_tmp;
+		for(uint32_t i = 0; i < m_cnn.size(); i ++) {
+			if(m_cnn[i]->m_layerType != "Activation") {   // Activation is in place      
+				outputLayers_tmp.push(m_cnn[i]);
+				for(uint32_t j = 0; j < m_cnn.size(); j++) {
+					for(uint32_t k = 0; k < m_cnn[j]->m_bottomLayers.size(); k++) {
+						if(m_cnn[i]->m_layerName == m_cnn[j]->m_bottomLayers[k]->m_layerName) {
+							outputLayers_tmp.pop();
+							goto label0;
+						}
+					}
+				}
+			}
+			label0:
+			continue;
+		}
+		// reverse order
+		m_outputLayers.resize(outputLayers.size());
+		m_outputLayers[outputLayers.size() - 1] = outputLayers_tmp.top();
+		outputLayers_tmp.pop();
+		for(uint32_t i = outputLayers.size() - 1; ((int)i) >= 0; i--) {
+			m_outputLayers[i] = outputLayers_tmp.top();
+			outputLayers_tmp.pop();
+		} 
+	}
 }
 
 
@@ -298,7 +162,7 @@ void Network::Forward(string start, string end) {
             cout << "\t Kernel Depth:       \t\t" << m_cnn[i]->m_kernelDepth << endl;
             cout << "\t Kernel Size:        \t\t" << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
         }
-        if(m_cnn[i]->m_layerType == "Pooling_MAX"|| m_cnn[i]->m_layerType == "Pooling_AVE") {
+        if(m_cnn[i]->m_layerType == "Pooling_MAX"|| m_cnn[i]->m_layerType == "Pooling_AVG") {
             if(m_cnn[i]->m_layerType == "Pooling_MAX") {
                 cout << "\t Pooling Param:  \t\t" << "Max" << endl;
             } else {
