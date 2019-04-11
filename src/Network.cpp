@@ -8,7 +8,7 @@ Network::Network() {}
 
 Network::Network(vector<layerInfo_t> &layerInfo, vector<int> &outputLayers) {
 	
-	for (uint32_t i = 0; i < layerInfo.size(); i++) {
+	for(int i = 0; i < layerInfo.size(); i++) {
 		if (layerInfo[i].layerType == "Input") {
 			m_cnn.push_back(new DataLayer(layerInfo[i]));
 		} else if(layerInfo[i].layerType == "Convolution") {
@@ -36,12 +36,12 @@ Network::Network(vector<layerInfo_t> &layerInfo, vector<int> &outputLayers) {
         }
 	}
   
-    for (uint32_t i = 0; i < m_cnn.size(); i++) {
+    for(int i = 0; i < m_cnn.size(); i++) {
         cout << "[ESPRESSO]: Loaded Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
 	}
     
     // look for top layers first and insert 
-   	for (uint32_t i = 0; i < m_cnn.size(); i++) {	// for every layer
+   	for(int i = 0; i < m_cnn.size(); i++) {	// for every layer
 		if (m_cnn[i]->m_layerType != "Input") {
 			for (uint32_t j = 0; j < m_cnn[i]->m_topLayerNames.size(); j++) { // for every top layer of the current cnn layer
 				for (uint32_t k = 0; k < m_cnn.size(); k++) {	// search for the top layer: where I write my data to
@@ -55,7 +55,7 @@ Network::Network(vector<layerInfo_t> &layerInfo, vector<int> &outputLayers) {
 	}
    
 
-    for (uint32_t i = 0; i < m_cnn.size(); i++) {	// for every layer
+    for(int i = 0; i < m_cnn.size(); i++) {	// for every layer
 		if (m_cnn[i]->m_layerType != "Input") {
 			for (uint32_t j = 0; j < m_cnn[i]->m_bottomLayerNames.size(); j++) { // for every bottom layer of the current cnn layer
 				for (uint32_t k = 0; k < m_cnn.size(); k++) {	// search for the bottom layer: where I get my data from
@@ -71,7 +71,7 @@ Network::Network(vector<layerInfo_t> &layerInfo, vector<int> &outputLayers) {
 
 	// get output layers
 	if(outputLayers.size() != 0) {
-		for (uint32_t i = 0; i < outputLayers.size(); i++) {
+		for(int i = 0; i < outputLayers.size(); i++) {
 			m_outputLayers.push_back(m_cnn[outputLayers[i]]);
 		}
 	} else {
@@ -105,7 +105,7 @@ Network::Network(vector<layerInfo_t> &layerInfo, vector<int> &outputLayers) {
 
 
 Network::~Network() {
-	for (uint32_t i = 0; i < m_cnn.size(); i++) {
+	for(int i = 0; i < m_cnn.size(); i++) {
 		delete m_cnn[i];
 	}
 }

@@ -38,7 +38,6 @@ void ConvolutionLayer::ComputeLayerParam() {
 }
 
 
-
 void ConvolutionLayer::ComputeLayer() {
     if(m_precision == FLOAT) {
 	    ComputeLayer_FlPt();
@@ -146,20 +145,10 @@ void ConvolutionLayer::ComputeLayer_FxPt() {
         fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
         float        *flData = m_bottomLayers[0]->m_blob.flData;
         for(int i = 0; i < blobSize; i++) {
-            fxData[i] = fixedPoint::create(m_dinNumFracBits, flData[i]);
+            fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
         }
     }
-        
-    if(m_bottomLayers[0]->m_doutFxPtLength != m_dinFxPtLength || m_bottomLayers[0]->m_doutNumFracBits != m_dinNumFracBits) {
-        fixedPoint::SetParam(   m_bottomLayers[0]->m_doutFxPtLength, 
-                                m_bottomLayers[0]->m_doutNumFracBits, 
-                                m_dinFxPtLength, 
-                                m_dinNumFracBits, 
-                                m_bottomLayers[0]->m_blob.fxData,
-                                m_bottomLayers[0]->m_blob.blobSize
-                            );
-    }
-        
+          
     // get input
     fixedPoint_t *datain = m_bottomLayers[0]->m_blob.fxData;
     int numInputBlobRows = m_bottomLayers[0]->m_blob.numRows;
@@ -168,32 +157,7 @@ void ConvolutionLayer::ComputeLayer_FxPt() {
         
     // output
     fixedPoint_t *dataout = m_topLayers[0]->m_blob.fxData;
-        
-    //filter data
-    fixedPoint_t *filters = (fixedPoint_t*)malloc(sizeof(fixedPoint_t) * m_numFilterValues);
-    memcpy(filters, m_fxFilterData, (sizeof(fixedPoint_t) * m_numFilterValues));
-    fixedPoint::SetParam(   ESPRO_DEF_FXPT_LEN,
-                            ESPRO_DEF_NUM_FRAC_BITS,
-                            m_whtFxPtLength,
-                            m_whtNumFracBits,
-                            filters,
-                            m_numFilterValues
-                        );
-	fixedPoint_t *filters_ptr = filters;
-        
-    int resFxPtLength  = m_dinFxPtLength + m_whtFxPtLength;
-    int resNumFracBits = m_dinNumFracBits + m_whtNumFracBits;
-        
-    fixedPoint_t *bias = (fixedPoint_t*)malloc(sizeof(fixedPoint_t) * m_numKernels);
-    memcpy(bias, m_fxBiasData, (sizeof(fixedPoint_t) * m_numKernels));
-    fixedPoint::SetParam(   ESPRO_DEF_FXPT_LEN,
-                            ESPRO_DEF_NUM_FRAC_BITS,
-                            resFxPtLength,
-                            resNumFracBits,
-                            bias,
-                            m_numKernels
-                        );
-        
+                
 #ifdef HIGH_PERF
 	int nthreads = std::thread::hardware_concurrency();
 #else
@@ -207,14 +171,14 @@ void ConvolutionLayer::ComputeLayer_FxPt() {
 			for (int m = bi_m; m < ei_m; m++) {
 				for (int x = 0, a = 0; x < m_numOutputRows; x++, a += m_stride) {
 					for(int y = 0, b = 0; y < m_numOutputCols; y++, b += m_stride) {
-						index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = bias[m];
+						index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) = m_fxBiasData[m];
 						for (int k = 0; k < m_kernelDepth; k++) {
 							for (int i = a - m_padding, kr = 0; kr < m_numKernelRows; i++, kr++) {
 								for (int j = b - m_padding, kc = 0; kc < m_numKernelCols; j++, kc++) {
 									if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) {	// in valid region, assuming zero padding                        
 										index3D(m_outputDepth, m_numOutputRows, m_numOutputCols, dataout, m, x, y) += (
 											index3D(inputBlobDepth, numInputBlobRows, numInputBlobCols, datain, k, i, j)
-											* index4D(m_numKernels, m_kernelDepth, m_numKernelRows, m_numKernelCols, filters_ptr, m, k, kr, kc)
+											* index4D(m_numKernels, m_kernelDepth, m_numKernelRows, m_numKernelCols, m_fxFilterData, m, k, kr, kc)
 										);
 									}
 								}
@@ -233,8 +197,8 @@ void ConvolutionLayer::ComputeLayer_FxPt() {
 	// filters += ((m_numKernels / m_group) * m_kernelDepth * m_numKernelRows * m_numKernelCols);
 		
 		
-    fixedPoint::SetParam(   resFxPtLength, 
-                            resNumFracBits, 
+    fixedPoint::SetParam(   m_biasFxPtLength, 
+                            m_biasNumFracBits, 
                             m_doutFxPtLength, 
                             m_doutNumFracBits, 
                             m_topLayers[0]->m_blob.fxData,
@@ -246,9 +210,6 @@ void ConvolutionLayer::ComputeLayer_FxPt() {
 			LeakyActivation_FxPt();
 		}
 	}
-	
-    free(filters);
-    free(bias);
 }
 
 
@@ -264,8 +225,8 @@ void ConvolutionLayer::LeakyActivation_FxPt() {
 	int nthreads = 1;
 #endif
 	vector<thread> threads(nthreads);
-	fixedPoint_t leakyScaleValue = fixedPoint::create(m_leakyNumFracBits, 0.1f);
-	fixedPoint_t one = fixedPoint::create(m_leakyNumFracBits, 1.0f);
+	fixedPoint_t leakyScaleValue = fixedPoint::create(m_leakyFxPtLength, m_leakyNumFracBits, 0.1f);
+	fixedPoint_t one = fixedPoint::create(m_leakyFxPtLength, m_leakyNumFracBits, 1.0f);
 	
 	int resFxPtLength  = m_dinFxPtLength + m_leakyFxPtLength;
     int resNumFracBits = m_dinNumFracBits + m_leakyNumFracBits;
@@ -282,11 +243,11 @@ void ConvolutionLayer::LeakyActivation_FxPt() {
 	for_each(threads.begin(), threads.end(), [](std::thread& x){x.join(); });	
 	
 	
-
+	// Leaky value is always less than 1 so just normalize back to din params
 	fixedPoint::SetParam(   resFxPtLength, 
 							resNumFracBits, 
-							m_doutFxPtLength, 
-							m_doutNumFracBits, 
+							m_dinFxPtLength, 
+							m_dinNumFracBits, 
 							m_topLayers[0]->m_blob.fxData,
 							m_topLayers[0]->m_blob.blobSize
 						);

@@ -184,7 +184,7 @@ void PoolingLayer::MaxPooling_FxPt() {
         fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
         float        *flData = m_bottomLayers[0]->m_blob.flData;
         for(int i = 0; i < blobSize; i++) {
-            fxData[i] = fixedPoint::create(m_dinNumFracBits, flData[i]);
+            fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
         }
     }
         
@@ -251,7 +251,7 @@ void PoolingLayer::AvgPooling_FxPt() {
         fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
         float        *flData = m_bottomLayers[0]->m_blob.flData;
         for(int i = 0; i < blobSize; i++) {
-            fxData[i] = fixedPoint::create(m_dinNumFracBits, flData[i]);
+            fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
         }
     }
         

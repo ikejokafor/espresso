@@ -22,11 +22,9 @@ Layer::Layer   (
     m_doutFxPtLength			= layerInfo.doutFxPtLength; 
     m_doutNumFracBits			= layerInfo.doutNumFracBits;              
 	m_biasFxPtLength			= layerInfo.biasFxPtLength;
-	m_biasNumFracBit			= layerInfo.biasNumFracBits;
-	m_scaleBiasFxPtLength		= layerInfo.scaleBiasFxPtLength;
-	m_scaleBiasNumFracBits		= layerInfo.scaleBiasNumFracBits;
+	m_biasNumFracBits			= layerInfo.biasNumFracBits;
 	m_leakyFxPtLength			= layerInfo.leakyFxPtLength;
-	m_leakyNumFracBits			= layerInfo.leakyNumFracBits;
+	m_leakyNumFracBits			= layerInfo.leakyNumFracBits;  
     m_numKernelRows				= layerInfo.numKernelRows;
     m_numKernelCols				= layerInfo.numKernelCols;
     m_stride					= layerInfo.stride;
@@ -43,11 +41,7 @@ Layer::Layer   (
 	if(layerInfo.flBiasData) {
 		m_flBiasData = (float*)malloc(m_outputDepth * sizeof(float));
 		memcpy(m_flBiasData, layerInfo.flBiasData, m_outputDepth * sizeof(float));
-	}
-	if(layerInfo.flScaleBiasData) {
-		m_flScaleBiasData = (float*)malloc(m_outputDepth * sizeof(float));
-		memcpy(m_flScaleBiasData, layerInfo.flScaleBiasData, m_outputDepth * sizeof(float));
-	}      
+	}    
 	if(layerInfo.fxFilterData) {
 		m_fxFilterData = (fixedPoint_t*)malloc(m_numFilterValues * sizeof(fixedPoint_t));
 		memcpy(m_fxFilterData, layerInfo.fxFilterData, m_numFilterValues * sizeof(fixedPoint_t));
@@ -56,10 +50,6 @@ Layer::Layer   (
 		m_fxBiasData = (fixedPoint_t*)malloc(m_outputDepth * sizeof(fixedPoint_t));
 		memcpy(m_fxBiasData, layerInfo.fxBiasData, m_outputDepth * sizeof(fixedPoint_t));
 	}
-	if(layerInfo.fxScaleBiasData) {
-		m_fxScaleBiasData = (fixedPoint_t*)malloc(m_outputDepth * sizeof(fixedPoint_t));
-		memcpy(m_fxScaleBiasData, layerInfo.fxScaleBiasData, m_outputDepth * sizeof(fixedPoint_t));
-	}   
     m_group						= layerInfo.group;
     m_localSize					= layerInfo.localSize; 
     m_alpha						= layerInfo.alpha;
@@ -68,22 +58,6 @@ Layer::Layer   (
 	m_activation				= layerInfo.activation;
     m_darknetNormScaleBias		= layerInfo.darknetNormScaleBias;
 	m_darknetAct				= layerInfo.darknetAct;
-	if(layerInfo.flMeanData) {
-		m_flMeanData = (float*)malloc(m_outputDepth * sizeof(float));
-		memcpy(m_flMeanData, layerInfo.flMeanData, m_outputDepth * sizeof(float));
-	}
-	if(layerInfo.flVarianceData) {
-		m_flVarianceData = (float*)malloc(m_outputDepth * sizeof(float));
-		memcpy(m_flVarianceData, layerInfo.flVarianceData, m_outputDepth * sizeof(float));
-	}
-	if(layerInfo.fxMeanData) {
-		m_fxMeanData = (fixedPoint_t*)malloc(m_outputDepth * sizeof(fixedPoint_t));
-		memcpy(m_fxMeanData, layerInfo.fxMeanData, m_outputDepth * sizeof(fixedPoint_t));
-	}
-	if(layerInfo.fxVarianceData) {
-		m_fxVarianceData = (fixedPoint_t*)malloc(m_outputDepth * sizeof(fixedPoint_t));
-		memcpy(m_fxVarianceData, layerInfo.fxVarianceData, m_outputDepth * sizeof(fixedPoint_t));
-	}
     m_blob.flData	        = NULL;
     m_blob.fxData	        = NULL;
     m_blob.numRows		    = 1;

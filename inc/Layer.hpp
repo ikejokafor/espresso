@@ -2,8 +2,8 @@
 #define __LAYER_HPP__
 
 
-#define ESPRO_DEF_FXPT_LEN          16
-#define ESPRO_DEF_NUM_FRAC_BITS		14
+#define ESPRO_DEF_FXPT_LEN          32
+#define ESPRO_DEF_NUM_FRAC_BITS		16
 #define HIGH_PERF
 
 
@@ -80,8 +80,6 @@ namespace espresso {
 			doutNumFracBits(ESPRO_DEF_NUM_FRAC_BITS),	
 			biasFxPtLength(ESPRO_DEF_FXPT_LEN),
 			biasNumFracBits(ESPRO_DEF_NUM_FRAC_BITS),
-			scaleBiasFxPtLength(ESPRO_DEF_FXPT_LEN),
-			scaleBiasNumFracBits(ESPRO_DEF_NUM_FRAC_BITS),
 		    leakyFxPtLength(ESPRO_DEF_FXPT_LEN),
 		    leakyNumFracBits(ESPRO_DEF_NUM_FRAC_BITS),
 			numKernelRows(1),
@@ -92,20 +90,14 @@ namespace espresso {
 		    numFilterValues(1),
 			flFilterData(NULL),
 			flBiasData(NULL),
-			flScaleBiasData(NULL),
 			fxFilterData(NULL),
 			fxBiasData(NULL),
-			fxScaleBiasData(NULL),
 			group(1),
 			localSize(5),
 			alpha(0.0001f),
 			flBeta(0.75f),
 		    fxBeta(0.000001f),
 			activation(espresso::RELU),
-		    flMeanData(NULL),
-		    fxMeanData(NULL),
-		    flVarianceData(NULL),
-		    fxVarianceData(NULL),
 		    darknetNormScaleBias(false),
 		    darknetAct(false),
 		    darknet_n_param(0),
@@ -129,8 +121,6 @@ namespace espresso {
         int doutNumFracBits;	    
 	    int biasFxPtLength;
         int biasNumFracBits;
-	    int scaleBiasFxPtLength;
-        int scaleBiasNumFracBits;	 
 	    int leakyFxPtLength;
 	    int	leakyNumFracBits;
         int numKernelRows;
@@ -141,20 +131,14 @@ namespace espresso {
         int numFilterValues;	    
         float *flFilterData;
         float *flBiasData;
-	    float *flScaleBiasData;
         fixedPoint_t *fxFilterData;
-        fixedPoint_t *fxBiasData;
-		fixedPoint_t *fxScaleBiasData;	    
+        fixedPoint_t *fxBiasData; 
         int group;
         int localSize;
         float alpha;
         float flBeta;
 	    float fxBeta;
 		espresso::activation_t activation;
-		float *flMeanData;
-		float *flVarianceData;
-		fixedPoint_t *fxMeanData;
-		fixedPoint_t *fxVarianceData;
 	    bool darknetNormScaleBias;
 	    bool darknetAct;
 	    int darknet_n_param;
@@ -205,9 +189,7 @@ class Layer {
         int m_doutFxPtLength;
         int m_doutNumFracBits;
 		int m_biasFxPtLength;
-		int m_biasNumFracBit;
-		int m_scaleBiasFxPtLength;
-		int m_scaleBiasNumFracBits;
+		int m_biasNumFracBits;
 	    int m_leakyFxPtLength;
 	    int	m_leakyNumFracBits;
 		int m_numKernelRows;
@@ -220,26 +202,19 @@ class Layer {
 	    int m_numFilterValues;
 		float *m_flFilterData;
 		float *m_flBiasData;
-		float *m_flScaleBiasData;
 		fixedPoint_t *m_fxFilterData;
 		fixedPoint_t *m_fxBiasData;
-		fixedPoint_t *m_fxScaleBiasData;
         int m_group;      
         int m_localSize;
         float m_alpha;
         float m_flBeta;
 	    float m_fxBeta;
 		espresso::activation_t m_activation;
-		float *m_flMeanData;
-		float *m_flVarianceData;
-		fixedPoint_t *m_fxMeanData;
-		fixedPoint_t *m_fxVarianceData;
-		bool m_darknetNormScaleBias;
 		bool m_darknetAct;
 		int m_darknet_n_param;
 	    int m_darknet_classes_param;
 		int m_darknet_outputs_param;
-	
+		bool m_darknetNormScaleBias;
         
 		Blob_t m_blob;
 		std::vector<Layer*> m_topLayers;

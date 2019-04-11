@@ -92,11 +92,11 @@ void FullyConnectedLayer::ComputeLayer_FxPt() {
         fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
         float        *flData = m_bottomLayers[0]->m_blob.flData;
         for(int i = 0; i < blobSize; i++) {
-            fxData[i] = fixedPoint::create(m_dinNumFracBits, flData[i]);
+            fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
         }
     }
         
-    if(m_bottomLayers[0]->m_doutFxPtLength != m_dinFxPtLength){
+    if(m_bottomLayers[0]->m_doutFxPtLength != m_dinFxPtLength || m_bottomLayers[0]->m_doutNumFracBits != m_dinNumFracBits) {
         fixedPoint::SetParam(   m_bottomLayers[0]->m_doutFxPtLength, 
                                 m_bottomLayers[0]->m_doutNumFracBits, 
                                 m_dinFxPtLength, 
@@ -108,28 +108,23 @@ void FullyConnectedLayer::ComputeLayer_FxPt() {
         
     // get input
     fixedPoint_t *datain = m_bottomLayers[0]->m_blob.fxData;
+    int numInputBlobRows = m_bottomLayers[0]->m_blob.numRows;
+    int numInputBlobCols = m_bottomLayers[0]->m_blob.numCols;
+    int inputBlobDepth = m_bottomLayers[0]->m_blob.depth;
         
     // output
     fixedPoint_t *dataout = m_topLayers[0]->m_blob.fxData;
-  
-    // filter data
-    fixedPoint_t *filters = (fixedPoint_t*)malloc(sizeof(fixedPoint_t) * m_numFilterValues);
-    memcpy(filters, m_fxFilterData, (sizeof(fixedPoint_t) * m_numFilterValues));
-    fixedPoint::SetParam(   ESPRO_DEF_FXPT_LEN,
-                            ESPRO_DEF_NUM_FRAC_BITS,
-                            m_whtFxPtLength,
-                            m_whtNumFracBits,
-                            filters,
-                            m_numFilterValues
-                        );
+        
+    //filter data
+	fixedPoint_t *filters = m_fxFilterData;
         
     int resFxPtLength  = m_dinFxPtLength + m_whtFxPtLength;
     int resNumFracBits = m_dinNumFracBits + m_whtNumFracBits;
         
     fixedPoint_t *bias = (fixedPoint_t*)malloc(sizeof(fixedPoint_t) * m_numKernels);
     memcpy(bias, m_fxBiasData, (sizeof(fixedPoint_t) * m_numKernels));
-    fixedPoint::SetParam(   ESPRO_DEF_FXPT_LEN,
-                            ESPRO_DEF_NUM_FRAC_BITS,
+    fixedPoint::SetParam(   m_biasFxPtLength,
+                            m_biasNumFracBits,
                             resFxPtLength,
                             resNumFracBits,
                             bias,
@@ -152,6 +147,5 @@ void FullyConnectedLayer::ComputeLayer_FxPt() {
                             m_topLayers[0]->m_blob.blobSize
                         );
                             
-    free(filters);
     free(bias);
 }
