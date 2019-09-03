@@ -33,7 +33,7 @@ void ResidualLayer_DKN::ComputeLayer_FlPt() { }
 void ResidualLayer_DKN::ComputeLayer_FxPt() { }
 
 
-void ResidualLayer_DKN::ComputeLayerParam() 
+void ResidualLayer_DKN::ComputeLayerParam()
 {
 	// input size
 	m_inputDepth = m_bottomLayers[0]->m_outputDepth;
@@ -49,7 +49,7 @@ void ResidualLayer_DKN::ComputeLayerParam()
 	m_blob.depth = m_outputDepth;
 	m_blob.numRows = m_numOutputRows;
 	m_blob.numCols = m_numOutputCols;
-	m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
-	m_blob.flData = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
-	m_blob.fxData = (fixedPoint_t*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(fixedPoint_t));
+    m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
+	m_blob.flData =  new float[m_outputDepth * m_numOutputRows * m_numOutputCols];
+	m_blob.fxData = new fixedPoint_t[m_outputDepth * m_numOutputRows * m_numOutputCols];
 }

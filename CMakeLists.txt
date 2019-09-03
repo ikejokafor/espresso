@@ -100,8 +100,9 @@ SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES
 
 
 # BEGIN Build dependencies --------------------------------------------------------------------------------------------------------------------------
-add_dependencies(${TARGET_NAME} fixedPoint)
-add_dependencies(${TARGET_NAME} util)
+# add_dependencies(${TARGET_NAME} darknet_arcv)
+# add_dependencies(${TARGET_NAME} fixedPoint)
+# add_dependencies(${TARGET_NAME} util)
 # END Build dependencies ----------------------------------------------------------------------------------------------------------------------------
 
 
@@ -124,10 +125,12 @@ TARGET_COMPILE_OPTIONS(${TARGET_NAME} PUBLIC
 
 
 # BEGIN Include directories -------------------------------------------------------------------------------------------------------------------------
-TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
+TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PRIVATE
     ${PROJECT_SOURCE_DIR}/inc/
     ${PROJECT_SOURCE_DIR}/../fixedPoint/inc/
     ${PROJECT_SOURCE_DIR}/../util/inc/
+	${PROJECT_SOURCE_DIR}/../darknet/include/
+	${PROJECT_SOURCE_DIR}/../darknet/src/
 )
 # END Include directories ---------------------------------------------------------------------------------------------------------------------------
 

@@ -1,40 +1,41 @@
-#ifndef __NETWORK_HPP__
-#define __NETWORK_HPP__
+#pragma once
 
+
+// Project Includes
 #include "Layer.hpp"
 #include "DataLayer.hpp"
-#include "ConvolutionLayer.hpp"
-#include "ActivationLayer.hpp"
-#include "PoolingLayer.hpp"
 #include "ConcatLayer.hpp"
-#include "FullyConnectedLayer.hpp"
-#include "SoftMaxLayer.hpp"
-#include "NormLayer.hpp"
-#include "YOLOLayer.hpp"
-#include "UpSampleLayer.hpp"
+#include "ConcatLayer_DKN.hpp"
+#include "ConcatLayer_FPGA.hpp"
+#include "ConvolutionLayer.hpp"
+#include "ConvolutionLayer_DKN.hpp"
+#include "ConvolutionLayer_FPGA.hpp"
 #include "ResidualLayer.hpp"
+#include "ResidualLayer_DKN.hpp"
+#include "ResidualLayer_FPGA.hpp"
+#include "UpSampleLayer.hpp"
+#include "UpSampleLayer_DKN.hpp"
+#include "UpSampleLayer_FPGA.hpp"
+#include "YOLOLayer.hpp"
 
+namespace espresso 
+{
+	class Network {
 
-#include <vector>
-
-
-class Network {
-
-	public:
-        Network();
-        Network(std::vector<espresso::layerInfo_t> &layerInfo, std::vector<int> &outputLayers);
-        ~Network();
-        void Forward(std::string start = " ", std::string end = " ");
-        int ReturnLayerIdx(std::string name);
+		public:
+			Network(std::vector<espresso::layerInfo_obj> layerInfo, std::vector<int> &outputLayers);
+			~Network();
+			void Forward(std::string start = " ", std::string end = " ");
+			int ReturnLayerIdx(std::string name);
+			void printLayerStats(int i);
         
-		std::vector<Layer*> m_cnn;
-        std::vector<Layer*> m_outputLayers;
+			std::vector<espresso::Layer*> m_cnn;
+			std::vector<espresso::Layer*> m_outputLayers;
         
-	protected:
+		protected:
 
 
-	private:
+		private:
 
-};
-
-#endif
+	};
+}

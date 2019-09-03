@@ -1,45 +1,33 @@
 #include "YOLOLayer.hpp"
-using namespace std;
-using namespace espresso;
 
 
-YOLOLayer::YOLOLayer(layerInfo_t layerInfo) : Layer(layerInfo) {}
+YOLOLayer::YOLOLayer(espresso::layerInfo_obj layerInfo) : Layer(layerInfo) 
+{
+	m_backend = espresso::ESPRESSO_BACKEND;
+}
 
 
 YOLOLayer::~YOLOLayer() {}
 
 
-void YOLOLayer::ComputeLayerParam() {
-	// input size
-	m_inputDepth   = m_bottomLayers[0]->m_outputDepth;
-	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;
-	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
-
-	// output size
-	m_outputDepth = m_inputDepth;
-	m_numOutputRows = m_numInputRows;
-	m_numOutputCols = m_numInputCols;
-    
-	// create output blob
-	m_blob.depth = m_outputDepth;
-	m_blob.numRows = m_numOutputRows;
-	m_blob.numCols = m_numOutputCols;
-    m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
-    m_blob.flData = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
+void YOLOLayer::activate_array(float *x, const int n) 
+{
+	for (int i = 0; i < n; i++) 
+	{
+		x[i] = 1.0f / (1.0f + exp(-x[i]));
+	}	
 }
 
 
-void YOLOLayer::ComputeLayer() {
-	if (m_precision == FLOAT) {  
-		ComputeLayer_FlPt();
-	} else if(m_precision == FIXED) { 
-		ComputeLayer_FxPt();
-	}
+void YOLOLayer::ComputeLayer() 
+{
+	ComputeLayer_FlPt();
 }
 
 
-void YOLOLayer::ComputeLayer_FlPt() {
-	if(m_bottomLayers[0]->m_precision == FIXED) {
+void YOLOLayer::ComputeLayer_FlPt() 
+{
+	if (m_bottomLayers[0]->m_precision == espresso::FIXED) {
         int dinNumFracBits   = m_bottomLayers[0]->m_dinNumFracBits;
         int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
         fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
@@ -68,20 +56,33 @@ void YOLOLayer::ComputeLayer_FlPt() {
 }
 
 
-void YOLOLayer::ComputeLayer_FxPt() {
-	return;
+void YOLOLayer::ComputeLayer_FxPt() { }
+
+
+
+void YOLOLayer::ComputeLayerParam() {
+	// input size
+	m_inputDepth   = m_bottomLayers[0]->m_outputDepth;
+	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;
+	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
+
+	// output size
+	m_outputDepth = m_inputDepth;
+	m_numOutputRows = m_numInputRows;
+	m_numOutputCols = m_numInputCols;
+    
+	// create output blob
+	m_blob.depth = m_outputDepth;
+	m_blob.numRows = m_numOutputRows;
+	m_blob.numCols = m_numOutputCols;
+	m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
+	m_blob.flData = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
 }
 
 
-int YOLOLayer::entry_index(int location, int entry) {
-    int n = location / (m_numInputCols * m_numInputRows);
-    int loc = location % (m_numInputCols * m_numInputRows);
-    return n * m_numInputCols * m_numInputRows * (4 + m_darknet_classes_param + 1) + entry * m_numInputCols * m_numInputRows + loc;
-}
-
-
-void YOLOLayer::activate_array(float *x, const int n) {
-    for(int i = 0; i < n; i++) {
-	    x[i] = 1.0f / (1.0f + exp(-x[i]));
-    }	
+int YOLOLayer::entry_index(int location, int entry) 
+{
+	int n = location / (m_numInputCols * m_numInputRows);
+	int loc = location % (m_numInputCols * m_numInputRows);
+	return n * m_numInputCols * m_numInputRows * (4 + m_darknet_classes_param + 1) + entry * m_numInputCols * m_numInputRows + loc;
 }

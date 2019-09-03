@@ -3,13 +3,19 @@
 #define NUM_KERNEL_3x3_VAL			10
 #define QUAD_MAX_NUM_KRNL			64
 #define QUAD_MAX_KRNL_DEPTH			8
+#define WEIGHT_SIZE					2
 
+
+// Sysem Includes
 #include <stdint.h>
 #include <iostream>
 #include <fstream>
 
+
+// Project Includes
 #include "fixedPoint.hpp"
 #include "util.hpp"
+
 
 class kernel_group_config
 {
@@ -24,7 +30,7 @@ class kernel_group_config
 	
 	
 	private:
-		fixedPoint_t *** m_Data;
+		fixedPoint_t *m_Data;
 		int m_kernels;
 		int m_channels;
 		int m_filValues;	

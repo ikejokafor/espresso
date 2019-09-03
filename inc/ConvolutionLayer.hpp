@@ -1,28 +1,18 @@
-#ifndef __CONVOLUTION_LAYER_HPP__
-#define __CONVOLUTION_LAYER_HPP__
+#pragma once
 
 
 #include "Layer.hpp"
 
 
-class ConvolutionLayer : public Layer {
-	
+class ConvolutionLayer : public espresso::Layer 
+{
 	public:
-        ConvolutionLayer(espresso::layerInfo_t layerInfo = espresso::layerInfo_t());
+		ConvolutionLayer(espresso::layerInfo_obj layerInfo = espresso::layerInfo_obj());
         ~ConvolutionLayer();
-        void ComputeLayerParam();
         void ComputeLayer();
-	    void ComputeLayer_FlPt();
+		void ComputeLayer_FlPt();
 		void ComputeLayer_FxPt();
+		void ComputeLayerParam();	
 		void LeakyActivation_FlPt();
 		void LeakyActivation_FxPt();
-	
-
-	protected:
-
-
-	private:
-
 };
-
-#endif

@@ -1,53 +1,23 @@
 #include "ResidualLayer.hpp"
-using namespace std;
-using namespace espresso;
 
 
-ResidualLayer::ResidualLayer(layerInfo_t layerInfo) : Layer(layerInfo) {}
+ResidualLayer::ResidualLayer(espresso::layerInfo_obj layerInfo) : Layer(layerInfo) { }
 
 
-ResidualLayer::~ResidualLayer() {
-	if(m_blob.flData) {
-		free(m_blob.flData);
-	}
-	if(m_blob.fxData) {
-		free(m_blob.fxData);
-	}
-}
-
-
-void ResidualLayer::ComputeLayerParam() {
-	// input size
-	m_inputDepth   = m_bottomLayers[0]->m_outputDepth;
-	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;
-	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
-
-	// output size
-	m_outputDepth = m_inputDepth;
-	m_numOutputRows = m_numInputRows;
-	m_numOutputCols = m_numInputCols;
-    
-	// create output blob
-	m_blob.depth = m_outputDepth;
-	m_blob.numRows = m_numOutputRows;
-	m_blob.numCols = m_numOutputCols;
-    m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
-    m_blob.flData = (float*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(float));
-    m_blob.fxData = (fixedPoint_t*)malloc(m_outputDepth * m_numOutputRows * m_numOutputCols * sizeof(fixedPoint_t));
-}
+ResidualLayer::~ResidualLayer() { }
 
 
 void ResidualLayer::ComputeLayer() {
-	if (m_precision == FLOAT) {  
+	if (m_precision == espresso::FLOAT) {  
 		ComputeLayer_FlPt();
-	} else if(m_precision == FIXED) { 
+	} else if(m_precision == espresso::FIXED) { 
 		ComputeLayer_FxPt();
 	}
 }
 
 
 void ResidualLayer::ComputeLayer_FlPt() {
-    if(m_bottomLayers[0]->m_precision == FIXED) {
+	if (m_bottomLayers[0]->m_precision == espresso::FIXED) {
         int dinNumFracBits   = m_bottomLayers[0]->m_dinNumFracBits;
         int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
         fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
@@ -67,7 +37,7 @@ void ResidualLayer::ComputeLayer_FlPt() {
 #else
 	int nthreads = 1;
 #endif
-	vector<thread> threads(nthreads);
+	std::vector<std::thread> threads(nthreads);
 
 	    
 	for (int t = 0; t < nthreads; t++) {
@@ -83,7 +53,7 @@ void ResidualLayer::ComputeLayer_FlPt() {
 
 
 void ResidualLayer::ComputeLayer_FxPt() {
-    if(m_bottomLayers[0]->m_precision == FLOAT) {
+	if (m_bottomLayers[0]->m_precision == espresso::FLOAT) {
         int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
         fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
         float        *flData = m_bottomLayers[0]->m_blob.flData;
@@ -102,7 +72,7 @@ void ResidualLayer::ComputeLayer_FxPt() {
 #else
 	int nthreads = 1;
 #endif
-	vector<thread> threads(nthreads);
+	std::vector<std::thread> threads(nthreads);
 
 	    
 	for (int t = 0; t < nthreads; t++) {
@@ -114,4 +84,25 @@ void ResidualLayer::ComputeLayer_FxPt() {
 		}, t * numValues / nthreads, (t + 1) == nthreads ? numValues : (t + 1) * numValues / nthreads, t));
 	}
 	for_each(threads.begin(), threads.end(), [](std::thread& x){x.join(); });
+}
+
+
+void ResidualLayer::ComputeLayerParam() {
+	// input size
+	m_inputDepth = m_bottomLayers[0]->m_outputDepth;
+	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;
+	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
+
+	// output size
+	m_outputDepth = m_inputDepth;
+	m_numOutputRows = m_numInputRows;
+	m_numOutputCols = m_numInputCols;
+    
+	// create output blob
+	m_blob.depth = m_outputDepth;
+	m_blob.numRows = m_numOutputRows;
+	m_blob.numCols = m_numOutputCols;
+	m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
+	m_blob.flData =  new float[m_outputDepth * m_numOutputRows * m_numOutputCols];
+	m_blob.fxData = new fixedPoint_t[m_outputDepth * m_numOutputRows * m_numOutputCols];
 }

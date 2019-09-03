@@ -1,14 +1,13 @@
-#ifndef __YOLO_LAYER_HPP__
-#define __YOLO_LAYER_HPP__
+#pragma once
 
 
 #include "Layer.hpp"
 
 
-class YOLOLayer : public Layer {
+class YOLOLayer : public espresso::Layer {
 	
 	public:
-		YOLOLayer(espresso::layerInfo_t layerInfo = espresso::layerInfo_t()); 
+		YOLOLayer(espresso::layerInfo_obj layerInfo = espresso::layerInfo_obj()); 
         ~YOLOLayer();      
         void ComputeLayerParam();  
         void ComputeLayer();
@@ -16,13 +15,4 @@ class YOLOLayer : public Layer {
         void ComputeLayer_FxPt();
 		int entry_index(int location, int entry);
 		void activate_array(float *x, const int n);
-
-	protected:
-
-
-	private:
-
 };
-
-
-#endif

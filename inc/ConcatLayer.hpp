@@ -1,26 +1,16 @@
-#ifndef __CONCAT_LAYER_HPP__
-#define __CONCAT_LAYER_HPP__
+#pragma once
 
 
 #include "Layer.hpp"
 
 
-class ConcatLayer : public Layer {
-	
+class ConcatLayer : public espresso::Layer 
+{	
 	public:
-        ConcatLayer(espresso::layerInfo_t layerInfo = espresso::layerInfo_t());
+        ConcatLayer(espresso::layerInfo_obj layerInfo = espresso::layerInfo_obj());
         ~ConcatLayer();         
-        void ComputeLayerParam();
         void ComputeLayer();
-	    void ComputeLayer_FlPt();
+		void ComputeLayer_FlPt();
 		void ComputeLayer_FxPt();
-
-
-	protected:
-
-
-	private:
-
+		void ComputeLayerParam();
 };
-
-#endif

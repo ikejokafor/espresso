@@ -1,26 +1,16 @@
-#ifndef __DATA_LAYER_HPP__
-#define __DATA_LAYER_HPP__
+#pragma once
 
 
 #include "Layer.hpp"
 
 
-class DataLayer : public Layer {
-	
+class DataLayer : public espresso::Layer 
+{
 	public:
-        DataLayer(espresso::layerInfo_t layerInfo = espresso::layerInfo_t());
+        DataLayer(espresso::layerInfo_obj layerInfo  = espresso::layerInfo_obj());
         ~DataLayer();               
-        void ComputeLayerParam();
         void ComputeLayer();
 	    void ComputeLayer_FlPt();
 		void ComputeLayer_FxPt();
-	
-
-	protected:
-
-
-	private:
-
+		void ComputeLayerParam();
 };
-
-#endif

@@ -10,63 +10,86 @@ kernel_group_config::kernel_group_config(int kernels, int channels, int filValue
 	m_fxPtLen = fxPtLen;
 	m_numFracBits = numFracBits;
 	
-	m_Data = new fixedPoint_t**[m_kernels];
-	for (int a = 0; a < m_kernels; a++) {
-		m_Data[a] = new fixedPoint_t*[m_channels];
-		for (int b = 0; b < m_channels; b++) {
-			m_Data[a][b] = new fixedPoint_t[m_filValues];
-			for (int i = 0; i < m_filValues; i++) {
-				m_Data[a][b][i] = 0;
-			}
-		}
-	}
+	m_Data = new fixedPoint_t[m_kernels * m_channels * filValues];
 }
 
 
 kernel_group_config::~kernel_group_config()
 {
-	for (int a = 0; a < m_kernels; a++) {
-		for (int b = 0; b < m_channels; b++) {
-			free(m_Data[a][b]);
-		}
-		free(m_Data[a]);
-	}
 	free(m_Data);
 }
 
 
 void kernel_group_config::set_data(int k, int c, int v, fixedPoint_t data)
-{
-	m_Data[k][c][v] = data;
+{	
+	int idx = index3D(
+		m_filValues,
+		m_channels,
+		k,
+		v,
+		c
+	);
+	m_Data[idx] = data;
 }
 
 
 fixedPoint_t kernel_group_config::get_data(int k, int c, int v)
 {
-	return m_Data[k][c][v];
+	int idx = index3D(
+		m_filValues,
+		m_channels,
+		k,
+		v,
+		c
+	);
+	return m_Data[idx];
 }
 
 
 uint8_t * kernel_group_config::get_bytes(int & length)
 {
-	length = m_kernels * m_channels * m_filValues * sizeof(fixedPoint_t);
-	fixedPoint_t* bytes = new fixedPoint_t[length];
-	
-	for (int k = 0; k < m_kernels; k++) {
-		for (int c = 0; c < m_channels; c++) {
-			for (int v = 0; v < m_filValues; v++) {
-				int i0 = index3D(
-					m_filValues,
-					m_channels,
-					k,
-					v,
-					c
-				);
-				bytes[i0] = m_Data[k][c][v];
-			}
-		}
+	length = m_kernels * m_channels * m_filValues * WEIGHT_SIZE;
+	uint64_t* bytes = new uint64_t[int(ceil(float(length) / float(sizeof(uint64_t))))];
+	int numValues = m_kernels * m_channels * m_filValues;
+	int nValPerGrp = sizeof(uint64_t) / WEIGHT_SIZE;
+	numValues -=  (numValues % nValPerGrp);
+	int remValues = numValues % nValPerGrp;
+	int i = 0;
+	uint64_t zero = 0;
+	for (i = 0; i < numValues; i += nValPerGrp) 
+	{		
+		bytes[i] = m_Data[i] << 0
+			| m_Data[i + 1] << 16
+			| m_Data[i + 2] << 32
+			| m_Data[i + 3] << 48;
 	}
-
+	switch (remValues)
+	{
+		case 1:
+		{
+			bytes[i] = m_Data[i] << 0
+				| zero << 16
+				| zero << 32
+				| zero << 48;
+			break;
+		}
+		case 2:
+		{
+			bytes[i] = m_Data[i] << 0
+				| m_Data[i + 1] << 16
+				| zero << 32
+				| zero << 48;
+			break;
+		}
+		case 3:
+		{
+			bytes[i] = m_Data[i] << 0
+				| m_Data[i + 1] << 16
+				| m_Data[i + 2] << 32
+				| zero << 48;
+			break;
+		}
+	};
 	return (uint8_t*)bytes;
 }
 
