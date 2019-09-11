@@ -59,13 +59,13 @@ namespace espresso
 {	
 	// Definitions
 	#define HIGH_PERF
-	#define THRESH					0.5f
-	#define HIER_THRESH				0.5f
-	#define NMS_THRESH				0.45f
-	#define YOLO_DEF_FXPT_LEN		16
-	#define YOLO_DEF_NUM_FRAC_BITS	14
-	#define YOLO_MAX_NUM_INT_BIT	(YOLO_DEF_FXPT_LEN - 1)
-	#define YOLO_MAX_NUM_FRAC_BITS	(YOLO_DEF_FXPT_LEN - 2)
+	const float THRESH = 0.5f;
+	const float HIER_THRESH	= 0.5f;
+	const float NMS_THRESH = 0.45f;
+	const int YOLO_DEF_FXPT_LEN	= 16;
+	const int YOLO_DEF_NUM_FRAC_BITS = 14;
+	const int YOLO_MAX_NUM_INT_BITS = (YOLO_DEF_FXPT_LEN - 1);
+	const int YOLO_MAX_NUM_FRAC_BITS = (YOLO_DEF_FXPT_LEN - 2);
 
 	
 	// User Defined Types
