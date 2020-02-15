@@ -50,9 +50,10 @@
 #include "lstm_layer.h"
 #include "util.hpp"
 #include "fixedPoint.hpp"
-#include "kernel.h" 
+// #ifdef FPGA
 #include "kernel_group.h"
-#include "kernel_group_config.h"
+// #endif
+
 
 
 namespace espresso 
@@ -204,7 +205,7 @@ namespace espresso
 			int numKernelGroups;
 			int numKrlPerGrp;
 			int numKernelDepthGroups; 
-			std::vector<std::vector<kernel_group*>>	kernel_group_arr;
+			std::vector<std::vector<kernel_group*> >	kernel_group_arr;
 			backend_t backend;
 			int net_idx;
 			network *yolo_net;
@@ -278,7 +279,7 @@ namespace espresso
 			int m_numKernelGroups;
 			int m_numKrlPerGrp;
 			int m_numKernelDepthGroups;
-			std::vector<std::vector<kernel_group*>>	m_kernel_group_arr;
+			std::vector<std::vector<kernel_group*> >	m_kernel_group_arr;
 			espresso::backend_t m_backend;
 			int m_net_idx;
 			network* m_yolo_net;

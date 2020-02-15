@@ -61,9 +61,18 @@ PROJECT(${TARGET_NAME})
 
 # BEGIN Target Sources ------------------------------------------------------------------------------------------------------------------------------
 FILE(GLOB TARGET_SRCS
-    ${PROJECT_SOURCE_DIR}/src/*.c
+    ${PROJECT_SOURCE_DIR}/src/*.c 
     ${PROJECT_SOURCE_DIR}/src/*.cpp
     ${PROJECT_SOURCE_DIR}/src/*.cu
+    ${PROJECT_SOURCE_DIR}/src/FPGA/*.c 
+    ${PROJECT_SOURCE_DIR}/src/FPGA/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/FPGA/*.cu
+    ${PROJECT_SOURCE_DIR}/src/CPU/*.c 
+    ${PROJECT_SOURCE_DIR}/src/CPU/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/CPU/*.cu
+    ${PROJECT_SOURCE_DIR}/src/Darknet/*.c 
+    ${PROJECT_SOURCE_DIR}/src/Darknet/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/Darknet/*.cu
 )
 # END Target Sources --------------------------------------------------------------------------------------------------------------------------------
 
@@ -73,6 +82,15 @@ FILE(GLOB TARGET_HEADERS
     ${PROJECT_SOURCE_DIR}/inc/*.h 
     ${PROJECT_SOURCE_DIR}/inc/*.hpp
     ${PROJECT_SOURCE_DIR}/inc/*.cuh
+    ${PROJECT_SOURCE_DIR}/inc/FPGA/*.h 
+    ${PROJECT_SOURCE_DIR}/inc/FPGA/*.hpp
+    ${PROJECT_SOURCE_DIR}/inc/FPGA/*.cuh
+    ${PROJECT_SOURCE_DIR}/inc/CPU/*.h 
+    ${PROJECT_SOURCE_DIR}/inc/CPU/*.hpp
+    ${PROJECT_SOURCE_DIR}/inc/CPU/*.cuh
+    ${PROJECT_SOURCE_DIR}/inc/Darknet/*.h 
+    ${PROJECT_SOURCE_DIR}/inc/Darknet/*.hpp
+    ${PROJECT_SOURCE_DIR}/inc/Darknet/*.cuh
 )
 # END Target Sources --------------------------------------------------------------------------------------------------------------------------------
 
@@ -117,18 +135,27 @@ set(CMAKLE_CXX_FLAGS_RELEASE "-O3")
 
 # BEGIN Compiler Flags ------------------------------------------------------------------------------------------------------------------------------
 TARGET_COMPILE_OPTIONS(${TARGET_NAME} PUBLIC 
-    "-std=c++11" 
+    "-std=c++11"
+    "-std=c++14"
+    "-std=gnu++11" 
+"-std=c++0x"
     "-Wall"
     "-fexceptions"
 )
+SET(CMAKE_CXX_FLAGS "-std=c++11")
+SET(CMAKE_CXX_FLAGS "-std=c++14")
+SET(CMAKE_CXX_FLAGS "-std=c++0x")
 # END Compiler Flags --------------------------------------------------------------------------------------------------------------------------------
 
 
 # BEGIN Include directories -------------------------------------------------------------------------------------------------------------------------
-TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PRIVATE
-    ${PROJECT_SOURCE_DIR}/inc/
-    ${PROJECT_SOURCE_DIR}/../fixedPoint/inc/
-    ${PROJECT_SOURCE_DIR}/../util/inc/
+TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
+	${PROJECT_SOURCE_DIR}/inc/
+	${PROJECT_SOURCE_DIR}/inc/CPU/
+	${PROJECT_SOURCE_DIR}/inc/FPGA/
+	${PROJECT_SOURCE_DIR}/inc/Darknet/
+	${PROJECT_SOURCE_DIR}/../fixedPoint/inc/
+	${PROJECT_SOURCE_DIR}/../util/inc/
 	${PROJECT_SOURCE_DIR}/../darknet/include/
 	${PROJECT_SOURCE_DIR}/../darknet/src/
 )

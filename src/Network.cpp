@@ -189,24 +189,23 @@ void espresso::Network::Forward(std::string start, std::string end)
 		m_cnn[i]->ComputeLayer();   
         std::cout << "Finished Layer" << " " << m_cnn[i]->m_layerName << std::endl;
 		
-		int c, h, w;
-		char buf[100];
-		sprintf(buf, "layers/esp_layer_%05d.txt", i);
-		FILE *fd = fopen(buf, "w");
-		for (c = 0; c < m_cnn[i]->m_outputDepth; c++)
-		{
-			for (h = 0; h < m_cnn[i]->m_numOutputRows; h++)
-			{
-				for (w = 0; w < m_cnn[i]->m_numOutputCols; w++)
-				{
-					fprintf(fd, "%f ", m_cnn[i]->m_blob.flData[(c * m_cnn[i]->m_numOutputRows + h) * m_cnn[i]->m_numOutputCols + w]);
-				}
-				fprintf(fd, "\n");
-			}
-			fprintf(fd, "\n\n\n");
-		}
-		fclose(fd);
-		
+		// int c, h, w;
+		// char buf[100];
+		// sprintf(buf, "layers/esp_layer_%05d.txt", i);
+		// FILE *fd = fopen(buf, "w");
+		// for (c = 0; c < m_cnn[i]->m_outputDepth; c++)
+		// {
+		// 	for (h = 0; h < m_cnn[i]->m_numOutputRows; h++)
+		// 	{
+		// 		for (w = 0; w < m_cnn[i]->m_numOutputCols; w++)
+		// 		{
+		// 			fprintf(fd, "%f ", m_cnn[i]->m_blob.flData[(c * m_cnn[i]->m_numOutputRows + h) * m_cnn[i]->m_numOutputCols + w]);
+		// 		}
+		// 		fprintf(fd, "\n");
+		// 	}
+		// 	fprintf(fd, "\n\n\n");
+		// }
+		// fclose(fd);
 	}
 }
 

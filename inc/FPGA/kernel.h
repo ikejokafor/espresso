@@ -43,7 +43,13 @@ public:
 
 	//Diagnostic printing
 	void print(std::ofstream *od);
-private:
+	
+	/** total number of bits for kernel value */
+	int m_fxPtLen;
+	
+	/** total number of fractional bits for kernel value */
+	int m_numFracBits;
+
 	//unique ID of this kernel
 	kuid m_UID;
 
@@ -55,9 +61,5 @@ private:
 	//pointer to coefficient data
 	fixedPoint_t*** m_Data;
 	
-	/** total number of bits for kernel value */
-	int m_fxPtLen;
-	
-	/** total number of fractional bits for kernel value */
-	int m_numFracBits;
+
 };
