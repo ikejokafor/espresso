@@ -1,5 +1,5 @@
 #include "ConvolutionLayer_FPGA.hpp"
-
+using namespace std;
 
 ConvolutionLayer_FPGA::ConvolutionLayer_FPGA(espresso::layerInfo_obj layerInfo) : Layer(layerInfo) { }
 
@@ -31,24 +31,25 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
 	int inputBlobDepth	 = m_bottomLayers[0]->m_blob.depth;
 	int numInputBlobRows = m_bottomLayers[0]->m_blob.numRows;
 	int numInputBlobCols = m_bottomLayers[0]->m_blob.numCols;
-				
-    // adapt_net_allocator* allocator = new adapt_net_allocator();
-    // for (int i = 0; i < NUM_AWP; i++)
-	// {
-	// 	allocator->add_awp(new awp(NUM_QUAD_PER_AWE));
-    // }
-	// for (int i = 0; i < NUM_FAS; i++)
-    // {
-	// 	allocator->add_fas(new fas(64, 1, 64));
-    // }
-	// layer_job* job = new layer_job(m_layerName);
-    // job->set_allocator(allocator);
-	// job->add_map_descriptor(new map_descriptor(numInputBlobCols, numInputBlobRows, inputBlobDepth));
-	// 
-	// for (int k = 0; k < m_numKernels; k++)
-	// 	job->add_kernel(new kernel(m_numKernelCols, m_numKernelRows, m_kernelDepth, m_whtFxPtLength, m_whtNumFracBits));
-	// 
-    // job->initialize();
+	
+	cout << "Layer: " << m_layerName << endl << endl << endl;
+	Layer_Job layer_job(		    
+		inputBlobDepth, 
+		numInputBlobRows, 
+		numInputBlobCols, 
+		m_numKernels, 
+		m_kernelDepth, 
+		m_numKernelRows, 
+		m_numKernelCols,
+		m_stride,
+		m_fpga_upsample,
+		m_padding,
+		m_fpga_conv_out_fmt0,
+		m_fpga_residual,
+		m_fpga_activation
+	);
+	layer_job.createLayerIters();
+	layer_job.process();
 }
 
 

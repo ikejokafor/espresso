@@ -4,24 +4,28 @@
 #include <vector>
 #include "InputMaps.hpp"
 #include "Kernels.hpp"
+#include <math.h> 
 #include "Layer_Iteration.hpp"
-#include "AWP.hpp"
-#include "QUAD.hpp"
+#include "common.hpp"
 
 
 class Layer_Job
 {
     public:
         Layer_Job(
-		    int inputmapDepth, 
+		    int inputMapDepth, 
 		    int numInputMapRows, 
 		    int numInputMapCols, 
 		    int numKernels, 
 		    int kernelDepth, 
 		    int numKernelRows, 
 		    int numKernelCols,
-			bool m_upsample,
-			int m_padding,
+			int stride,
+			bool upsample,
+			int padding,
+			bool conv_out_fmt0,
+			bool residual,
+			bool activation,
 		    int fxPtLength = 16, 
 		    int numFracBits = 14
 	    );
@@ -38,9 +42,13 @@ class Layer_Job
         int m_numKernelCols;
 	    int m_fxPtLength;
         int m_numFracBits;
-		int m_upsample;
+		int m_stride;
+		bool m_upsample;
 		bool m_padding;
+		bool m_conv_out_fmt0;
+		bool m_residual;
+		bool m_activation;
 	    InputMaps* m_inputMaps;
 	    Kernels* m_kernels;
-        std::vector<Layer_Iteration> m_lay_it_arr;
+        std::vector<Layer_Iteration*> m_lay_it_arr;
 };

@@ -1,4 +1,5 @@
 #include "ResidualLayer_FPGA.hpp"
+using namespace std;
 
 
 ResidualLayer_FPGA::ResidualLayer_FPGA(espresso::layerInfo_obj layerInfo) : Layer(layerInfo) { }
@@ -19,13 +20,17 @@ void ResidualLayer_FPGA::ComputeLayer()
 			fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
 		}
 	}
+	std::cout << m_layerName << " Merged" << std::endl << std::endl << std::endl;
 }
 
 
 void ResidualLayer_FPGA::ComputeLayer_FlPt() { }
 
 
-void ResidualLayer_FPGA::ComputeLayer_FxPt() { }
+void ResidualLayer_FPGA::ComputeLayer_FxPt() 
+{
+
+}
 
 
 

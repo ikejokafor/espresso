@@ -52,6 +52,7 @@
 #include "fixedPoint.hpp"
 // #ifdef FPGA
 #include "kernel_group.h"
+#include "Layer_Job.hpp"
 // #endif
 
 
@@ -215,7 +216,7 @@ namespace espresso
 	// We can compute the spatial size of the output volume as a function of the input volume size (W), the
 	// the receptive field size of the Conv Layer neurons (F), the stride with which they are applied (S), and
 	// the amount of zero padding used (P) on the border.You can convince yourself that the correct formula for 
-	// calculating how many neurons “fit” is given by ((W - F + (2 * P)) / S) + 1. For example for a 7x7 input and a 
+	// calculating how many neurons ï¿½fitï¿½ is given by ((W - F + (2 * P)) / S) + 1. For example for a 7x7 input and a 
 	// 3x3 filter with stride 1 and pad 0 we would get a 5x5 output.With stride 2 we would get a 3x3 output.
 
 	// Blob memory is row-major in layout, so the last / rightmost dimension changes fastest. For example, in a 4D blob, the value at index (n, k, h, w) is physically 
@@ -259,6 +260,10 @@ namespace espresso
 			int m_numKernels;
 			int m_stride;
 			int m_padding;
+			bool m_fpga_upsample;
+			bool m_fpga_activation;
+			bool m_fpga_residual;
+			bool m_fpga_conv_out_fmt0;
 			bool m_globalPooling;
 			int m_numFilterValues;
 			float* m_flFilterData;

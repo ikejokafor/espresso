@@ -30,7 +30,10 @@ espresso::Layer::Layer(layerInfo_obj layerInfo) {
 	m_darknet_n_param   		= layerInfo.darknet_n_param;
 	m_darknet_classes_param		= layerInfo.darknet_classes_param;
 	m_darknet_outputs_param		= layerInfo.darknet_outputs_param;
-	m_backend					= layerInfo.backend;
+	m_backend					= layerInfo.backend;	
+	m_fpga_upsample				= false;
+	m_fpga_activation			= false;
+	m_fpga_conv_out_fmt0		= false;
 	if(layerInfo.flFilterData) 
 	{
 		m_flFilterData = new float[m_numFilterValues];

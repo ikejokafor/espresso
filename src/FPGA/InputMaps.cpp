@@ -15,7 +15,7 @@ InputMaps::~InputMaps()
 }
 
 
-InputMaps* InputMaps::GetVolume(int depthBgn, int depthEnd)
+InputMaps* InputMaps::GetVolume(int depthBgn, int depthSize)
 {
-	return new InputMaps((depthEnd - depthBgn) + 1, m_numInputMapRows, m_numInputMapCols);
+	return new InputMaps((depthBgn + depthSize), m_numInputMapRows, m_numInputMapCols);
 }

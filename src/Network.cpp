@@ -181,13 +181,29 @@ void espresso::Network::Forward(std::string start, std::string end)
     for (int i = startIdx; i < (endIdx + 1); i++) 
     {
 		m_cnn[i]->ComputeLayerParam();
+	    if (i > 0 && m_cnn[i + 1]->m_layerType == RESIDUAL)
+	    {
+		    m_cnn[i]->m_fpga_residual = true;
+	    }
+		if(i > 0 && m_cnn[i - 1]->m_layerType == UPSAMPLE)
+		{
+			m_cnn[i]->m_fpga_upsample = true;
+		}
+		if(i > 0 && m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i - 1]->m_layerType == CONVOLUTION && m_cnn[i - 1]->m_darknetAct)
+		{
+			m_cnn[i]->m_fpga_activation = true;
+		}
+	    if (i > 0 && m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i - 1]->m_layerType == CONVOLUTION && m_cnn[i - 1]->m_numKernelRows == 1)
+		{
+			m_cnn[i]->m_fpga_conv_out_fmt0 = false;
+		}
 	}
     // Forward Propagation
 	for (int i = startIdx; i < (endIdx + 1); i++) 
 	{
 		// printLayerStats(i);
 		m_cnn[i]->ComputeLayer();   
-        std::cout << "Finished Layer" << " " << m_cnn[i]->m_layerName << std::endl;
+        // std::cout << "Finished Layer" << " " << m_cnn[i]->m_layerName << std::endl << std::endl << std::endl;
 		
 		// int c, h, w;
 		// char buf[100];

@@ -16,7 +16,7 @@ Kernels::~Kernels()
 }
 
 
-Kernels* Kernels::GetVolume(int krnl_bgn, int krnl_end, int depthBgn, int depthEnd)
+Kernels* Kernels::GetVolume(int krnl_bgn, int numKrnl, int depthBgn, int depthSize)
 {
-	return new Kernels((krnl_end - krnl_bgn) + 1, (depthEnd - depthBgn) + 1, m_numKernelRows, m_numKernelCols);
+	return new Kernels((krnl_bgn + numKrnl), (depthBgn + depthSize), m_numKernelRows, m_numKernelCols);
 }

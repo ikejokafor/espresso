@@ -1,4 +1,5 @@
 #include "UpSampleLayer_FPGA.hpp"
+using namespace std;
 
 
 UpSampleLayer_FPGA::UpSampleLayer_FPGA(espresso::layerInfo_obj layerInfo) : Layer(layerInfo) { }
@@ -18,6 +19,7 @@ void UpSampleLayer_FPGA::ComputeLayer() {
 			fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
 		}
 	}
+	cout << m_layerName << " Merged" <<  endl << endl << endl;
 }
 
 
