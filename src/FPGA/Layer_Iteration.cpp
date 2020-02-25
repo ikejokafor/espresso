@@ -42,6 +42,7 @@ Layer_Iteration::Layer_Iteration(InputMaps* inputMaps, Kernels* kernels, int str
 				}
 				else
 				{
+					m_fas_cfg_arr[i]->m_awp_cfg_arr[j]->m_AWP_QUAD_cfg_arr.push_back(new QUAD_cfg());
 					m_fas_cfg_arr[i]->m_awp_cfg_arr[j]->m_AWP_QUAD_cfg_en_arr.push_back(false);
 				}
 				remDepth -= QUAD_DPTH_SIMD;
@@ -58,6 +59,8 @@ Layer_Iteration::Layer_Iteration(InputMaps* inputMaps, Kernels* kernels, int str
 			cout << "AWP " << j << endl;
 			for (int k = 0; k < NUM_QUAD_PER_AWP; k++)
 			{
+				if(!m_fas_cfg_arr[i]->m_awp_cfg_arr[j]->m_AWP_QUAD_cfg_en_arr[k])
+					continue;
 				cout << "QUAD " << k << endl;
 				auto& m_AWP_QUAD_cfg_arr = m_fas_cfg_arr[i]->m_awp_cfg_arr[j]->m_AWP_QUAD_cfg_arr;
 				cout << "FAS_id: "                  << m_AWP_QUAD_cfg_arr[k]->m_FAS_id                  << endl;

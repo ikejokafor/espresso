@@ -1,6 +1,9 @@
 #include "QUAD_cfg.hpp"
 
 
+QUAD_cfg::QUAD_cfg() { }
+
+
 QUAD_cfg::QUAD_cfg(
     int FAS_id,	
     int AWP_id,

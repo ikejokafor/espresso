@@ -5,11 +5,17 @@ using namespace std;
 Layer_Job::Layer_Job(
 	int inputMapDepth, 
 	int numInputMapRows, 
-	int numInputMapCols, 
+	int numInputMapCols,
+	fixedPoint_t* inputMapData,
 	int numKernels, 
 	int kernelDepth, 
 	int numKernelRows, 
 	int numKernelCols,
+	fixedPoint_t* kernelData,
+	int outputMapDepth,
+	int numOutputMapRows,
+	int numOutputMapCols,
+	fixedPoint_t* outputMapData,
 	int stride,
 	bool upsample,
 	int padding,
@@ -22,6 +28,9 @@ Layer_Job::Layer_Job(
     m_inputMapDepth         = inputMapDepth			;  
     m_numInputMapRows       = numInputMapRows		;
     m_numInputMapCols       = numInputMapCols		;
+	m_outputMapDepth		= outputMapDepth		;
+	m_numOutputMapRows		= numOutputMapRows		;
+	m_numOutputMapCols		= numOutputMapCols		;	
     m_numKernels            = numKernels            ;
     m_kernelDepth           = kernelDepth           ;
     m_numKernelRows         = numKernelRows         ;
@@ -35,8 +44,9 @@ Layer_Job::Layer_Job(
 	m_residual				= residual				;
 	m_activation			= activation			;
 	m_residual				= residual				;
-	m_inputMaps 			= new InputMaps(m_inputMapDepth, m_numInputMapRows, m_numInputMapCols);
-	m_kernels 				= new Kernels(numKernels, kernelDepth, numKernelRows, numKernelCols);
+	m_inputMaps 			= new InputMaps(inputMapDepth, numInputMapRows, numInputMapCols, inputMapData);
+	m_kernels 				= new Kernels(numKernels, kernelDepth, numKernelRows, numKernelCols, kernelData);
+	m_outputMaps			= new OutputMaps(outputMapDepth, numOutputMapRows, numOutputMapCols, outputMapData);
 }
 
 
@@ -57,18 +67,20 @@ void Layer_Job::createLayerIters()
 	
 	int remNumKrnl = m_numKernels;
 	int numKrnl;
-	for (int i = 0, krnl_start = 0; i < num_krnl_iter; i++, krnl_start += numKrnl)
+	cout << num_krnl_iter <<  " Kernel iterations" << endl << endl << endl;
+	cout << num_Depth_iter <<  " Depth iterations" << endl << endl << endl;
+	for (int i = 0, krnlBgn = 0; i < num_krnl_iter; i++, krnlBgn += numKrnl)
 	{
 		cout << "Layer Kernel Iteration: " << i << endl << endl << endl;
 		numKrnl = min(remNumKrnl, QUAD_MAX_KERNELS);
 		int remDepth = m_inputMapDepth;
 		int depth;
 		int iter = 0;
-		for (int j = 0, depth_start = 0; j < num_Depth_iter; j++, depth_start += depth)
+		for (int j = 0, depthBgn = 0; j < num_Depth_iter; j++, depthBgn += depth)
 		{
 			depth = min(QUAD_DPTH_SIMD, remDepth);
-			InputMaps* inputMaps = m_inputMaps->GetVolume(depth_start, depth);
-			Kernels* kernels = m_kernels->GetVolume(krnl_start, numKrnl, depth_start, depth);
+			InputMaps* inputMaps = m_inputMaps->GetVolume(depthBgn, depth);
+			Kernels* kernels = m_kernels->GetVolume(krnlBgn, numKrnl, depthBgn, depth);
 			cout << "Layer Depth Iteration: " << iter << endl << endl << endl;
 			m_lay_it_arr.push_back(new Layer_Iteration(
 				inputMaps,

@@ -2,7 +2,9 @@
 
 
 #include <vector>
+#include "fixedPoint.hpp"
 #include "InputMaps.hpp"
+#include "OutputMaps.hpp"
 #include "Kernels.hpp"
 #include <math.h> 
 #include "Layer_Iteration.hpp"
@@ -15,18 +17,24 @@ class Layer_Job
         Layer_Job(
 		    int inputMapDepth, 
 		    int numInputMapRows, 
-		    int numInputMapCols, 
+		    int numInputMapCols,
+			fixedPoint_t* inputMapData,
 		    int numKernels, 
 		    int kernelDepth, 
 		    int numKernelRows, 
 		    int numKernelCols,
+			fixedPoint_t* kernelData,
+			int outputMapDepth,
+			int numOutputMapRows,
+			int numOutputMapCols,
+			fixedPoint_t* outputMapData,
 			int stride,
 			bool upsample,
 			int padding,
 			bool conv_out_fmt0,
 			bool residual,
 			bool activation,
-		    int fxPtLength = 16, 
+		    int fxPtLength = 16,
 		    int numFracBits = 14
 	    );
         ~Layer_Job();
@@ -36,6 +44,9 @@ class Layer_Job
         int m_inputMapDepth;
         int m_numInputMapRows;
         int m_numInputMapCols;
+		int m_outputMapDepth;
+		int m_numOutputMapRows;	
+		int m_numOutputMapCols;	
         int m_numKernels;
         int m_kernelDepth;
         int m_numKernelRows;
@@ -50,5 +61,6 @@ class Layer_Job
 		bool m_activation;
 	    InputMaps* m_inputMaps;
 	    Kernels* m_kernels;
+		OutputMaps*	m_outputMaps;
         std::vector<Layer_Iteration*> m_lay_it_arr;
 };

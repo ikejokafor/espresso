@@ -8,6 +8,7 @@
 class QUAD_cfg
 {
     public:
+		QUAD_cfg();
 	    QUAD_cfg(
 			int FAS_id,	
 			int AWP_id,

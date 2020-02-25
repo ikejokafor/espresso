@@ -28,19 +28,21 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt() { }
 
 void ConvolutionLayer_FPGA::ComputeLayer_FxPt() 
 { 
-	int inputBlobDepth	 = m_bottomLayers[0]->m_blob.depth;
-	int numInputBlobRows = m_bottomLayers[0]->m_blob.numRows;
-	int numInputBlobCols = m_bottomLayers[0]->m_blob.numCols;
-	
 	cout << "Layer: " << m_layerName << endl << endl << endl;
 	Layer_Job layer_job(		    
-		inputBlobDepth, 
-		numInputBlobRows, 
-		numInputBlobCols, 
+		m_inputDepth, 
+		m_numInputRows, 
+		m_numInputCols,
+		m_blob.fxData,
 		m_numKernels, 
 		m_kernelDepth, 
 		m_numKernelRows, 
 		m_numKernelCols,
+		m_fxFilterData,
+		m_outputDepth,
+		m_numOutputRows,
+		m_numOutputCols,
+		m_topLayers[0]->m_blob.fxData,
 		m_stride,
 		m_fpga_upsample,
 		m_padding,
