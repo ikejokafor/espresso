@@ -1,7 +1,7 @@
-#include "Network.hpp"
+#include "CNN_Network.hpp"
 
 
-espresso::Network::Network(std::vector<espresso::layerInfo_obj> layerInfo, std::vector<int> &outputLayers) {
+espresso::CNN_Network::CNN_Network(std::vector<espresso::layerInfo_obj> layerInfo, std::vector<int> &outputLayers) {
 	
 	for(int i = 0; i < layerInfo.size(); i++) 
 	{
@@ -140,7 +140,7 @@ espresso::Network::Network(std::vector<espresso::layerInfo_obj> layerInfo, std::
 
 
 
-espresso::Network::~Network() 
+espresso::CNN_Network::~CNN_Network() 
 {
 	for(int i = 0; i < m_cnn.size(); i++) 
 	{
@@ -151,7 +151,7 @@ espresso::Network::~Network()
 
 
 
-void espresso::Network::Forward(std::string start, std::string end) 
+void espresso::CNN_Network::Forward(std::string start, std::string end) 
 {
     // find start and end
     int startIdx = -1;
@@ -193,9 +193,9 @@ void espresso::Network::Forward(std::string start, std::string end)
 		{
 			m_cnn[i]->m_fpga_activation = true;
 		}
-	    if (i > 0 && m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i - 1]->m_layerType == CONVOLUTION && m_cnn[i - 1]->m_numKernelRows == 1)
+	    if (i > 0 && m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_numKernelRows == 1)
 		{
-			m_cnn[i]->m_fpga_conv_out_fmt0 = false;
+			m_cnn[i]->m_kernel_1x1 = true;
 		}
 	}
     // Forward Propagation
@@ -226,7 +226,7 @@ void espresso::Network::Forward(std::string start, std::string end)
 }
 
 
-int espresso::Network::ReturnLayerIdx(std::string name) 
+int espresso::CNN_Network::ReturnLayerIdx(std::string name) 
 {
     for(uint32_t i = 0; i < m_cnn.size(); i++) 
     {
@@ -239,7 +239,7 @@ int espresso::Network::ReturnLayerIdx(std::string name)
 }
 
 
-void espresso::Network::printLayerStats(int i) 
+void espresso::CNN_Network::printLayerStats(int i) 
 {
 	// std::cout << "Layer " << i <<  " " << m_cnn[i]->m_layerName << std::endl;
 	// std::cout << "\t inputDepth:     \t\t"   << m_cnn[i]->m_inputDepth       << std::endl;
@@ -270,4 +270,13 @@ void espresso::Network::printLayerStats(int i)
 	// std::cout << "\t whtNumFracBits:  \t\t"   << m_cnn[i]->m_whtNumFracBits    << std::endl;
 	// std::cout << "\t doutFxPtLength:  \t\t"   << m_cnn[i]->m_doutFxPtLength    << std::endl;
 	// std::cout << "\t doutNumFracBits: \t\t"   << m_cnn[i]->m_doutNumFracBits   << std::endl;
+}
+
+
+void espresso::CNN_Network::setHardware(FPGA_hndl* fpga_hndl)
+{
+	for (int i = 0; i < m_cnn.size(); i++) 
+	{
+		m_cnn[i]->m_fpga_hndl = fpga_hndl;
+	}
 }

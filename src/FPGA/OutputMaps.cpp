@@ -1,18 +1,60 @@
 #include "OutputMaps.hpp"
 
 
-OutputMaps::OutputMaps(int outputMapDepth, int numOutputMapRows, int numOutputMapCols, fixedPoint_t* data)
+OutputMaps::OutputMaps(int outputMapDepth, int numOutputMapRows, int numOutputMapCols, fixedPoint_t* data) : Accel_Payload()
 {
 	m_outputMapDepth = outputMapDepth;
 	m_numOutputMapRows = numOutputMapRows;
 	m_numOutputMapCols = numOutputMapCols;
-	m_data = data;
+	int size = outputMapDepth * numOutputMapRows * numOutputMapCols * sizeof(fixedPoint_t);
+	m_data = (fixedPoint_t*)allocate(size);
+	memcpy(m_data, data, size);
 }
 
 
 OutputMaps::~OutputMaps()
 {
+	deallocate();
+}
+
+
+uint64_t OutputMaps::allocate(int size)
+{
+#ifdef SYSTEMC
+	m_size = size;
+	return (uint64_t)malloc(size);
+#else
+
+#endif
+}
+
+
+void OutputMaps::deallocate()
+{
+#ifdef SYSTEMC
+	free(m_data);
+#else
+
+#endif
+}
+
+
+void OutputMaps::serialize()
+{
+#ifdef SYSTEMC
 	
+#else
+
+#endif
+}
+
+void OutputMaps::deserialize()
+{
+#ifdef SYSTEMC
+	
+#else
+
+#endif
 }
 
 

@@ -2,54 +2,114 @@
 using namespace std;
 
 
-Kernels::Kernels(int numKernels, int kernelDepth, int numKernelRows, int numKernelCols, fixedPoint_t* data)
+Kernels::Kernels(int numKernels, int kernelDepth, int numKernelRows, int numKernelCols, fixedPoint_t* data) : Accel_Payload()
 {
 	m_numKernels = numKernels;
-	m_kernelDpeth = kernelDepth;
+	m_kernelDepth = kernelDepth;
 	m_numKernelRows = numKernelRows;
 	m_numKernelCols = numKernelCols;
 	m_data.resize(numKernels);
+	m_num_shm = 0;
 	for (int i = 0; i < numKernels; i++)
 	{
 		m_data[i].resize(kernelDepth);
 		for (int j = 0; j < kernelDepth; j++)
 		{
-			m_data[i][j] = new fixedPoint_t[numKernelRows * numKernelCols];
+#ifdef SYSTEMC
+			int size = numKernelRows * numKernelCols * sizeof(fixedPoint_t);
+			m_data[i][j] = (fixedPoint_t*)allocate(size);
+#else
+			
+#endif
 			int krnl_step = kernelDepth * numKernelRows * numKernelCols;
 			int dpth_idx = j * (numKernelRows * numKernelCols);
 			int idx = index2D(krnl_step, i, dpth_idx);
 			fixedPoint_t* kernel = &data[idx];
 			int cpySize = numKernelRows * numKernelCols * sizeof(fixedPoint_t);
-			memcpy(kernel, (void*)data, cpySize);
+			memcpy((void*)m_data[i][j], (void*)kernel, cpySize);
 		}
 	}
 }
 
 
-Kernels::Kernels(int numKernels, int kernelDepth, int numKernelRows, int numKernelCols, krnl_data_t data)
+Kernels::Kernels(int numKernels, int kernelDepth, int numKernelRows, int numKernelCols, krnl_data_t data) : Accel_Payload()
 {
 	m_numKernels = numKernels;
-	m_kernelDpeth = kernelDepth;
+	m_kernelDepth = kernelDepth;
 	m_numKernelRows = numKernelRows;
 	m_numKernelCols = numKernelCols;
-	m_data.resize(numKernels);
 	m_data = data;
+#ifdef SYSTEMC
+	m_size = 8;
+#else
+
+#endif
 }
 
 
 Kernels::~Kernels()
 {
+	deallocate();
+}
 
+
+uint64_t Kernels::allocate(int size)
+{
+#ifdef SYSTEMC
+	m_size = size;
+	return (uint64_t)malloc(size);
+#else
+
+#endif
+}
+
+
+void Kernels::deallocate()
+{
+	for (int i = 0; i < m_numKernels; i++)
+	{
+		for (int j = 0; j < m_kernelDepth; j++)
+		{
+#ifdef SYSTEMC
+			int idx = index2D(m_kernelDepth, i, j);
+			free(m_data[i][j]);
+#else
+			
+#endif
+		}
+	}
+}
+
+
+void Kernels::serialize()
+{
+#ifdef SYSTEMC
+
+#else
+
+#endif
+}
+
+
+void Kernels::deserialize()
+{
+#ifdef SYSTEMC
+	
+#else
+
+#endif
 }
 
 
 Kernels* Kernels::GetVolume(int krnlBgn, int numKrnl, int depthBgn, int depthSize)
 {	
 	krnl_data_t krnl_data;
+	krnl_data.resize(numKrnl);
 	int krnl_ofst = krnlBgn;
-	int depth_ofst = depthBgn;
 	for (int i = 0; i < numKrnl; i++, krnl_ofst++)
 	{
+		krnl_data[i].resize(depthSize);
+		int depth_ofst = depthBgn;
 		for (int j = 0; j < depthSize; j++, depth_ofst++)
 		{
 			krnl_data[i][j] = m_data[krnl_ofst][depth_ofst];

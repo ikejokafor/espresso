@@ -4,7 +4,9 @@
 #include <vector>
 #include <iostream>
 #include "InputMaps.hpp"
-#include "common.hpp"
+#include "OutputMaps.hpp"
+#include "espresso_FPGA_common.hpp"
+#include "AccelConfig.hpp"
 #include "Kernels.hpp"
 #include "FAS_cfg.hpp"
 #include "QUAD_cfg.hpp"
@@ -14,10 +16,12 @@
 class Layer_Iteration
 {
 	public:
-		Layer_Iteration(InputMaps* inputMaps, Kernels* kernels, int stride, bool upsample, int padding, bool conv_out_fmt0, bool residual, bool activation);
+	Layer_Iteration(int iter, bool last_iter, InputMaps* inputMaps, Kernels* kernels, int stride, bool upsample, int padding, bool kernel_1x1, bool residual, bool activation);
 		~Layer_Iteration();
 	
-		std::vector<FAS_cfg*> m_fas_cfg_arr;
+
+		AccelConfig* m_accelCfg			;		
 		InputMaps* m_inputMaps			;
 		Kernels* m_kernels				;
+		OutputMaps* m_outputMaps		;
 };

@@ -20,18 +20,19 @@
 
 namespace espresso 
 {
-	class Network {
-
+	class CNN_Network 
+    {
 		public:
-			Network(std::vector<espresso::layerInfo_obj> layerInfo, std::vector<int> &outputLayers);
-			~Network();
+			CNN_Network(std::vector<espresso::layerInfo_obj> layerInfo, std::vector<int> &outputLayers);
+			~CNN_Network();
 			void Forward(std::string start = " ", std::string end = " ");
 			int ReturnLayerIdx(std::string name);
 			void printLayerStats(int i);
+			 void setHardware(FPGA_hndl* fpga_hndl);
         
 			std::vector<espresso::Layer*> m_cnn;
 			std::vector<espresso::Layer*> m_outputLayers;
-        
+			FPGA_hndl* m_fpga_hndl;
 		protected:
 
 

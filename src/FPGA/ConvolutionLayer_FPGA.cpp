@@ -27,31 +27,40 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt() { }
 
 
 void ConvolutionLayer_FPGA::ComputeLayer_FxPt() 
-{ 
-	cout << "Layer: " << m_layerName << endl << endl << endl;
-	Layer_Job layer_job(		    
-		m_inputDepth, 
-		m_numInputRows, 
-		m_numInputCols,
-		m_blob.fxData,
-		m_numKernels, 
-		m_kernelDepth, 
-		m_numKernelRows, 
-		m_numKernelCols,
-		m_fxFilterData,
-		m_outputDepth,
-		m_numOutputRows,
-		m_numOutputCols,
-		m_topLayers[0]->m_blob.fxData,
-		m_stride,
-		m_fpga_upsample,
-		m_padding,
-		m_fpga_conv_out_fmt0,
-		m_fpga_residual,
-		m_fpga_activation
-	);
-	layer_job.createLayerIters();
-	layer_job.process();
+{
+	if (m_numKernelRows == 1)
+	{
+		cout << m_layerName << " Merged" << endl;
+	}
+	else
+	{
+		Layer_Job layer_job(
+			m_layerName,
+			m_inputDepth, 
+			m_numInputRows, 
+			m_numInputCols,
+			m_blob.fxData,
+			m_numKernels, 
+			m_kernelDepth, 
+			m_numKernelRows, 
+			m_numKernelCols,
+			m_fxFilterData,
+			m_outputDepth,
+			m_numOutputRows,
+			m_numOutputCols,
+			m_topLayers[0]->m_blob.fxData,
+			m_stride,
+			m_fpga_upsample,
+			m_padding,
+			m_kernel_1x1,
+			m_fpga_residual,
+			m_fpga_activation,
+			m_fpga_hndl
+		);
+		layer_job.createLayerIters();
+		layer_job.process();
+	}
+
 }
 
 

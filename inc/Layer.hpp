@@ -263,7 +263,7 @@ namespace espresso
 			bool m_fpga_upsample;
 			bool m_fpga_activation;
 			bool m_fpga_residual;
-			bool m_fpga_conv_out_fmt0;
+			bool m_kernel_1x1;
 			bool m_globalPooling;
 			int m_numFilterValues;
 			float* m_flFilterData;
@@ -292,7 +292,7 @@ namespace espresso
 			espresso::Blob_t m_blob;
 			std::vector<Layer*> m_topLayers;
 			std::vector<Layer*> m_bottomLayers;
-			
+			FPGA_hndl* m_fpga_hndl;			
 			
 	};
 }

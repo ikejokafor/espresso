@@ -1,13 +1,11 @@
 #include "QUAD_cfg.hpp"
 
 
-QUAD_cfg::QUAD_cfg() { }
-
-
 QUAD_cfg::QUAD_cfg(
     int FAS_id,	
     int AWP_id,
-    int QUAD_id, 		
+    int QUAD_id,
+    bool QUAD_en,	
     int numInputMapRows, 
     int numInputMapCols, 
     int numKernels, 
@@ -17,18 +15,21 @@ QUAD_cfg::QUAD_cfg(
     int stride,
     bool upsample,
     int padding,
-    bool conv_out_fmt0,
     bool activation,
-    bool master_quad,
+    bool master_QUAD,
     bool cascade
 ) {
-    m_master_quad = master_quad;
+	m_FAS_id = FAS_id;
+	m_AWP_id = AWP_id;
+	m_QUAD_id = QUAD_id;
+    m_QUAD_en = QUAD_en;
+	if(!m_QUAD_en)
+	{
+		return;
+	}
+    m_master_QUAD = master_QUAD;
     m_cascade = cascade;
-    m_FAS_id = FAS_id;
-    m_AWP_id = AWP_id;
-    m_QUAD_id = QUAD_id; 
     m_stride = stride;
-    m_conv_out_fmt0 = conv_out_fmt0;
     m_activation = activation;
     m_padding = padding;
     m_upsample = upsample;

@@ -1,18 +1,61 @@
 #include "InputMaps.hpp"
+using namespace std;
 
 
-InputMaps::InputMaps(int inputMapDepth, int numInputMapRows, int numInputMapCols, fixedPoint_t* data)
+InputMaps::InputMaps(int inputMapDepth, int numInputMapRows, int numInputMapCols, fixedPoint_t* data) : Accel_Payload()
 {
 	m_inputMapDepth = inputMapDepth;
 	m_numInputMapRows = numInputMapRows;
 	m_numInputMapCols = numInputMapCols;
-	m_data = data;
+	int size = inputMapDepth * numInputMapRows * numInputMapCols * sizeof(fixedPoint_t);
+	m_data = (fixedPoint_t*)allocate(size);
+	memcpy(m_data, data, size);
 }
 
 
 InputMaps::~InputMaps()
 {
+	deallocate();
+}
+
+
+uint64_t InputMaps::allocate(int size)
+{
+#ifdef SYSTEMC
+	m_size = size;
+	return (uint64_t)malloc(size);
+#else
+
+#endif
+}
+
+
+void InputMaps::deallocate()
+{
+#ifdef SYSTEMC
+	free(m_data);
+#else
+
+#endif
+}
+
+
+void InputMaps::serialize()
+{
+#ifdef SYSTEMC
 	
+#else
+
+#endif
+}
+
+void InputMaps::deserialize()
+{
+#ifdef SYSTEMC
+	
+#else
+
+#endif
 }
 
 

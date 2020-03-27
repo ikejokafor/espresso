@@ -33,7 +33,6 @@ espresso::Layer::Layer(layerInfo_obj layerInfo) {
 	m_backend					= layerInfo.backend;	
 	m_fpga_upsample				= false;
 	m_fpga_activation			= false;
-	m_fpga_conv_out_fmt0		= false;
 	if(layerInfo.flFilterData) 
 	{
 		m_flFilterData = new float[m_numFilterValues];
