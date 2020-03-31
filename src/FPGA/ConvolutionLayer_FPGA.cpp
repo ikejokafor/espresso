@@ -49,12 +49,19 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
 			m_numOutputRows,
 			m_numOutputCols,
 			m_topLayers[0]->m_blob.fxData,
+			m_residualMapDepth,
+			m_numResidualMapRows,
+			m_numResidualMapsCols,
+			m_residualMapData,
+			m_kernel1x1Data,
+			m_fxBiasData,
+			m_bias1x1Data,
 			m_stride,
 			m_fpga_upsample,
 			m_padding,
-			m_kernel_1x1,
-			m_fpga_residual,
-			m_fpga_activation,
+			m_fpga_do_kernel1x1,
+			m_fpga_do_res_layer,
+			m_activation,
 			m_fpga_hndl
 		);
 		layer_job.createLayerIters();

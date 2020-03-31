@@ -25,10 +25,14 @@ namespace espresso
 		public:
 			CNN_Network(std::vector<espresso::layerInfo_obj> layerInfo, std::vector<int> &outputLayers);
 			~CNN_Network();
+			
+			void getBgnEndLayer(int& startIdx, std::string start, int& endIdx, std::string end);
+			void cfgFPGALayer();
 			void Forward(std::string start = " ", std::string end = " ");
+			void cfgLayers(int startIdx, int endIdx);
 			int ReturnLayerIdx(std::string name);
 			void printLayerStats(int i);
-			 void setHardware(FPGA_hndl* fpga_hndl);
+			void setHardware(FPGA_hndl* fpga_hndl);
         
 			std::vector<espresso::Layer*> m_cnn;
 			std::vector<espresso::Layer*> m_outputLayers;

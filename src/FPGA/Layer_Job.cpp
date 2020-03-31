@@ -12,17 +12,24 @@ Layer_Job::Layer_Job(
 	int kernelDepth, 
 	int numKernelRows, 
 	int numKernelCols,
-	fixedPoint_t* kernelData,
+	fixedPoint_t* kernel3x3Data,
 	int outputMapDepth,
 	int numOutputMapRows,
 	int numOutputMapCols,
 	fixedPoint_t* outputMapData,
+	int residualMapDepth,
+	int numResidualMapRows,
+	int numResidualMapCols,
+	fixedPoint_t* residualMapData,
+	fixedPoint_t* kernel1x1Data,
+	fixedPoint_t* bias3x3Data,
+	fixedPoint_t* bias1x1Data,
 	int stride,
 	bool upsample,
 	int padding,
-	bool residual,
+	bool do_res_layer,
 	bool activation,
-	bool kernel_1x1,
+	bool do_kernel1x1,
 	FPGA_hndl* fpga_hndl,
 	int fxPtLength, 
 	int numFracBits
@@ -43,13 +50,16 @@ Layer_Job::Layer_Job(
 	m_stride				= stride				;
 	m_upsample				= upsample				;
 	m_padding				= padding				;
-	m_residual				= residual				;
+	m_do_res_layer			= do_res_layer			;
 	m_activation			= activation			;
-	m_kernel_1x1			= kernel_1x1			;
-	m_residual				= residual				;
+	m_do_kernel1x1			= do_kernel1x1			;
 	m_inputMaps 			= new InputMaps(inputMapDepth, numInputMapRows, numInputMapCols, inputMapData);
-	m_kernels 				= new Kernels(numKernels, kernelDepth, numKernelRows, numKernelCols, kernelData);
+	m_kernels3x3			= new Kernels(numKernels, kernelDepth, numKernelRows, numKernelCols, kernel3x3Data);
+	m_kernels1x1			= new Kernels(numKernels, 1, 1, 1, kernel1x1Data);
+	m_residualMaps			= new ResidualMaps(residualMapDepth, numResidualMapRows, numResidualMapCols, residualMapData);
 	m_outputMaps			= new OutputMaps(outputMapDepth, numOutputMapRows, numOutputMapCols, outputMapData);
+	m_bias3x3Data			= new Bias(numKernels, bias3x3Data);
+	m_bias1x1Data			= new Bias(numKernels, bias1x1Data);
 #ifdef SYSTEMC
 	m_sysc_fpga_hndl		= reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
 #else
@@ -74,8 +84,6 @@ void Layer_Job::createLayerIters()
 {
 	m_num_Depth_iter = ceil((double)m_inputMapDepth / (double)QUAD_DPTH_SIMD);
 	m_num_krnl_iter = ceil((double)m_numKernels / (double)QUAD_MAX_KERNELS);
-
-	
 	int remNumKrnl = m_numKernels;
 	int numKrnl;
 	m_lay_it_arr.resize(m_numKernels);
@@ -86,20 +94,59 @@ void Layer_Job::createLayerIters()
 		int depth;
 		for (int j = 0, depthBgn = 0; j < m_num_Depth_iter; j++, depthBgn += depth)
 		{
+			auto prevOutMap = m_lay_it_arr[i][j - 1]->m_outputMaps;
 			depth = min(QUAD_DPTH_SIMD, remDepth);
 			InputMaps* inputMaps = m_inputMaps->GetVolume(depthBgn, depth);
-			Kernels* kernels = m_kernels->GetVolume(krnlBgn, numKrnl, depthBgn, depth);
+			Kernels* kernels3x3 = m_kernels3x3->GetVolume(krnlBgn, numKrnl, depthBgn, depth);
+			Kernels* kernels1x1 = m_kernels1x1->GetVolume(krnlBgn, numKrnl, 1, 1);
+			Bias* kernels3x3Bias = m_bias3x3Data->GetVolume(krnlBgn, numKrnl);
+			Bias* kernels1x1Bias = m_bias1x1Data->GetVolume(krnlBgn, numKrnl);
+			PartialMaps* partialMaps = (j != 0) ? new PartialMaps(
+				prevOutMap->m_outputMapDepth,
+				prevOutMap->m_numOutputMapRows,
+				prevOutMap->m_numOutputMapCols,
+				prevOutMap->m_data
+			) : nullptr;
+			ResidualMaps* residualMaps = m_residualMaps->GetVolume(depthBgn, depth);
+			OutputMaps* outputMaps = m_outputMaps->GetVolume(depthBgn, depth);
+			int inMapFetchTotal = inputMaps->m_size;
+			int partMapFetchTotal =  partialMaps->m_size;
+			int krnl1x1FetchTotal = kernels1x1->m_size;
+			int krnl3x3FetchTotal = kernels3x3->m_size;
+			int resMapFetchTotal = 0;
+			int outMapStoreTotal = outputMaps->m_size;
+			if(j == 0)
+			{
+				partMapFetchTotal = 0;
+			}
+			else if(j == (m_num_Depth_iter - 1))
+			{
+				resMapFetchTotal = m_residualMaps->m_size;
+			}
 			m_lay_it_arr[i].push_back(new Layer_Iteration(
 				j,
+				(j == 0) ? true : false,
 				(j == m_num_Depth_iter) ? true : false,
 				inputMaps,
-				kernels,
+				kernels3x3,
+				kernels1x1,
+				kernels3x3Bias,
+				kernels1x1Bias,
+				partialMaps,
+				residualMaps,
+				outputMaps,
 				m_stride,
 				m_upsample,
 				m_padding,
-				m_kernel_1x1,
-				m_residual,
-				m_activation
+				m_do_kernel1x1,
+				m_do_res_layer,
+				m_activation,
+				inMapFetchTotal,
+				partMapFetchTotal,
+				krnl1x1FetchTotal,
+				krnl3x3FetchTotal,
+				resMapFetchTotal,
+				outMapStoreTotal
 			));
 			remDepth -= depth;
 		}
@@ -111,6 +158,28 @@ void Layer_Job::createLayerIters()
 void Layer_Job::process()
 {
 	// Get configuration
+	printConfig();
+	for(int k = 0; k < m_lay_it_arr.size(); k++)
+	{
+		for (int d = 0; d < m_lay_it_arr[k].size(); d++)
+		{
+			m_lay_it_arr[k][d]->m_accelCfg->serialize();
+			m_sysc_fpga_hndl->setConfig(m_lay_it_arr[k][d]->m_accelCfg);
+			m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_inputMaps);
+			m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_kernels3x3);
+			m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_kernels1x1);
+			m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_partialMaps);
+			m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_residualMaps);
+			m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_outputMaps);
+			m_sysc_fpga_hndl->sendStart();
+			m_sysc_fpga_hndl->waitComplete();
+		}
+	}
+}
+
+
+void Layer_Job::printConfig()
+{
 	ofstream fd;
 	fd.open(string("./layer_cfg/") + m_layerName + string(".txt"));
 	fd << m_layerName << endl;
@@ -119,8 +188,6 @@ void Layer_Job::process()
 		fd << "\tKernel Iteration: " << k << endl;
 		for (int d = 0; d < m_lay_it_arr[k].size(); d++)
 		{
-			m_lay_it_arr[k][d]->m_accelCfg->serialize();
-			m_sysc_fpga_hndl->setConfig(m_lay_it_arr[k][d]->m_accelCfg);
 			fd << "\t\tDepth Iteration: " << d << endl;
 			int numAWP = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr.size();
 			auto FAS_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr;
@@ -136,10 +203,10 @@ void Layer_Job::process()
 					{
 						fd << "\t\t\t\tFAS_id: "					<< QUAD_cfg_arr[q]->m_FAS_id                  	<< endl;
 						fd << "\t\t\t\tAWP_id: "					<< QUAD_cfg_arr[q]->m_AWP_id                  	<< endl;
-						fd << "\t\t\t\tresidual	"					<< FAS_cfg_arr[0]->m_res_layer					<< endl;
-						fd << "\t\t\t\tfirst_iter: "			    << FAS_cfg_arr[0]->m_first_iter					<< endl;
-						fd << "\t\t\t\tlast_iter: "					<< FAS_cfg_arr[0]->m_last_iter				   	<< endl;
-						fd << "\t\t\t\tkernel_1x1"					<< FAS_cfg_arr[0]->m_kernel_1x1				    << endl;
+						fd << "\t\t\t\tresidual	"					<< FAS_cfg_arr[0]->m_do_res_layer				<< endl;
+						fd << "\t\t\t\tfirst_depth_iter: "			<< FAS_cfg_arr[0]->m_first_depth_iter			<< endl;
+						fd << "\t\t\t\tlast_depth_iter: "			<< FAS_cfg_arr[0]->m_last_depth_iter		   	<< endl;
+						fd << "\t\t\t\tkernel_1x1"					<< FAS_cfg_arr[0]->m_do_kernel1x1			    << endl;
 						fd << "\t\t\t\tstride: "					<< QUAD_cfg_arr[q]->m_stride                  	<< endl;
 						fd << "\t\t\t\tnum_expd_input_rows: "		<< QUAD_cfg_arr[q]->m_num_expd_input_rows     	<< endl;
 						fd << "\t\t\t\tnum_expd_input_cols: "		<< QUAD_cfg_arr[q]->m_num_expd_input_cols     	<< endl;

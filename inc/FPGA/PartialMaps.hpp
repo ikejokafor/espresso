@@ -7,20 +7,20 @@
 #include "espresso_FPGA_common.hpp"
 
 
-class OutputMaps : public Accel_Payload
+class PartialMaps : public Accel_Payload
 {
 	public:
-		OutputMaps(int outputMapDepth, int numOutputMapRows, int numOutputMapCols, fixedPoint_t* data);
-		~OutputMaps();
+		PartialMaps(int partialMapDepth, int numPartialMapRows, int numPartialMapCols, fixedPoint_t* data);
+		~PartialMaps();
 		uint64_t allocate(int size);
 		void deallocate();
 		void serialize();
         void deserialize();
-		OutputMaps* GetVolume(int depthBgn, int depthSize);
+		PartialMaps* GetVolume(int depthBgn, int depthSize);
 	
-		int m_outputMapDepth;
-		int m_numOutputMapRows;
-		int m_numOutputMapCols;
+		int m_partialMapDepth;
+		int m_numPartialMapRows;
+		int m_numPartialMapCols;
 		fixedPoint_t* m_data;
 #ifdef SYSTEMC
 		int m_shm_fd;

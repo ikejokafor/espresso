@@ -1,7 +1,8 @@
 #include "CNN_Network.hpp"
+using namespace std;
 
 
-espresso::CNN_Network::CNN_Network(std::vector<espresso::layerInfo_obj> layerInfo, std::vector<int> &outputLayers) {
+espresso::CNN_Network::CNN_Network(vector<espresso::layerInfo_obj> layerInfo, vector<int> &outputLayers) {
 	
 	for(int i = 0; i < layerInfo.size(); i++) 
 	{
@@ -63,13 +64,13 @@ espresso::CNN_Network::CNN_Network(std::vector<espresso::layerInfo_obj> layerInf
 		}		
 		else
 		{
-            std::cout << "[ESPRESSO]: " << "Skipped Loading Layer: " << layerInfo[i].layerName << std::endl;
+            cout << "[ESPRESSO]: " << "Skipped Loading Layer: " << layerInfo[i].layerName << endl;
         }
 	}
   
     for(int i = 0; i < m_cnn.size(); i++) 
     {
-        std::cout << "[ESPRESSO]: Loaded Layer " << i <<  " " << m_cnn[i]->m_layerName << std::endl;
+        cout << "[ESPRESSO]: Loaded Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
 	}
    	for(int i = 0; i < m_cnn.size() ; i++) // for every layer 
    	{	
@@ -109,7 +110,7 @@ espresso::CNN_Network::CNN_Network(std::vector<espresso::layerInfo_obj> layerInf
 	} 
 	else 
 	{
-		std::stack<espresso::Layer*> outputLayers_tmp;
+		stack<espresso::Layer*> outputLayers_tmp;
 		for(uint32_t i = 0; i < m_cnn.size(); i ++) {
 			outputLayers_tmp.push(m_cnn[i]);
 			for(uint32_t j = 0; j < m_cnn.size(); j++) 
@@ -150,12 +151,8 @@ espresso::CNN_Network::~CNN_Network()
 }
 
 
-
-void espresso::CNN_Network::Forward(std::string start, std::string end) 
+void espresso::CNN_Network::getBgnEndLayer(int& startIdx, string start, int& endIdx, string end)
 {
-    // find start and end
-    int startIdx = -1;
-    int endIdx = -1;
     if(start == " ") 
     {
         startIdx = 0;
@@ -174,16 +171,29 @@ void espresso::CNN_Network::Forward(std::string start, std::string end)
             }
         }   
     }
-    if((startIdx == -1 || endIdx == -1) || (endIdx < startIdx)) {
-        std::cout << "No start layer: " << start << " or end layer: " << end  << " or direction wrong" << std::endl;
+	if((startIdx == -1 || endIdx == -1) || (endIdx < startIdx)) {
+        cout << "No start layer: " << start << " or end layer: " << end  << " or direction wrong" << endl;
         exit(0);
     }
-    for (int i = startIdx; i < (endIdx + 1); i++) 
+}
+
+
+void espresso::CNN_Network::cfgLayers(int startIdx, int endIdx)
+{
+	for (int i = startIdx; i < (endIdx + 1); i++) 
     {
 		m_cnn[i]->ComputeLayerParam();
 	    if (i > 0 && m_cnn[i + 1]->m_layerType == RESIDUAL)
 	    {
-		    m_cnn[i]->m_fpga_residual = true;
+		    m_cnn[i]->m_fpga_do_res_layer = true;
+			m_cnn[i]->m_residualMapDepth 
+				= m_cnn[i + 1]->m_bottomLayers[0]->m_blob.depth;
+			m_cnn[i]->m_numResidualMapRows
+				= m_cnn[i + 1]->m_bottomLayers[0]->m_blob.numRows;
+			m_cnn[i]->m_numResidualMapsCols
+				= m_cnn[i + 1]->m_bottomLayers[0]->m_blob.numCols;
+			m_cnn[i]->m_residualMapData
+				= m_cnn[i + 1]->m_bottomLayers[0]->m_blob.fxData;
 	    }
 		if(i > 0 && m_cnn[i - 1]->m_layerType == UPSAMPLE)
 		{
@@ -195,15 +205,26 @@ void espresso::CNN_Network::Forward(std::string start, std::string end)
 		}
 	    if (i > 0 && m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_numKernelRows == 1)
 		{
-			m_cnn[i]->m_kernel_1x1 = true;
+			m_cnn[i]->m_fpga_do_kernel1x1 = true;
+			m_cnn[i]->m_kernel1x1Data = m_cnn[i + 1]->m_fxFilterData;
+			m_cnn[i]->m_bias1x1Data = m_cnn[i + 1]->m_fxBiasData;
 		}
 	}
+}
+
+void espresso::CNN_Network::Forward(string start, string end) 
+{
+    // find start and end
+    int startIdx = -1;
+    int endIdx = -1;
+	getBgnEndLayer(startIdx, start, endIdx, end);
+	cfgLayers(startIdx, endIdx);
     // Forward Propagation
 	for (int i = startIdx; i < (endIdx + 1); i++) 
 	{
 		// printLayerStats(i);
 		m_cnn[i]->ComputeLayer();   
-        // std::cout << "Finished Layer" << " " << m_cnn[i]->m_layerName << std::endl << std::endl << std::endl;
+        // cout << "Finished Layer" << " " << m_cnn[i]->m_layerName << endl << endl << endl;
 		
 		// int c, h, w;
 		// char buf[100];
@@ -226,7 +247,7 @@ void espresso::CNN_Network::Forward(std::string start, std::string end)
 }
 
 
-int espresso::CNN_Network::ReturnLayerIdx(std::string name) 
+int espresso::CNN_Network::ReturnLayerIdx(string name) 
 {
     for(uint32_t i = 0; i < m_cnn.size(); i++) 
     {
@@ -241,35 +262,35 @@ int espresso::CNN_Network::ReturnLayerIdx(std::string name)
 
 void espresso::CNN_Network::printLayerStats(int i) 
 {
-	// std::cout << "Layer " << i <<  " " << m_cnn[i]->m_layerName << std::endl;
-	// std::cout << "\t inputDepth:     \t\t"   << m_cnn[i]->m_inputDepth       << std::endl;
-	// std::cout << "\t numInputRows:   \t\t"   << m_cnn[i]->m_numInputRows     << std::endl;
-	// std::cout << "\t numInputCols:   \t\t"   << m_cnn[i]->m_numInputCols     << std::endl;
-	// std::cout << "\t outputDepth:    \t\t"   << m_cnn[i]->m_outputDepth      << std::endl;
-	// std::cout << "\t numOutputRows:  \t\t"   << m_cnn[i]->m_numOutputRows    << std::endl;
-	// std::cout << "\t numOutputCols:  \t\t"   << m_cnn[i]->m_numOutputCols    << std::endl;       
+	// cout << "Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
+	// cout << "\t inputDepth:     \t\t"   << m_cnn[i]->m_inputDepth       << endl;
+	// cout << "\t numInputRows:   \t\t"   << m_cnn[i]->m_numInputRows     << endl;
+	// cout << "\t numInputCols:   \t\t"   << m_cnn[i]->m_numInputCols     << endl;
+	// cout << "\t outputDepth:    \t\t"   << m_cnn[i]->m_outputDepth      << endl;
+	// cout << "\t numOutputRows:  \t\t"   << m_cnn[i]->m_numOutputRows    << endl;
+	// cout << "\t numOutputCols:  \t\t"   << m_cnn[i]->m_numOutputCols    << endl;       
 	// if(m_cnn[i]->m_precision == espresso::FLOAT) 
 	// {
-	// 	std::cout << "\t precision:  \t\t\t"   << "FLOAT"                      << std::endl;
+	// 	cout << "\t precision:  \t\t\t"   << "FLOAT"                      << endl;
 	// } 
 	// else 
 	// {                                                            
-	// 	std::cout << "\t precision:  \t\t\t"   << "FIXED"                      << std::endl;
+	// 	cout << "\t precision:  \t\t\t"   << "FIXED"                      << endl;
 	// }
 	// if(m_cnn[i]->m_layerType == "Convolution" || m_cnn[i]->m_layerType == "InnerProduct") 
 	// {
-	// 	std::cout << "\t Stride:             \t\t" << m_cnn[i]->m_stride << std::endl;
-	// 	std::cout << "\t Padding:            \t\t" << m_cnn[i]->m_padding << std::endl;
-	// 	std::cout << "\t Number of Kernels:  \t\t" << m_cnn[i]->m_numKernels << std::endl;
-	// 	std::cout << "\t Kernel Depth:       \t\t" << m_cnn[i]->m_kernelDepth << std::endl;
-	// 	std::cout << "\t Kernel Size:        \t\t" << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << std::endl;
+	// 	cout << "\t Stride:             \t\t" << m_cnn[i]->m_stride << endl;
+	// 	cout << "\t Padding:            \t\t" << m_cnn[i]->m_padding << endl;
+	// 	cout << "\t Number of Kernels:  \t\t" << m_cnn[i]->m_numKernels << endl;
+	// 	cout << "\t Kernel Depth:       \t\t" << m_cnn[i]->m_kernelDepth << endl;
+	// 	cout << "\t Kernel Size:        \t\t" << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
 	// }
-	// std::cout << "\t dinFxPtLength:   \t\t"   << m_cnn[i]->m_dinFxPtLength     << std::endl;
-	// std::cout << "\t dinNumFracBits:  \t\t"   << m_cnn[i]->m_dinNumFracBits    << std::endl;
-	// std::cout << "\t whtFxPtLength:   \t\t"   << m_cnn[i]->m_whtFxPtLength     << std::endl;
-	// std::cout << "\t whtNumFracBits:  \t\t"   << m_cnn[i]->m_whtNumFracBits    << std::endl;
-	// std::cout << "\t doutFxPtLength:  \t\t"   << m_cnn[i]->m_doutFxPtLength    << std::endl;
-	// std::cout << "\t doutNumFracBits: \t\t"   << m_cnn[i]->m_doutNumFracBits   << std::endl;
+	// cout << "\t dinFxPtLength:   \t\t"   << m_cnn[i]->m_dinFxPtLength     << endl;
+	// cout << "\t dinNumFracBits:  \t\t"   << m_cnn[i]->m_dinNumFracBits    << endl;
+	// cout << "\t whtFxPtLength:   \t\t"   << m_cnn[i]->m_whtFxPtLength     << endl;
+	// cout << "\t whtNumFracBits:  \t\t"   << m_cnn[i]->m_whtNumFracBits    << endl;
+	// cout << "\t doutFxPtLength:  \t\t"   << m_cnn[i]->m_doutFxPtLength    << endl;
+	// cout << "\t doutNumFracBits: \t\t"   << m_cnn[i]->m_doutNumFracBits   << endl;
 }
 
 

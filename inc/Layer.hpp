@@ -262,8 +262,8 @@ namespace espresso
 			int m_padding;
 			bool m_fpga_upsample;
 			bool m_fpga_activation;
-			bool m_fpga_residual;
-			bool m_kernel_1x1;
+			bool m_fpga_do_res_layer;
+			bool m_fpga_do_kernel1x1;
 			bool m_globalPooling;
 			int m_numFilterValues;
 			float* m_flFilterData;
@@ -292,7 +292,12 @@ namespace espresso
 			espresso::Blob_t m_blob;
 			std::vector<Layer*> m_topLayers;
 			std::vector<Layer*> m_bottomLayers;
-			FPGA_hndl* m_fpga_hndl;			
-			
+			int m_residualMapDepth;
+			int m_numResidualMapRows;
+			int m_numResidualMapsCols;
+			fixedPoint_t* m_residualMapData;
+			FPGA_hndl* m_fpga_hndl;
+			fixedPoint_t* m_kernel1x1Data;
+			fixedPoint_t* m_bias1x1Data;			
 	};
 }

@@ -1,12 +1,7 @@
 #pragma once
 
 
-#include <stdio.h> 
-#include <stdlib.h> 
-#include <string.h> 
-#include <fcntl.h> 
-#include <sys/shm.h> 
-#include <sys/stat.h> 
+#include <string.h>
 #include "fixedPoint.hpp"
 #include "FPGA_shim.hpp"
 #include "espresso_FPGA_common.hpp"

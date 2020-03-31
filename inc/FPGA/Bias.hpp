@@ -7,20 +7,18 @@
 #include "espresso_FPGA_common.hpp"
 
 
-class OutputMaps : public Accel_Payload
+class Bias : public Accel_Payload
 {
 	public:
-		OutputMaps(int outputMapDepth, int numOutputMapRows, int numOutputMapCols, fixedPoint_t* data);
-		~OutputMaps();
+		Bias(int numKernels, fixedPoint_t* data);
+		~Bias();
 		uint64_t allocate(int size);
 		void deallocate();
 		void serialize();
         void deserialize();
-		OutputMaps* GetVolume(int depthBgn, int depthSize);
+		Bias* GetVolume(int krnlBgn, int numKrnl);
 	
-		int m_outputMapDepth;
-		int m_numOutputMapRows;
-		int m_numOutputMapCols;
+		int m_numKernels;
 		fixedPoint_t* m_data;
 #ifdef SYSTEMC
 		int m_shm_fd;

@@ -1,11 +1,8 @@
 #pragma once
 
+
 #include <vector>
 #include <string.h>
-#include <fstream>
-#include <iostream>
-#include <sys/ipc.h> 
-#include <sys/shm.h> 
 #include "fixedPoint.hpp"
 #include "util.hpp"
 #include "FPGA_shim.hpp"
@@ -27,6 +24,7 @@ class Kernels : public Accel_Payload
 		void serialize();
         void deserialize();
 		Kernels* GetVolume(int krnlBgn, int numKrnl, int depthBgn, int depthSize);
+		Kernels* GetVolume(int krnlBgn, int numKrnl);
 	
 		int m_numKernels;
 		int m_kernelDepth;
