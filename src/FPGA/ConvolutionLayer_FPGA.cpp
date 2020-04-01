@@ -48,7 +48,6 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
 			m_outputDepth,
 			m_numOutputRows,
 			m_numOutputCols,
-			m_topLayers[0]->m_blob.fxData,
 			m_residualMapDepth,
 			m_numResidualMapRows,
 			m_numResidualMapsCols,

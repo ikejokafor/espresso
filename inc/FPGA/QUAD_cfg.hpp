@@ -8,11 +8,12 @@
 class QUAD_cfg
 {
     public:
+		QUAD_cfg();
 	    QUAD_cfg(
-			int FAS_id = 0,	
-			int AWP_id = 0,
-			int QUAD_id = 0, 
-			bool QUAD_en = false,  
+			int FAS_id,	
+			int AWP_id,
+			int QUAD_id, 
+			bool QUAD_en,  
 			int numInputMapRows = 0, 
 			int numInputMapCols = 0, 
 			int numKernels = 0, 
@@ -31,7 +32,6 @@ class QUAD_cfg
 		int 	m_FAS_id                ;
         int 	m_AWP_id                ;
 		int 	m_QUAD_id               ;
-		bool 	m_QUAD_en				;
 		int 	m_stride			    ;
 		int		m_num_output_rows		;
 		int		m_num_output_col	    ;

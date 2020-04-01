@@ -9,6 +9,7 @@
 class AWP_cfg
 {
     public:
+        AWP_cfg();
 	    AWP_cfg(int FAS_id, int AWP_id);
         ~AWP_cfg();
         

@@ -1,6 +1,9 @@
 #include "QUAD_cfg.hpp"
 
 
+QUAD_cfg::QUAD_cfg() { }
+
+
 QUAD_cfg::QUAD_cfg(
     int FAS_id,	
     int AWP_id,
@@ -22,8 +25,7 @@ QUAD_cfg::QUAD_cfg(
 	m_FAS_id = FAS_id;
 	m_AWP_id = AWP_id;
 	m_QUAD_id = QUAD_id;
-    m_QUAD_en = QUAD_en;
-	if(!m_QUAD_en)
+	if(!QUAD_en)
 	{
 		return;
 	}

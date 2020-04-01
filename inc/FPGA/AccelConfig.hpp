@@ -23,6 +23,7 @@ class AccelConfig : public Accel_Payload
 		~AccelConfig();
 		uint64_t allocate(int size);
 		void deallocate();
+		void createCfg();
 		void serialize();
         void deserialize();
 

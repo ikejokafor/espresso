@@ -1,6 +1,9 @@
 #include "FAS_cfg.hpp"
 
 
+FAS_cfg::FAS_cfg() { }
+
+
 FAS_cfg::FAS_cfg(
 	int FAS_id, 
 	bool do_kernel1x1, 

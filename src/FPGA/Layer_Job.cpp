@@ -16,7 +16,6 @@ Layer_Job::Layer_Job(
 	int outputMapDepth,
 	int numOutputMapRows,
 	int numOutputMapCols,
-	fixedPoint_t* outputMapData,
 	int residualMapDepth,
 	int numResidualMapRows,
 	int numResidualMapCols,
@@ -55,11 +54,17 @@ Layer_Job::Layer_Job(
 	m_do_kernel1x1			= do_kernel1x1			;
 	m_inputMaps 			= new InputMaps(inputMapDepth, numInputMapRows, numInputMapCols, inputMapData);
 	m_kernels3x3			= new Kernels(numKernels, kernelDepth, numKernelRows, numKernelCols, kernel3x3Data);
-	m_kernels1x1			= new Kernels(numKernels, 1, 1, 1, kernel1x1Data);
-	m_residualMaps			= new ResidualMaps(residualMapDepth, numResidualMapRows, numResidualMapCols, residualMapData);
-	m_outputMaps			= new OutputMaps(outputMapDepth, numOutputMapRows, numOutputMapCols, outputMapData);
+	if(do_res_layer)
+	{
+		m_residualMaps		= new ResidualMaps(residualMapDepth, numResidualMapRows, numResidualMapCols, residualMapData);
+	}	
+	m_outputMaps			= new OutputMaps(outputMapDepth, numOutputMapRows, numOutputMapCols);
 	m_bias3x3Data			= new Bias(numKernels, bias3x3Data);
-	m_bias1x1Data			= new Bias(numKernels, bias1x1Data);
+	if(do_kernel1x1)
+	{
+		m_kernels1x1		= new Kernels(numKernels, 1, 1, 1, kernel1x1Data);
+		m_bias1x1Data		= new Bias(numKernels, bias1x1Data);
+	}
 #ifdef SYSTEMC
 	m_sysc_fpga_hndl		= reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
 #else
@@ -82,59 +87,51 @@ Layer_Job::~Layer_Job()
 
 void Layer_Job::createLayerIters()
 {
-	m_num_Depth_iter = ceil((double)m_inputMapDepth / (double)QUAD_DPTH_SIMD);
+	m_num_depth_iter = ceil((double)m_inputMapDepth / (double)QUAD_DPTH_SIMD);
 	m_num_krnl_iter = ceil((double)m_numKernels / (double)QUAD_MAX_KERNELS);
 	int remNumKrnl = m_numKernels;
 	int numKrnl;
-	m_lay_it_arr.resize(m_numKernels);
+	int inMapFetchTotal;
+	int partMapFetchTotal;
+	int krnl1x1FetchTotal;
+	int krnl3x3FetchTotal;
+	int resMapFetchTotal;
+	int outMapStoreTotal;
+	layAclPrm_t* lap;
+	m_lay_it_arr.resize(m_num_krnl_iter);
 	for (int i = 0, krnlBgn = 0; i < m_num_krnl_iter; i++, krnlBgn += numKrnl)
 	{
 		numKrnl = min(remNumKrnl, QUAD_MAX_KERNELS);
 		int remDepth = m_inputMapDepth;
 		int depth;
-		for (int j = 0, depthBgn = 0; j < m_num_Depth_iter; j++, depthBgn += depth)
+		for (int j = 0, depthBgn = 0; j < m_num_depth_iter; j++, depthBgn += depth)
 		{
-			auto prevOutMap = m_lay_it_arr[i][j - 1]->m_outputMaps;
 			depth = min(QUAD_DPTH_SIMD, remDepth);
-			InputMaps* inputMaps = m_inputMaps->GetVolume(depthBgn, depth);
-			Kernels* kernels3x3 = m_kernels3x3->GetVolume(krnlBgn, numKrnl, depthBgn, depth);
-			Kernels* kernels1x1 = m_kernels1x1->GetVolume(krnlBgn, numKrnl, 1, 1);
-			Bias* kernels3x3Bias = m_bias3x3Data->GetVolume(krnlBgn, numKrnl);
-			Bias* kernels1x1Bias = m_bias1x1Data->GetVolume(krnlBgn, numKrnl);
-			PartialMaps* partialMaps = (j != 0) ? new PartialMaps(
-				prevOutMap->m_outputMapDepth,
-				prevOutMap->m_numOutputMapRows,
-				prevOutMap->m_numOutputMapCols,
-				prevOutMap->m_data
-			) : nullptr;
-			ResidualMaps* residualMaps = m_residualMaps->GetVolume(depthBgn, depth);
-			OutputMaps* outputMaps = m_outputMaps->GetVolume(depthBgn, depth);
-			int inMapFetchTotal = inputMaps->m_size;
-			int partMapFetchTotal =  partialMaps->m_size;
-			int krnl1x1FetchTotal = kernels1x1->m_size;
-			int krnl3x3FetchTotal = kernels3x3->m_size;
-			int resMapFetchTotal = 0;
-			int outMapStoreTotal = outputMaps->m_size;
-			if(j == 0)
-			{
-				partMapFetchTotal = 0;
-			}
-			else if(j == (m_num_Depth_iter - 1))
-			{
-				resMapFetchTotal = m_residualMaps->m_size;
-			}
-			m_lay_it_arr[i].push_back(new Layer_Iteration(
+			lap = createAccelParams(
+				i,
 				j,
+				depthBgn, 
+				depth, 
+				krnlBgn, 
+				numKrnl,
+				inMapFetchTotal,
+				partMapFetchTotal,
+				krnl1x1FetchTotal,
+				krnl3x3FetchTotal,
+				resMapFetchTotal,
+				outMapStoreTotal
+			);
+			m_lay_it_arr[i].push_back(new Layer_Iteration(
 				(j == 0) ? true : false,
-				(j == m_num_Depth_iter) ? true : false,
-				inputMaps,
-				kernels3x3,
-				kernels1x1,
-				kernels3x3Bias,
-				kernels1x1Bias,
-				partialMaps,
-				residualMaps,
-				outputMaps,
+				(j == m_num_depth_iter) ? true : false,
+				lap->inputMaps,
+				lap->kernels3x3,
+				lap->kernels1x1,
+				lap->kernels3x3Bias,
+				lap->kernels1x1Bias,
+				lap->partialMaps,
+				lap->residualMaps,
+				lap->outputMaps,
 				m_stride,
 				m_upsample,
 				m_padding,
@@ -155,6 +152,61 @@ void Layer_Job::createLayerIters()
 }
 
 
+layAclPrm_t* Layer_Job::createAccelParams(
+	int i,
+	int j,
+	int depthBgn, 
+	int depth, 
+	int krnlBgn, 
+	int numKrnl,
+	int& inMapFetchTotal,
+	int& partMapFetchTotal,
+	int& krnl1x1FetchTotal,
+	int& krnl3x3FetchTotal,
+	int& resMapFetchTotal,
+	int& outMapStoreTotal
+) {
+	layAclPrm_t* lap = new layAclPrm_t;
+	memset(lap, 0x0, sizeof(layAclPrm_t));	
+	lap->inputMaps = m_inputMaps->GetVolume(depthBgn, depth);
+	lap->kernels3x3 = m_kernels3x3->GetVolume(krnlBgn, numKrnl, depthBgn, depth);
+	lap->kernels3x3Bias = m_bias3x3Data->GetVolume(krnlBgn, numKrnl);
+	lap->outputMaps = m_outputMaps->GetVolume(depthBgn, depth);
+	inMapFetchTotal = lap->inputMaps->m_size;
+	krnl3x3FetchTotal = lap->kernels3x3->m_size;
+	outMapStoreTotal = lap->outputMaps->m_size;
+	if(m_do_kernel1x1)
+	{
+		lap->kernels1x1 = m_kernels1x1->GetVolume(krnlBgn, numKrnl, 1, 1);
+		lap->kernels1x1Bias = m_bias1x1Data->GetVolume(krnlBgn, numKrnl);
+		krnl1x1FetchTotal = lap->kernels1x1->m_size;
+	}
+	if(j == 0)
+	{
+		partMapFetchTotal = 0;
+		lap->partialMaps = nullptr;
+	}
+	else
+	{
+		auto& prevOutMap = m_lay_it_arr[i][j - 1]->m_outputMaps;
+		lap->partialMaps = new PartialMaps(
+			prevOutMap->m_outputMapDepth,
+			prevOutMap->m_numOutputMapRows,
+			prevOutMap->m_numOutputMapCols,
+			prevOutMap->m_data
+		);
+		partMapFetchTotal = lap->partialMaps->m_size;
+	}
+	resMapFetchTotal = 0;
+	if(j == (m_num_depth_iter - 1) && m_do_res_layer)
+	{
+		resMapFetchTotal = m_residualMaps->m_size;
+		lap->residualMaps = m_residualMaps->GetVolume(depthBgn, depth);
+	}
+	return lap;
+}
+
+
 void Layer_Job::process()
 {
 	// Get configuration
@@ -165,12 +217,12 @@ void Layer_Job::process()
 		{
 			m_lay_it_arr[k][d]->m_accelCfg->serialize();
 			m_sysc_fpga_hndl->setConfig(m_lay_it_arr[k][d]->m_accelCfg);
-			m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_inputMaps);
-			m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_kernels3x3);
-			m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_kernels1x1);
-			m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_partialMaps);
-			m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_residualMaps);
-			m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_outputMaps);
+			// m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_inputMaps);
+			// m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_kernels3x3);
+			// m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_kernels1x1);
+			// m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_partialMaps);
+			// m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_residualMaps);
+			// m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_outputMaps);
 			m_sysc_fpga_hndl->sendStart();
 			m_sysc_fpga_hndl->waitComplete();
 		}
@@ -190,12 +242,12 @@ void Layer_Job::printConfig()
 		{
 			fd << "\t\tDepth Iteration: " << d << endl;
 			int numAWP = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr.size();
-			auto FAS_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr;
+			auto& FAS_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr;
 			for (int a = 0; a < numAWP; a++)
 			{
 				int numQUADs = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr.size();
-				auto QUAD_en_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_en_arr;
-				auto QUAD_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr;	
+				auto& QUAD_en_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_en_arr;
+				auto& QUAD_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr;	
 				for (int q = 0; q < numQUADs; q++)
 				{
 					fd << "\t\t\tQUAD_id: "                 << QUAD_cfg_arr[q]->m_QUAD_id                 << endl;

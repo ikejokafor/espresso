@@ -10,6 +10,7 @@
 class OutputMaps : public Accel_Payload
 {
 	public:
+		OutputMaps(int outputMapDepth, int numOutputMapRows, int numOutputMapCols);
 		OutputMaps(int outputMapDepth, int numOutputMapRows, int numOutputMapCols, fixedPoint_t* data);
 		~OutputMaps();
 		uint64_t allocate(int size);

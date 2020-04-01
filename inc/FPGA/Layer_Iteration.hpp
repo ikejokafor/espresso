@@ -20,7 +20,6 @@ class Layer_Iteration
 {
 	public:
 		Layer_Iteration(
-			int iter,
 			bool first_depth_iter,
 			bool last_depth_iter, 
 			InputMaps* inputMaps, 

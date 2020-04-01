@@ -19,6 +19,18 @@
 #include "Kernels.hpp"
 
 
+typedef struct
+{
+	InputMaps* inputMaps;
+	Kernels* kernels3x3;
+	Kernels* kernels1x1;
+	Bias* kernels3x3Bias;
+	Bias* kernels1x1Bias;
+	PartialMaps* partialMaps;
+	ResidualMaps* residualMaps;
+	OutputMaps* outputMaps;
+} layAclPrm_t;
+
 
 class Layer_Job
 {
@@ -37,7 +49,6 @@ class Layer_Job
 			int outputMapDepth,
 			int numOutputMapRows,
 			int numOutputMapCols,
-			fixedPoint_t* outputMapData,
 			int residualMapDepth,
 			int numResidualMapRows,
 			int numResidualMapCols,
@@ -57,6 +68,20 @@ class Layer_Job
 	    );
         ~Layer_Job();
         void createLayerIters();
+		layAclPrm_t* createAccelParams(
+			int i,
+			int j,
+			int depthBgn, 
+			int depth, 
+			int krnlBgn, 
+			int numKrnl,
+			int& inMapFetchTotal,
+			int& partMapFetchTotal,
+			int& krnl1x1FetchTotal,
+			int& krnl3x3FetchTotal,
+			int& resMapFetchTotal,
+			int& outMapStoreTotal
+		);
 		void printConfig();
         void process();
         
@@ -87,7 +112,7 @@ class Layer_Job
 		Bias* m_bias3x3Data;
 		Bias* m_bias1x1Data;
 		std::vector<std::vector<Layer_Iteration*>> m_lay_it_arr;
-		int m_num_Depth_iter;
+		int m_num_depth_iter;
 		int m_num_krnl_iter;
 #ifdef SYSTEMC
 		SYSC_FPGA_hndl* m_sysc_fpga_hndl;
