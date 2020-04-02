@@ -1,8 +1,8 @@
-#include "Bias.hpp"
+#include "KernelBias.hpp"
 using namespace std;
 
 
-Bias::Bias(int numKernels, fixedPoint_t* data) : Accel_Payload()
+KernelBias::KernelBias(int numKernels, fixedPoint_t* data) : Accel_Payload()
 {
 	m_numKernels = numKernels;
 	int size = m_numKernels * sizeof(fixedPoint_t);
@@ -11,16 +11,16 @@ Bias::Bias(int numKernels, fixedPoint_t* data) : Accel_Payload()
 }
 
 
-Bias::~Bias()
+KernelBias::~KernelBias()
 {
 	deallocate();
 }
 
 
-uint64_t Bias::allocate(int size)
+uint64_t KernelBias::allocate(int size)
 {
+	m_size = size;	
 #ifdef SYSTEMC
-	m_size = size;
 	return (uint64_t)malloc(size);
 #else
 
@@ -28,7 +28,7 @@ uint64_t Bias::allocate(int size)
 }
 
 
-void Bias::deallocate()
+void KernelBias::deallocate()
 {
 #ifdef SYSTEMC
 	free(m_data);
@@ -38,16 +38,7 @@ void Bias::deallocate()
 }
 
 
-void Bias::serialize()
-{
-#ifdef SYSTEMC
-	
-#else
-
-#endif
-}
-
-void Bias::deserialize()
+void KernelBias::serialize()
 {
 #ifdef SYSTEMC
 	
@@ -57,8 +48,18 @@ void Bias::deserialize()
 }
 
 
-Bias* Bias::GetVolume(int krnlBgn, int numKrnl)
+void KernelBias::deserialize()
+{
+#ifdef SYSTEMC
+	
+#else
+
+#endif
+}
+
+
+KernelBias* KernelBias::GetVolume(int krnlBgn, int numKrnl)
 {
 	fixedPoint_t* ptr = (fixedPoint_t*)(m_data + krnlBgn);
-	return new Bias(numKrnl, ptr);
+	return new KernelBias(numKrnl, ptr);
 }

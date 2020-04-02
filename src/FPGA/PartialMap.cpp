@@ -21,8 +21,8 @@ PartialMaps::~PartialMaps()
 
 uint64_t PartialMaps::allocate(int size)
 {
-#ifdef SYSTEMC
 	m_size = size;
+#ifdef SYSTEMC
 	return (uint64_t)malloc(size);
 #else
 

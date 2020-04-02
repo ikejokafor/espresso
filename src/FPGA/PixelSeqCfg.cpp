@@ -1,29 +1,63 @@
-#include "pixel_seq_config.hpp"
+#include "PixelSeqCfg.hpp"
 
 
-pixel_seq_config::pixel_seq_config(int stride)
+PixelSeqCfg::PixelSeqCfg(int stride)
 {
 	m_stride = stride;
-}
-
-
-uint8_t* pixel_seq_config::get_bytes(int& length)
-{
-	if (m_stride == 1)
+	m_address = allocate(MAX_NUM_INPUT_COLS * NUM_CE_PER_QUAD * PIX_SEQ_CONFIG_SIZE);
+	if(stride == 1)
 	{
-		return stride1_config(length);
+		stride1_config();
 	}
 	else
 	{
-		return stride2_config(length);
+		stride2_config();
 	}
 }
 
 
-uint8_t* pixel_seq_config::stride1_config(int& length)
+PixelSeqCfg::~PixelSeqCfg()
 {
-	length = MAX_NUM_INPUT_COLS * NUM_CE_PER_QUAD * PIX_SEQ_CONFIG_SIZE;
-	uint16_t *bytes = new uint16_t[length];
+	deallocate();
+}
+
+
+uint64_t PixelSeqCfg::allocate(int size)
+{
+	m_size = size;
+#ifdef SYSTEMC
+	return (uint64_t)malloc(size);
+#else
+
+#endif
+}
+
+
+void PixelSeqCfg::deallocate()
+{
+#ifdef SYSTEMC
+	free((uint64_t*)m_address);
+#else
+
+#endif
+}
+
+
+void PixelSeqCfg::serialize()
+{
+
+}
+
+
+void PixelSeqCfg::deserialize()
+{
+
+}
+
+
+void PixelSeqCfg::stride1_config()
+{
+	uint16_t* bytes = (uint16_t*)m_address;
 	bytes[0] = uint16_t(3072);
 	bytes[1] = uint16_t(2);
 	bytes[2] = uint16_t(8704);
@@ -71,14 +105,12 @@ uint8_t* pixel_seq_config::stride1_config(int& length)
 		bytes[i] = 0;
 		i = i + 1;
 	}
-	return (uint8_t*)bytes;
 }
 
 
-uint8_t* pixel_seq_config::stride2_config(int& length)
+void PixelSeqCfg::stride2_config()
 {
-	length = MAX_NUM_INPUT_COLS * NUM_CE_PER_QUAD * PIX_SEQ_CONFIG_SIZE;
-	uint16_t *bytes = new uint16_t[length];
+	uint16_t* bytes = (uint16_t*)m_address;
 	bytes[0] = uint16_t(3072);
 	bytes[1] = uint16_t(2);
 	bytes[2] = uint16_t(8704);
@@ -115,5 +147,4 @@ uint8_t* pixel_seq_config::stride2_config(int& length)
 		bytes[i] = 0;
 		i = i + 1;
 	}
-	return (uint8_t*)bytes;
 }

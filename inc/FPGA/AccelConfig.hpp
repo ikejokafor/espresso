@@ -4,9 +4,6 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <string.h> 
-#include <fcntl.h> 
-#include <sys/shm.h> 
-#include <sys/stat.h> 
 #include "fixedPoint.hpp"
 #include "FPGA_shim.hpp"
 #include "FAS_cfg.hpp"
@@ -23,20 +20,27 @@ class AccelConfig : public Accel_Payload
 		~AccelConfig();
 		uint64_t allocate(int size);
 		void deallocate();
-		void createCfg();
 		void serialize();
         void deserialize();
+		void createCfg();
 
 		typedef struct
 		{
+			uint64_t FAS_id                     ;
+			uint64_t AWP_id                     ;
+			uint64_t AWP_en                     ;
 			uint64_t do_res_layer               ;
 			uint64_t first_depth_iter           ;
 			uint64_t last_depth_iter            ;
 			uint64_t do_kernel1x1               ;
+			uint64_t pixSeqCfgFetchTotal		;
 			uint64_t inMapFetchTotal          	;
-			uint64_t partMapFetchTotal        	;
+			uint64_t krnl3x3FetchTotal          ;
 			uint64_t krnl1x1FetchTotal          ;
-			uint64_t resMapFetchTotal         	;
+			uint64_t krnl3x3BiasFetchTotal      ;
+			uint64_t krnl1x1BiasFetchTotal      ;
+			uint64_t resMapFetchTotal         	;			
+			uint64_t partMapFetchTotal        	;
 			uint64_t outMapStoreTotal			;
 			uint64_t imAddrArr_0                ;
 			uint64_t imAddrArr_1                ;
@@ -46,15 +50,16 @@ class AccelConfig : public Accel_Payload
 			uint64_t krnl3x3Addr_1              ;
 			uint64_t krnl3x3Addr_2              ;
 			uint64_t krnl3x3Addr_3              ;
-			uint64_t krnl1x1AddrArr             ;
+			uint64_t krnl3x3BiasAddr_0          ;
+			uint64_t krnl3x3BiasAddr_1          ;
+			uint64_t krnl3x3BiasAddr_2          ;
+			uint64_t krnl3x3BiasAddr_3          ;
+			uint64_t krnl1x1BiasAddr            ;
 			uint64_t partMapAddr				;
 			uint64_t resMapAddr					;
-			uint64_t biasAddr                   ;
+			uint64_t outMapAddr					;
 			uint64_t pixelSeqAddr               ;
-			uint64_t FAS_id                     ;
-			uint64_t AWP_id                     ;
 			uint64_t QUAD_id                    ;
-			uint64_t AWP_en                     ;
 			uint64_t QUAD_en                    ;
 			uint64_t stride                     ;
 			uint64_t num_output_rows            ;

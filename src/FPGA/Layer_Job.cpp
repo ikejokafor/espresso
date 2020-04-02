@@ -59,11 +59,11 @@ Layer_Job::Layer_Job(
 		m_residualMaps		= new ResidualMaps(residualMapDepth, numResidualMapRows, numResidualMapCols, residualMapData);
 	}	
 	m_outputMaps			= new OutputMaps(outputMapDepth, numOutputMapRows, numOutputMapCols);
-	m_bias3x3Data			= new Bias(numKernels, bias3x3Data);
+	m_kernel3x3Bias			= new KernelBias(numKernels, bias3x3Data);
 	if(do_kernel1x1)
 	{
 		m_kernels1x1		= new Kernels(numKernels, 1, 1, 1, kernel1x1Data);
-		m_bias1x1Data		= new Bias(numKernels, bias1x1Data);
+		m_kernel1x1Bias		= new KernelBias(numKernels, bias1x1Data);
 	}
 #ifdef SYSTEMC
 	m_sysc_fpga_hndl		= reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
@@ -79,7 +79,7 @@ Layer_Job::~Layer_Job()
 	{
 		for(int j = 0; j < m_lay_it_arr[j].size(); j++)
 		{
-			// delete m_lay_it_arr[i][j];
+			delete m_lay_it_arr[i][j];
 		}
 	}
 }
@@ -91,13 +91,7 @@ void Layer_Job::createLayerIters()
 	m_num_krnl_iter = ceil((double)m_numKernels / (double)QUAD_MAX_KERNELS);
 	int remNumKrnl = m_numKernels;
 	int numKrnl;
-	int inMapFetchTotal;
-	int partMapFetchTotal;
-	int krnl1x1FetchTotal;
-	int krnl3x3FetchTotal;
-	int resMapFetchTotal;
-	int outMapStoreTotal;
-	layAclPrm_t* lap;
+	layAclPrm_t* layAclPrm;
 	m_lay_it_arr.resize(m_num_krnl_iter);
 	for (int i = 0, krnlBgn = 0; i < m_num_krnl_iter; i++, krnlBgn += numKrnl)
 	{
@@ -107,43 +101,31 @@ void Layer_Job::createLayerIters()
 		for (int j = 0, depthBgn = 0; j < m_num_depth_iter; j++, depthBgn += depth)
 		{
 			depth = min(QUAD_DPTH_SIMD, remDepth);
-			lap = createAccelParams(
+			layAclPrm = createAccelParams(
 				i,
 				j,
 				depthBgn, 
 				depth, 
 				krnlBgn, 
-				numKrnl,
-				inMapFetchTotal,
-				partMapFetchTotal,
-				krnl1x1FetchTotal,
-				krnl3x3FetchTotal,
-				resMapFetchTotal,
-				outMapStoreTotal
+				numKrnl
 			);
 			m_lay_it_arr[i].push_back(new Layer_Iteration(
 				(j == 0) ? true : false,
 				(j == m_num_depth_iter) ? true : false,
-				lap->inputMaps,
-				lap->kernels3x3,
-				lap->kernels1x1,
-				lap->kernels3x3Bias,
-				lap->kernels1x1Bias,
-				lap->partialMaps,
-				lap->residualMaps,
-				lap->outputMaps,
+				layAclPrm->inputMaps,
+				layAclPrm->kernels3x3,
+				layAclPrm->kernels1x1,
+				layAclPrm->kernels3x3Bias,
+				layAclPrm->kernels1x1Bias,
+				layAclPrm->partialMaps,
+				layAclPrm->residualMaps,
+				layAclPrm->outputMaps,
 				m_stride,
 				m_upsample,
 				m_padding,
 				m_do_kernel1x1,
 				m_do_res_layer,
-				m_activation,
-				inMapFetchTotal,
-				partMapFetchTotal,
-				krnl1x1FetchTotal,
-				krnl3x3FetchTotal,
-				resMapFetchTotal,
-				outMapStoreTotal
+				m_activation
 			));
 			remDepth -= depth;
 		}
@@ -158,52 +140,38 @@ layAclPrm_t* Layer_Job::createAccelParams(
 	int depthBgn, 
 	int depth, 
 	int krnlBgn, 
-	int numKrnl,
-	int& inMapFetchTotal,
-	int& partMapFetchTotal,
-	int& krnl1x1FetchTotal,
-	int& krnl3x3FetchTotal,
-	int& resMapFetchTotal,
-	int& outMapStoreTotal
+	int numKrnl
 ) {
-	layAclPrm_t* lap = new layAclPrm_t;
-	memset(lap, 0x0, sizeof(layAclPrm_t));	
-	lap->inputMaps = m_inputMaps->GetVolume(depthBgn, depth);
-	lap->kernels3x3 = m_kernels3x3->GetVolume(krnlBgn, numKrnl, depthBgn, depth);
-	lap->kernels3x3Bias = m_bias3x3Data->GetVolume(krnlBgn, numKrnl);
-	lap->outputMaps = m_outputMaps->GetVolume(depthBgn, depth);
-	inMapFetchTotal = lap->inputMaps->m_size;
-	krnl3x3FetchTotal = lap->kernels3x3->m_size;
-	outMapStoreTotal = lap->outputMaps->m_size;
+	layAclPrm_t* layAclPrm = new layAclPrm_t;
+	memset(layAclPrm, 0x0, sizeof(layAclPrm_t));	
+	layAclPrm->inputMaps = m_inputMaps->GetVolume(depthBgn, depth);
+	layAclPrm->kernels3x3 = m_kernels3x3->GetVolume(krnlBgn, numKrnl, depthBgn, depth);
+	layAclPrm->kernels3x3Bias = m_kernel3x3Bias->GetVolume(krnlBgn, numKrnl);
+	layAclPrm->outputMaps = m_outputMaps->GetVolume(depthBgn, depth);
 	if(m_do_kernel1x1)
 	{
-		lap->kernels1x1 = m_kernels1x1->GetVolume(krnlBgn, numKrnl, 1, 1);
-		lap->kernels1x1Bias = m_bias1x1Data->GetVolume(krnlBgn, numKrnl);
-		krnl1x1FetchTotal = lap->kernels1x1->m_size;
+		layAclPrm->kernels1x1 = m_kernels1x1->GetVolume(krnlBgn, numKrnl, 1, 1);
+		layAclPrm->kernels1x1Bias = m_kernel1x1Bias->GetVolume(krnlBgn, numKrnl);
 	}
 	if(j == 0)
 	{
-		partMapFetchTotal = 0;
-		lap->partialMaps = nullptr;
+		layAclPrm->partialMaps = nullptr;
 	}
 	else
 	{
 		auto& prevOutMap = m_lay_it_arr[i][j - 1]->m_outputMaps;
-		lap->partialMaps = new PartialMaps(
+		layAclPrm->partialMaps = new PartialMaps(
 			prevOutMap->m_outputMapDepth,
 			prevOutMap->m_numOutputMapRows,
 			prevOutMap->m_numOutputMapCols,
 			prevOutMap->m_data
 		);
-		partMapFetchTotal = lap->partialMaps->m_size;
 	}
-	resMapFetchTotal = 0;
 	if(j == (m_num_depth_iter - 1) && m_do_res_layer)
 	{
-		resMapFetchTotal = m_residualMaps->m_size;
-		lap->residualMaps = m_residualMaps->GetVolume(depthBgn, depth);
+		layAclPrm->residualMaps = m_residualMaps->GetVolume(depthBgn, depth);
 	}
-	return lap;
+	return layAclPrm;
 }
 
 
@@ -241,14 +209,12 @@ void Layer_Job::printConfig()
 		for (int d = 0; d < m_lay_it_arr[k].size(); d++)
 		{
 			fd << "\t\tDepth Iteration: " << d << endl;
-			int numAWP = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr.size();
 			auto& FAS_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr;
-			for (int a = 0; a < numAWP; a++)
+			for (int a = 0; a < MAX_AWP_PER_FAS; a++)
 			{
-				int numQUADs = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr.size();
 				auto& QUAD_en_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_en_arr;
 				auto& QUAD_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr;	
-				for (int q = 0; q < numQUADs; q++)
+				for (int q = 0; q < NUM_TOTAL_QUADS; q++)
 				{
 					fd << "\t\t\tQUAD_id: "                 << QUAD_cfg_arr[q]->m_QUAD_id                 << endl;
 					if (QUAD_en_arr[q])

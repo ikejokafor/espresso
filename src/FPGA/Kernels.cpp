@@ -55,8 +55,8 @@ Kernels::~Kernels()
 
 uint64_t Kernels::allocate(int size)
 {
+	m_size = size;	
 #ifdef SYSTEMC
-	m_size = size;
 	return (uint64_t)malloc(size);
 #else
 

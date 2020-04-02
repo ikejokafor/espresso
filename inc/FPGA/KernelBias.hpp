@@ -7,16 +7,16 @@
 #include "espresso_FPGA_common.hpp"
 
 
-class Bias : public Accel_Payload
+class KernelBias : public Accel_Payload
 {
 	public:
-		Bias(int numKernels, fixedPoint_t* data);
-		~Bias();
+		KernelBias(int numKernels, fixedPoint_t* data);
+		~KernelBias();
 		uint64_t allocate(int size);
 		void deallocate();
 		void serialize();
         void deserialize();
-		Bias* GetVolume(int krnlBgn, int numKrnl);
+		KernelBias* GetVolume(int krnlBgn, int numKrnl);
 	
 		int m_numKernels;
 		fixedPoint_t* m_data;

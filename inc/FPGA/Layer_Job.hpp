@@ -10,11 +10,12 @@
 #include "Layer_Iteration.hpp"
 #include "fixedPoint.hpp"
 #include "InputMaps.hpp"
+#include "Kernels.hpp"
+#include "KernelBias.hpp"
 #include "PartialMaps.hpp"
 #include "ResidualMaps.hpp"
-#include "Bias.hpp"
 #include "OutputMaps.hpp"
-#include "Kernels.hpp"
+
 
 
 typedef struct
@@ -22,8 +23,8 @@ typedef struct
 	InputMaps* inputMaps;
 	Kernels* kernels3x3;
 	Kernels* kernels1x1;
-	Bias* kernels3x3Bias;
-	Bias* kernels1x1Bias;
+	KernelBias* kernels3x3Bias;
+	KernelBias* kernels1x1Bias;
 	PartialMaps* partialMaps;
 	ResidualMaps* residualMaps;
 	OutputMaps* outputMaps;
@@ -72,13 +73,7 @@ class Layer_Job
 			int depthBgn, 
 			int depth, 
 			int krnlBgn, 
-			int numKrnl,
-			int& inMapFetchTotal,
-			int& partMapFetchTotal,
-			int& krnl1x1FetchTotal,
-			int& krnl3x3FetchTotal,
-			int& resMapFetchTotal,
-			int& outMapStoreTotal
+			int numKrnl
 		);
 		void printConfig();
         void process();
@@ -105,10 +100,10 @@ class Layer_Job
 	    InputMaps* m_inputMaps;
 	    Kernels* m_kernels3x3;
 		Kernels* m_kernels1x1;
+		KernelBias* m_kernel3x3Bias;
+		KernelBias* m_kernel1x1Bias;
 		ResidualMaps* m_residualMaps;
 		OutputMaps*	m_outputMaps;
-		Bias* m_bias3x3Data;
-		Bias* m_bias1x1Data;
 		std::vector<std::vector<Layer_Iteration*>> m_lay_it_arr;
 		int m_num_depth_iter;
 		int m_num_krnl_iter;

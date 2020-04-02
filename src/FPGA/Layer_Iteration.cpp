@@ -8,8 +8,8 @@ Layer_Iteration::Layer_Iteration(
 	InputMaps* inputMaps, 
 	Kernels* kernels3x3,
 	Kernels* kernels1x1,
-	Bias* bias3x3,
-	Bias* bias1x1,
+	KernelBias* kernels3x3Bias,
+	KernelBias* kernels1x1Bias,
 	PartialMaps* partialMaps,
 	ResidualMaps* residualMaps,
 	OutputMaps* outputMaps, 
@@ -18,22 +18,19 @@ Layer_Iteration::Layer_Iteration(
 	int padding, 
 	bool do_kernel1x1, 
 	bool do_res_layer, 
-	bool activation,
-	int inMapFetchTotal,
-	int partMapFetchTotal,
-	int krnl1x1FetchTotal,
-	int krnl3x3FetchTotal,
-	int resMapFetchTotal,
-	int outMapStoreTotal
+	bool activation
 ) {
-	int remDepth = inputMaps->m_inputMapDepth;
+	m_pxSeqCfg = new PixelSeqCfg(stride);
 	m_accelCfg = new AccelConfig();
 	m_inputMaps	= inputMaps;
 	m_kernels3x3 = kernels3x3;
 	m_kernels1x1 = kernels1x1;
+	m_kernels3x3Bias = kernels3x3Bias;
+	m_kernels1x1Bias = kernels1x1Bias;
 	m_partialMaps = partialMaps;
 	m_residualMaps = residualMaps;
 	m_outputMaps =	outputMaps;
+	int remDepth = inputMaps->m_inputMapDepth;
 	for(int i = 0; i < NUM_FAS; i++)
 	{
 		m_accelCfg->m_FAS_cfg_arr.push_back(new FAS_cfg(
@@ -42,12 +39,20 @@ Layer_Iteration::Layer_Iteration(
 			do_res_layer, 
 			first_depth_iter, 
 			last_depth_iter,
-			inMapFetchTotal,
-			partMapFetchTotal,
-			krnl1x1FetchTotal,
-			krnl3x3FetchTotal,
-			resMapFetchTotal,
-			outMapStoreTotal
+			(do_kernel1x1) ? kernels1x1Bias->m_size : 0,
+			m_pxSeqCfg->m_address,
+			(!first_depth_iter) ? partialMaps->m_address : 0,
+			(do_res_layer) ? residualMaps->m_address : 0,
+			outputMaps->m_address,
+			m_pxSeqCfg->m_size,
+			inputMaps->m_size,
+			kernels3x3->m_size,
+			kernels3x3Bias->m_size,		
+			(do_kernel1x1) ? kernels1x1->m_size : 0,
+			(do_kernel1x1) ? kernels1x1Bias->m_size : 0,
+			(!first_depth_iter) ? partialMaps->m_size : 0,
+			(do_res_layer) ? residualMaps->m_size : 0,
+			outputMaps->m_size
 		));
 		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (partialMaps != nullptr) ? partialMaps->m_address : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (residualMaps != nullptr) ? residualMaps->m_address : -1;
@@ -56,6 +61,7 @@ Layer_Iteration::Layer_Iteration(
 		{
 			auto& imAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_imAddrArr;
 			auto& krnl3x3AddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3AddrArr;
+			auto& krnl3x3BiasAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3BiasAddrArr;
 			m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr.push_back(new AWP_cfg(i ,j));
 			for (int k = 0; k < MAX_QUAD_PER_AWP; k++)
 			{
@@ -89,6 +95,7 @@ Layer_Iteration::Layer_Iteration(
 					int krn3x3DepthStep = QUAD_MAX_DEPTH * 3 * 3;
 					imAddrArr[k] = inputMaps->m_address + (k * imDepthStep);
 					krnl3x3AddrArr[k] = kernels3x3->m_address + (k * krn3x3DepthStep);
+					krnl3x3BiasAddrArr[k] = kernels3x3Bias->m_address;
 				}
 				else
 				{
