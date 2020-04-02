@@ -16,6 +16,7 @@ class ResidualMaps : public Accel_Payload
 		void deallocate();
 		void serialize();
         void deserialize();
+		void permuteData();
 		ResidualMaps* GetVolume(int depthBgn, int depthSize);
 	
 		int m_residualMapDepth;

@@ -58,7 +58,7 @@ void AccelConfig::serialize()
 				cfg[idx].partMapFetchTotal      	= m_FAS_cfg_arr[f]->m_partMapFetchTotal;
 				cfg[idx].krnl1x1FetchTotal         	= m_FAS_cfg_arr[f]->m_krnl1x1FetchTotal;
 				cfg[idx].resMapFetchTotal       	= m_FAS_cfg_arr[f]->m_resMapFetchTotal;
-				cfg[idx].outMapFetchTotal			= m_FAS_cfg_arr[f]->m_outMapStoreTotal;
+				cfg[idx].outMapStoreTotal			= m_FAS_cfg_arr[f]->m_outMapStoreTotal;
 				cfg[idx].imAddrArr_0 				= m_FAS_cfg_arr[f]->m_imAddrArr[0];
 				cfg[idx].imAddrArr_1 				= m_FAS_cfg_arr[f]->m_imAddrArr[1];
 				cfg[idx].imAddrArr_2 				= m_FAS_cfg_arr[f]->m_imAddrArr[2];
@@ -124,7 +124,7 @@ void AccelConfig::deserialize()
 				m_FAS_cfg_arr[f]->m_partMapFetchTotal			= cfg[idx].partMapFetchTotal        ;
 				m_FAS_cfg_arr[f]->m_krnl1x1FetchTotal			= cfg[idx].krnl1x1FetchTotal        ;
 				m_FAS_cfg_arr[f]->m_resMapFetchTotal			= cfg[idx].resMapFetchTotal         ;
-				m_FAS_cfg_arr[f]->m_outMapStoreTotal			= cfg[idx].outMapFetchTotal		    ;
+				m_FAS_cfg_arr[f]->m_outMapStoreTotal			= cfg[idx].outMapStoreTotal		    ;
 				m_FAS_cfg_arr[f]->m_imAddrArr[0]				= cfg[idx].imAddrArr_0 			    ;
 				m_FAS_cfg_arr[f]->m_imAddrArr[1]				= cfg[idx].imAddrArr_1 			    ;
 				m_FAS_cfg_arr[f]->m_imAddrArr[2]				= cfg[idx].imAddrArr_2 			    ;

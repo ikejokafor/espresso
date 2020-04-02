@@ -59,6 +59,12 @@ void ResidualMaps::deserialize()
 }
 
 
+void ResidualMaps::permuteData()
+{
+	
+}
+
+
 ResidualMaps* ResidualMaps::GetVolume(int depthBgn, int depthSize)
 {
 	fixedPoint_t* ptr = (fixedPoint_t*)(m_data + (depthBgn * m_numResidualMapRows * m_numResidualMapCols));

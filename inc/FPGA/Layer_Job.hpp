@@ -6,8 +6,6 @@
 #include <math.h>
 #include <fstream>
 #include "espresso_FPGA_common.hpp"
-#include "Network.hpp"
-#include "MyNetProto.hpp"
 #include "SYSC_FPGA_shim.hpp"
 #include "Layer_Iteration.hpp"
 #include "fixedPoint.hpp"

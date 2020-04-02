@@ -37,7 +37,7 @@ class AccelConfig : public Accel_Payload
 			uint64_t partMapFetchTotal        	;
 			uint64_t krnl1x1FetchTotal          ;
 			uint64_t resMapFetchTotal         	;
-			uint64_t outMapFetchTotal			;
+			uint64_t outMapStoreTotal			;
 			uint64_t imAddrArr_0                ;
 			uint64_t imAddrArr_1                ;
 			uint64_t imAddrArr_2                ;
