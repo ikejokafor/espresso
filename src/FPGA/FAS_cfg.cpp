@@ -2,21 +2,17 @@
 using namespace std;
 
 
-FAS_cfg::FAS_cfg() :
-	m_imAddrArr(MAX_QUAD_PER_AWP),
-	m_krnl3x3AddrArr(MAX_QUAD_PER_AWP),
-	m_krnl3x3BiasAddrArr(MAX_QUAD_PER_AWP)
-{ }
+FAS_cfg::FAS_cfg() { }
 
 
 FAS_cfg::FAS_cfg(
 	int FAS_id, 
-	bool do_kernel1x1, 
+	bool do_kernels1x1, 
 	bool do_res_layer, 
 	bool first_depth_iter, 
 	bool last_depth_iter,
-	uint64_t krnl1x1BiasAddr,
 	uint64_t pixelSeqAddr,
+	uint64_t krnl1x1BiasAddr,
 	uint64_t partMapAddr,
 	uint64_t resMapAddr,
 	uint64_t outMapAddr,
@@ -29,13 +25,9 @@ FAS_cfg::FAS_cfg(
 	int partMapFetchTotal,
 	int resMapFetchTotal,
 	int outMapStoreTotal
-) :
-	m_imAddrArr(MAX_QUAD_PER_AWP),
-	m_krnl3x3AddrArr(MAX_QUAD_PER_AWP),
-	m_krnl3x3BiasAddrArr(MAX_QUAD_PER_AWP)
-{
+) {
 	m_FAS_id = FAS_id;
-	m_do_kernel1x1 = do_kernel1x1;
+	m_do_kernels1x1 = do_kernels1x1;
 	m_do_res_layer = do_res_layer;
 	m_first_depth_iter = first_depth_iter;
 	m_last_depth_iter = last_depth_iter;

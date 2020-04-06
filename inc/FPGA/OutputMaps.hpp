@@ -24,7 +24,7 @@ class OutputMaps : public Accel_Payload
 		int m_numOutputMapCols;
 		fixedPoint_t* m_data;
 #ifdef SYSTEMC
-		int m_shm_fd;
+
 #else
 
 #endif

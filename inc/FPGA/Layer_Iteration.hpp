@@ -34,7 +34,7 @@ class Layer_Iteration
 			int stride, 
 			bool upsample, 
 			int padding, 
-			bool do_kernel1x1, 
+			bool do_kernels1x1, 
 			bool do_res_layer, 
 			bool activation
 		);		

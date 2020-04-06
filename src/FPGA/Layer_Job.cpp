@@ -21,14 +21,14 @@ Layer_Job::Layer_Job(
 	int numResidualMapCols,
 	fixedPoint_t* residualMapData,
 	fixedPoint_t* kernel1x1Data,
-	fixedPoint_t* bias3x3Data,
-	fixedPoint_t* bias1x1Data,
+	fixedPoint_t* kernel3x3Bias,
+	fixedPoint_t* kernel1x1Bias,
 	int stride,
 	bool upsample,
 	int padding,
 	bool do_res_layer,
 	bool activation,
-	bool do_kernel1x1,
+	bool do_kernels1x1,
 	FPGA_hndl* fpga_hndl,
 	int fxPtLength, 
 	int numFracBits
@@ -51,7 +51,7 @@ Layer_Job::Layer_Job(
 	m_padding				= padding				;
 	m_do_res_layer			= do_res_layer			;
 	m_activation			= activation			;
-	m_do_kernel1x1			= do_kernel1x1			;
+	m_do_kernels1x1			= do_kernels1x1			;
 	m_inputMaps 			= new InputMaps(inputMapDepth, numInputMapRows, numInputMapCols, inputMapData);
 	m_kernels3x3			= new Kernels(numKernels, kernelDepth, numKernelRows, numKernelCols, kernel3x3Data);
 	if(do_res_layer)
@@ -59,11 +59,11 @@ Layer_Job::Layer_Job(
 		m_residualMaps		= new ResidualMaps(residualMapDepth, numResidualMapRows, numResidualMapCols, residualMapData);
 	}	
 	m_outputMaps			= new OutputMaps(outputMapDepth, numOutputMapRows, numOutputMapCols);
-	m_kernel3x3Bias			= new KernelBias(numKernels, bias3x3Data);
-	if(do_kernel1x1)
+	m_kernel3x3Bias			= new KernelBias(numKernels, kernel3x3Bias);
+	if(do_kernels1x1)
 	{
 		m_kernels1x1		= new Kernels(numKernels, 1, 1, 1, kernel1x1Data);
-		m_kernel1x1Bias		= new KernelBias(numKernels, bias1x1Data);
+		m_kernel1x1Bias		= new KernelBias(numKernels, kernel1x1Bias);
 	}
 #ifdef SYSTEMC
 	m_sysc_fpga_hndl		= reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
@@ -123,7 +123,7 @@ void Layer_Job::createLayerIters()
 				m_stride,
 				m_upsample,
 				m_padding,
-				m_do_kernel1x1,
+				m_do_kernels1x1,
 				m_do_res_layer,
 				m_activation
 			));
@@ -148,7 +148,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
 	layAclPrm->kernels3x3 = m_kernels3x3->GetVolume(krnlBgn, numKrnl, depthBgn, depth);
 	layAclPrm->kernels3x3Bias = m_kernel3x3Bias->GetVolume(krnlBgn, numKrnl);
 	layAclPrm->outputMaps = m_outputMaps->GetVolume(depthBgn, depth);
-	if(m_do_kernel1x1)
+	if(m_do_kernels1x1)
 	{
 		layAclPrm->kernels1x1 = m_kernels1x1->GetVolume(krnlBgn, numKrnl, 1, 1);
 		layAclPrm->kernels1x1Bias = m_kernel1x1Bias->GetVolume(krnlBgn, numKrnl);
@@ -178,12 +178,11 @@ layAclPrm_t* Layer_Job::createAccelParams(
 void Layer_Job::process()
 {
 	// Get configuration
-	printConfig();
+	// printConfig();
 	for(int k = 0; k < m_lay_it_arr.size(); k++)
 	{
 		for (int d = 0; d < m_lay_it_arr[k].size(); d++)
 		{
-			m_lay_it_arr[k][d]->m_accelCfg->serialize();
 			m_sysc_fpga_hndl->setConfig(m_lay_it_arr[k][d]->m_accelCfg);
 			// m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_inputMaps);
 			// m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_kernels3x3);
@@ -224,7 +223,7 @@ void Layer_Job::printConfig()
 						fd << "\t\t\t\tresidual	"					<< FAS_cfg_arr[0]->m_do_res_layer				<< endl;
 						fd << "\t\t\t\tfirst_depth_iter: "			<< FAS_cfg_arr[0]->m_first_depth_iter			<< endl;
 						fd << "\t\t\t\tlast_depth_iter: "			<< FAS_cfg_arr[0]->m_last_depth_iter		   	<< endl;
-						fd << "\t\t\t\tkernel_1x1"					<< FAS_cfg_arr[0]->m_do_kernel1x1			    << endl;
+						fd << "\t\t\t\tkernel_1x1"					<< FAS_cfg_arr[0]->m_do_kernels1x1			    << endl;
 						fd << "\t\t\t\tstride: "					<< QUAD_cfg_arr[q]->m_stride                  	<< endl;
 						fd << "\t\t\t\tnum_expd_input_rows: "		<< QUAD_cfg_arr[q]->m_num_expd_input_rows     	<< endl;
 						fd << "\t\t\t\tnum_expd_input_cols: "		<< QUAD_cfg_arr[q]->m_num_expd_input_cols     	<< endl;

@@ -53,14 +53,14 @@ class Layer_Job
 			int numResidualMapCols,
 			fixedPoint_t* residualMapData,
 			fixedPoint_t* kernel1x1Data,
-			fixedPoint_t* bias3x3Data,
-			fixedPoint_t* bias1x1Data,
+			fixedPoint_t* kernel3x3Bias,
+			fixedPoint_t* kernel1x1Bias,
 			int stride,
 			bool upsample,
 			int padding,
 			bool do_res_layer,
 			bool activation,
-			bool do_kernel1x1,
+			bool do_kernels1x1,
 			FPGA_hndl* fpga_hndl,
 		    int fxPtLength = 16,
 		    int numFracBits = 14
@@ -95,7 +95,7 @@ class Layer_Job
 		bool m_upsample;
 		bool m_padding;
 		bool m_do_res_layer;
-		bool m_do_kernel1x1;
+		bool m_do_kernels1x1;
 		bool m_activation;
 	    InputMaps* m_inputMaps;
 	    Kernels* m_kernels3x3;

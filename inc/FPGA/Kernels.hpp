@@ -12,7 +12,7 @@
 class Kernels : public Accel_Payload
 {
 	typedef std::vector<std::vector<fixedPoint_t*>> krnl_data_t;
-	typedef std::vector<int> shm_fd_t;
+	typedef std::vector<std::vector<int>> krnl_data_sz_t;
 
 	
 	public:
@@ -24,16 +24,14 @@ class Kernels : public Accel_Payload
 		void serialize();
         void deserialize();
 		Kernels* GetVolume(int krnlBgn, int numKrnl, int depthBgn, int depthSize);
-		Kernels* GetVolume(int krnlBgn, int numKrnl);
 	
 		int m_numKernels;
 		int m_kernelDepth;
 		int m_numKernelRows;
 		int m_numKernelCols;
 		krnl_data_t m_data;
+		krnl_data_sz_t m_data_sz;
 #ifdef SYSTEMC
-		shm_fd_t m_shm_fd;
-		int m_num_shm;
 #else
 
 #endif

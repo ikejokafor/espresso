@@ -26,6 +26,8 @@ namespace espresso
 			CNN_Network(std::vector<espresso::layerInfo_obj> layerInfo, std::vector<int> &outputLayers);
 			~CNN_Network();
 			
+			void GetTopAndBottomLayers();
+			void GetOutputLayers(std::vector<int> &outputLayers);
 			void getBgnEndLayer(int& startIdx, std::string start, int& endIdx, std::string end);
 			void cfgFPGALayer();
 			void Forward(std::string start = " ", std::string end = " ");

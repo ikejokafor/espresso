@@ -32,10 +32,11 @@ uint64_t OutputMaps::allocate(int size)
 {
 	m_size = size;
 #ifdef SYSTEMC
-	return (uint64_t)malloc(size);
+	m_address = (uint64_t)malloc(size);
 #else
 
 #endif
+	return m_address;
 }
 
 

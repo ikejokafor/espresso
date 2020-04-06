@@ -16,7 +16,7 @@ Layer_Iteration::Layer_Iteration(
 	int stride, 
 	bool upsample, 
 	int padding, 
-	bool do_kernel1x1, 
+	bool do_kernels1x1, 
 	bool do_res_layer, 
 	bool activation
 ) {
@@ -30,26 +30,36 @@ Layer_Iteration::Layer_Iteration(
 	m_partialMaps = partialMaps;
 	m_residualMaps = residualMaps;
 	m_outputMaps =	outputMaps;
+
+	m_inputMaps->serialize();
+	m_kernels3x3->serialize();
+	m_kernels3x3Bias->serialize();
+	m_outputMaps->serialize();
+	(do_kernels1x1) ? m_kernels1x1->serialize() : void();
+	(do_kernels1x1) ? m_kernels1x1Bias->serialize() : void();
+	(!first_depth_iter) ? m_partialMaps->serialize() : void();
+	(do_res_layer) ? m_residualMaps->serialize() : void();
+
 	int remDepth = inputMaps->m_inputMapDepth;
 	for(int i = 0; i < NUM_FAS; i++)
 	{
 		m_accelCfg->m_FAS_cfg_arr.push_back(new FAS_cfg(
 			i, 
-			do_kernel1x1, 
+			do_kernels1x1, 
 			do_res_layer, 
 			first_depth_iter, 
 			last_depth_iter,
-			(do_kernel1x1) ? kernels1x1Bias->m_size : 0,
 			m_pxSeqCfg->m_address,
+			(do_kernels1x1) ? kernels1x1Bias->m_address : 0,
 			(!first_depth_iter) ? partialMaps->m_address : 0,
 			(do_res_layer) ? residualMaps->m_address : 0,
 			outputMaps->m_address,
 			m_pxSeqCfg->m_size,
 			inputMaps->m_size,
 			kernels3x3->m_size,
-			kernels3x3Bias->m_size,		
-			(do_kernel1x1) ? kernels1x1->m_size : 0,
-			(do_kernel1x1) ? kernels1x1Bias->m_size : 0,
+			(do_kernels1x1) ? kernels1x1->m_size : 0,		
+			kernels3x3Bias->m_size,
+			(do_kernels1x1) ? kernels1x1Bias->m_size : 0,
 			(!first_depth_iter) ? partialMaps->m_size : 0,
 			(do_res_layer) ? residualMaps->m_size : 0,
 			outputMaps->m_size
@@ -59,10 +69,10 @@ Layer_Iteration::Layer_Iteration(
 		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapAddr = outputMaps->m_address;
 		for (int j = 0; j < MAX_AWP_PER_FAS; j++)
 		{
-			auto& imAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_imAddrArr;
-			auto& krnl3x3AddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3AddrArr;
-			auto& krnl3x3BiasAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3BiasAddrArr;
 			m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr.push_back(new AWP_cfg(i ,j));
+			auto& imAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr[j]->m_imAddrArr;
+			auto& krnl3x3AddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr[j]->m_krnl3x3AddrArr;
+			auto& krnl3x3BiasAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr[j]->m_krnl3x3BiasAddrArr;
 			for (int k = 0; k < MAX_QUAD_PER_AWP; k++)
 			{
 				auto& QUAD_cfg_arr = m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr[j]->m_QUAD_cfg_arr;
@@ -107,6 +117,7 @@ Layer_Iteration::Layer_Iteration(
 			m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_en_arr.push_back(true);
 		}
 	}
+	m_accelCfg->serialize();
 }
 
 

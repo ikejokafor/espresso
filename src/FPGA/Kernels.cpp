@@ -9,18 +9,14 @@ Kernels::Kernels(int numKernels, int kernelDepth, int numKernelRows, int numKern
 	m_numKernelRows = numKernelRows;
 	m_numKernelCols = numKernelCols;
 	m_data.resize(numKernels);
-	m_num_shm = 0;
+	m_data_sz.resize(numKernels);
 	for (int i = 0; i < numKernels; i++)
 	{
 		m_data[i].resize(kernelDepth);
 		for (int j = 0; j < kernelDepth; j++)
 		{
-#ifdef SYSTEMC
 			int size = numKernelRows * numKernelCols * sizeof(fixedPoint_t);
 			m_data[i][j] = (fixedPoint_t*)allocate(size);
-#else
-			
-#endif
 			int krnl_step = kernelDepth * numKernelRows * numKernelCols;
 			int dpth_idx = j * (numKernelRows * numKernelCols);
 			int idx = index2D(krnl_step, i, dpth_idx);
@@ -29,6 +25,7 @@ Kernels::Kernels(int numKernels, int kernelDepth, int numKernelRows, int numKern
 			memcpy((void*)m_data[i][j], (void*)kernel, cpySize);
 		}
 	}
+	m_size = numKernels * kernelDepth * numKernelRows * numKernelCols * sizeof(fixedPoint_t);
 }
 
 
@@ -39,11 +36,7 @@ Kernels::Kernels(int numKernels, int kernelDepth, int numKernelRows, int numKern
 	m_numKernelRows = numKernelRows;
 	m_numKernelCols = numKernelCols;
 	m_data = data;
-#ifdef SYSTEMC
-	m_size = 8;
-#else
-
-#endif
+	m_size = numKernels * kernelDepth * numKernelRows * numKernelCols * sizeof(fixedPoint_t);
 }
 
 
@@ -55,12 +48,12 @@ Kernels::~Kernels()
 
 uint64_t Kernels::allocate(int size)
 {
-	m_size = size;	
 #ifdef SYSTEMC
-	return (uint64_t)malloc(size);
+	m_address = (uint64_t)malloc(size);
 #else
 
 #endif
+	return m_address;
 }
 
 
@@ -84,7 +77,7 @@ void Kernels::deallocate()
 void Kernels::serialize()
 {
 #ifdef SYSTEMC
-
+	m_address = -1;
 #else
 
 #endif

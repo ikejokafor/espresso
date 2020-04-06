@@ -12,12 +12,12 @@ class FAS_cfg
 		FAS_cfg();
 		FAS_cfg(
 			int FAS_id, 
-			bool do_kernel1x1, 
+			bool do_kernels1x1, 
 			bool do_res_layer, 
 			bool first_depth_iter, 
 			bool last_depth_iter,
-			uint64_t krnl1x1BiasAddr,
 			uint64_t pixelSeqAddr,
+			uint64_t krnl1x1BiasAddr,
 			uint64_t partMapAddr,
 			uint64_t resMapAddr,
 			uint64_t outMapAddr,
@@ -34,13 +34,10 @@ class FAS_cfg
         ~FAS_cfg();
 	
 	    int m_FAS_id;
-		bool m_do_kernel1x1;
+		bool m_do_kernels1x1;
 		bool m_do_res_layer;
 		bool m_first_depth_iter;
 		bool m_last_depth_iter;
-		std::vector<uint64_t> m_imAddrArr;
-		std::vector<uint64_t> m_krnl3x3AddrArr;
-		std::vector<uint64_t> m_krnl3x3BiasAddrArr;
         uint64_t m_krnl1x1BiasAddr;
         uint64_t m_pixelSeqAddr;
 		uint64_t m_partMapAddr;

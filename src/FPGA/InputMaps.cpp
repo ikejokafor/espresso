@@ -23,10 +23,11 @@ uint64_t InputMaps::allocate(int size)
 {
 #ifdef SYSTEMC
 	m_size = size;
-	return (uint64_t)malloc(size);
+	m_address = (uint64_t)malloc(size);
 #else
 
 #endif
+	return m_address;
 }
 
 

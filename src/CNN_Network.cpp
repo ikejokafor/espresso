@@ -67,12 +67,29 @@ espresso::CNN_Network::CNN_Network(vector<espresso::layerInfo_obj> layerInfo, ve
             cout << "[ESPRESSO]: " << "Skipped Loading Layer: " << layerInfo[i].layerName << endl;
         }
 	}
-  
     for(int i = 0; i < m_cnn.size(); i++) 
     {
         cout << "[ESPRESSO]: Loaded Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
 	}
-   	for(int i = 0; i < m_cnn.size() ; i++) // for every layer 
+	GetTopAndBottomLayers();
+	GetOutputLayers(outputLayers);
+}
+
+
+
+espresso::CNN_Network::~CNN_Network() 
+{
+	for(int i = 0; i < m_cnn.size(); i++) 
+	{
+		delete m_cnn[i];
+	}
+	free_network(m_cnn[0]->m_yolo_net);
+}
+
+
+void espresso::CNN_Network::GetTopAndBottomLayers()
+{
+	for(int i = 0; i < m_cnn.size() ; i++) // for every layer 
    	{	
 	   	for (uint32_t j = 0; j < m_cnn[i]->m_topLayerNames.size(); j++) // for every top layer of the current cnn layer
 	   	{ 
@@ -100,7 +117,11 @@ espresso::CNN_Network::CNN_Network(vector<espresso::layerInfo_obj> layerInfo, ve
 			}
 		}
 	}
-	// get output layers
+}
+
+
+void espresso::CNN_Network::GetOutputLayers(vector<int> &outputLayers)
+{
 	if(outputLayers.size() != 0) 
 	{
 		for(int i = 0; i < outputLayers.size(); i++) 
@@ -140,17 +161,6 @@ espresso::CNN_Network::CNN_Network(vector<espresso::layerInfo_obj> layerInfo, ve
 }
 
 
-
-espresso::CNN_Network::~CNN_Network() 
-{
-	for(int i = 0; i < m_cnn.size(); i++) 
-	{
-		delete m_cnn[i];
-	}
-	free_network(m_cnn[0]->m_yolo_net);
-}
-
-
 void espresso::CNN_Network::getBgnEndLayer(int& startIdx, string start, int& endIdx, string end)
 {
     if(start == " ") 
@@ -183,7 +193,11 @@ void espresso::CNN_Network::cfgLayers(int startIdx, int endIdx)
 	for (int i = startIdx; i < (endIdx + 1); i++) 
     {
 		m_cnn[i]->ComputeLayerParam();
-	    if (i > 0 && m_cnn[i + 1]->m_layerType == RESIDUAL)
+		if(i == 0)
+		{
+			continue;
+		}
+	    if (m_cnn[i + 1]->m_layerType == RESIDUAL)
 	    {
 		    m_cnn[i]->m_fpga_do_res_layer = true;
 			m_cnn[i]->m_residualMapDepth 
@@ -195,15 +209,15 @@ void espresso::CNN_Network::cfgLayers(int startIdx, int endIdx)
 			m_cnn[i]->m_residualMapData
 				= m_cnn[i + 1]->m_bottomLayers[0]->m_blob.fxData;
 	    }
-		if(i > 0 && m_cnn[i - 1]->m_layerType == UPSAMPLE)
+		if(m_cnn[i - 1]->m_layerType == UPSAMPLE)
 		{
 			m_cnn[i]->m_fpga_upsample = true;
 		}
-		if(i > 0 && m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i - 1]->m_layerType == CONVOLUTION && m_cnn[i - 1]->m_darknetAct)
+		if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i - 1]->m_layerType == CONVOLUTION && m_cnn[i - 1]->m_darknetAct)
 		{
 			m_cnn[i]->m_fpga_activation = true;
 		}
-	    if (i > 0 && m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_numKernelRows == 1)
+	    if (m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_numKernelRows == 1)
 		{
 			m_cnn[i]->m_fpga_do_kernel1x1 = true;
 			m_cnn[i]->m_kernel1x1Data = m_cnn[i + 1]->m_fxFilterData;
