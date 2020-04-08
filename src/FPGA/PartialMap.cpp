@@ -21,7 +21,6 @@ PartialMaps::~PartialMaps()
 
 uint64_t PartialMaps::allocate(int size)
 {
-	m_size = size;
 #ifdef SYSTEMC
 	m_address = (uint64_t)malloc(size);
 #else
@@ -44,7 +43,7 @@ void PartialMaps::deallocate()
 void PartialMaps::serialize()
 {
 #ifdef SYSTEMC
-	
+	m_size = m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols * PIXEL_SIZE;
 #else
 
 #endif
@@ -53,7 +52,7 @@ void PartialMaps::serialize()
 void PartialMaps::deserialize()
 {
 #ifdef SYSTEMC
-	
+
 #else
 
 #endif

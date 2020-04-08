@@ -30,7 +30,6 @@ OutputMaps::~OutputMaps()
 
 uint64_t OutputMaps::allocate(int size)
 {
-	m_size = size;
 #ifdef SYSTEMC
 	m_address = (uint64_t)malloc(size);
 #else
@@ -52,8 +51,9 @@ void OutputMaps::deallocate()
 
 void OutputMaps::serialize()
 {
+	m_size = m_outputMapDepth * m_numOutputMapRows * m_numOutputMapCols * PIXEL_SIZE;
 #ifdef SYSTEMC
-	
+
 #else
 
 #endif
@@ -62,7 +62,7 @@ void OutputMaps::serialize()
 void OutputMaps::deserialize()
 {
 #ifdef SYSTEMC
-	
+
 #else
 
 #endif

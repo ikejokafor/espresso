@@ -19,7 +19,6 @@ KernelBias::~KernelBias()
 
 uint64_t KernelBias::allocate(int size)
 {
-	m_size = size;	
 #ifdef SYSTEMC
 	m_address = (uint64_t)malloc(size);
 #else
@@ -42,7 +41,7 @@ void KernelBias::deallocate()
 void KernelBias::serialize()
 {
 #ifdef SYSTEMC
-	
+	m_size = m_numKernels * PIXEL_SIZE;
 #else
 
 #endif
@@ -52,7 +51,7 @@ void KernelBias::serialize()
 void KernelBias::deserialize()
 {
 #ifdef SYSTEMC
-	
+
 #else
 
 #endif

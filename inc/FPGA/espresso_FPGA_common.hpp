@@ -10,3 +10,4 @@
 #define QUAD_MAX_KERNELS	    64
 #define QUAD_MAX_DEPTH		    8
 #define QUAD_DPTH_SIMD		    (QUAD_MAX_DEPTH * NUM_TOTAL_QUADS)
+#define PIXEL_SIZE              2

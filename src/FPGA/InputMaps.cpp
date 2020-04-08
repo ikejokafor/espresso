@@ -43,8 +43,9 @@ void InputMaps::deallocate()
 
 void InputMaps::serialize()
 {
+	m_size = m_inputMapDepth * m_numInputMapRows * m_numInputMapCols * PIXEL_SIZE;
 #ifdef SYSTEMC
-	
+
 #else
 
 #endif
@@ -53,7 +54,7 @@ void InputMaps::serialize()
 void InputMaps::deserialize()
 {
 #ifdef SYSTEMC
-	
+
 #else
 
 #endif

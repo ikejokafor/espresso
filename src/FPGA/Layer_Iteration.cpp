@@ -4,20 +4,20 @@ using namespace std;
 
 Layer_Iteration::Layer_Iteration(
 	bool first_depth_iter,
-	bool last_depth_iter, 
-	InputMaps* inputMaps, 
+	bool last_depth_iter,
+	InputMaps* inputMaps,
 	Kernels* kernels3x3,
 	Kernels* kernels1x1,
 	KernelBias* kernels3x3Bias,
 	KernelBias* kernels1x1Bias,
 	PartialMaps* partialMaps,
 	ResidualMaps* residualMaps,
-	OutputMaps* outputMaps, 
-	int stride, 
-	bool upsample, 
-	int padding, 
-	bool do_kernels1x1, 
-	bool do_res_layer, 
+	OutputMaps* outputMaps,
+	int stride,
+	bool upsample,
+	int padding,
+	bool do_kernels1x1,
+	bool do_res_layer,
 	bool activation
 ) {
 	m_pxSeqCfg = new PixelSeqCfg(stride);
@@ -44,10 +44,10 @@ Layer_Iteration::Layer_Iteration(
 	for(int i = 0; i < NUM_FAS; i++)
 	{
 		m_accelCfg->m_FAS_cfg_arr.push_back(new FAS_cfg(
-			i, 
-			do_kernels1x1, 
-			do_res_layer, 
-			first_depth_iter, 
+			i,
+			do_kernels1x1,
+			do_res_layer,
+			first_depth_iter,
 			last_depth_iter,
 			m_pxSeqCfg->m_address,
 			(do_kernels1x1) ? kernels1x1Bias->m_address : 0,
@@ -57,7 +57,7 @@ Layer_Iteration::Layer_Iteration(
 			m_pxSeqCfg->m_size,
 			inputMaps->m_size,
 			kernels3x3->m_size,
-			(do_kernels1x1) ? kernels1x1->m_size : 0,		
+			(do_kernels1x1) ? kernels1x1->m_size : 0,
 			kernels3x3Bias->m_size,
 			(do_kernels1x1) ? kernels1x1Bias->m_size : 0,
 			(!first_depth_iter) ? partialMaps->m_size : 0,
@@ -67,6 +67,7 @@ Layer_Iteration::Layer_Iteration(
 		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (partialMaps != nullptr) ? partialMaps->m_address : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (residualMaps != nullptr) ? residualMaps->m_address : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapAddr = outputMaps->m_address;
+		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapFetchFactor = m_inputMaps->m_numInputMapCols;
 		for (int j = 0; j < MAX_AWP_PER_FAS; j++)
 		{
 			m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr.push_back(new AWP_cfg(i ,j));
@@ -86,7 +87,7 @@ Layer_Iteration::Layer_Iteration(
 						j,
 						k,
 						true,
-						inputMaps->m_numInputMapRows, 
+						inputMaps->m_numInputMapRows,
 						inputMaps->m_numInputMapCols,
 						kernels3x3->m_numKernels,
 						kernels3x3->m_kernelDepth,
@@ -97,8 +98,9 @@ Layer_Iteration::Layer_Iteration(
 						padding,
 						activation,
 						master_QUAD,
-						cascade
-					);				
+						cascade,
+						(remDepth > QUAD_MAX_DEPTH) ? QUAD_MAX_DEPTH : remDepth
+					);
 					QUAD_cfg_arr.push_back(quad_cfg);
 					QUAD_en_arr.push_back(true);
 					int imDepthStep = QUAD_MAX_DEPTH * inputMaps->m_numInputMapRows * inputMaps->m_numInputMapCols;

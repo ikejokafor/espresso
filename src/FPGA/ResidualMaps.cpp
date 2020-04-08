@@ -21,7 +21,6 @@ ResidualMaps::~ResidualMaps()
 
 uint64_t ResidualMaps::allocate(int size)
 {
-	m_size = size;
 #ifdef SYSTEMC
 	m_address = (uint64_t)malloc(size);
 #else
@@ -44,7 +43,7 @@ void ResidualMaps::deallocate()
 void ResidualMaps::serialize()
 {
 #ifdef SYSTEMC
-	
+	m_size = m_residualMapDepth * m_numResidualMapRows * m_numResidualMapCols * PIXEL_SIZE;
 #else
 
 #endif
@@ -53,7 +52,7 @@ void ResidualMaps::serialize()
 void ResidualMaps::deserialize()
 {
 #ifdef SYSTEMC
-	
+
 #else
 
 #endif
@@ -62,7 +61,7 @@ void ResidualMaps::deserialize()
 
 void ResidualMaps::permuteData()
 {
-	
+
 }
 
 

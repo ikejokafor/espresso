@@ -36,13 +36,13 @@ class Layer_Job
     public:
         Layer_Job(
 			std::string layerName,
-		    int inputMapDepth, 
-		    int numInputMapRows, 
+		    int inputMapDepth,
+		    int numInputMapRows,
 		    int numInputMapCols,
 			fixedPoint_t* inputMapData,
-		    int numKernels, 
-		    int kernelDepth, 
-		    int numKernelRows, 
+		    int numKernels,
+		    int kernelDepth,
+		    int numKernelRows,
 		    int numKernelCols,
 			fixedPoint_t* kernelData,
 			int outputMapDepth,
@@ -70,21 +70,21 @@ class Layer_Job
 		layAclPrm_t* createAccelParams(
 			int i,
 			int j,
-			int depthBgn, 
-			int depth, 
-			int krnlBgn, 
+			int depthBgn,
+			int depth,
+			int krnlBgn,
 			int numKrnl
 		);
 		void printConfig();
         void process();
-        
+
 		std::string m_layerName;
         int m_inputMapDepth;
         int m_numInputMapRows;
         int m_numInputMapCols;
 		int m_outputMapDepth;
-		int m_numOutputMapRows;	
-		int m_numOutputMapCols;	
+		int m_numOutputMapRows;
+		int m_numOutputMapCols;
         int m_numKernels;
         int m_kernelDepth;
         int m_numKernelRows;
@@ -93,7 +93,7 @@ class Layer_Job
         int m_numFracBits;
 		int m_stride;
 		bool m_upsample;
-		bool m_padding;
+		int m_padding;
 		bool m_do_res_layer;
 		bool m_do_kernels1x1;
 		bool m_activation;
@@ -110,6 +110,6 @@ class Layer_Job
 #ifdef SYSTEMC
 		SYSC_FPGA_hndl* m_sysc_fpga_hndl;
 #else
-	
+
 #endif
 };

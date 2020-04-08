@@ -1,9 +1,9 @@
 #pragma once
 
 
-#include <stdio.h> 
-#include <stdlib.h> 
-#include <string.h> 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "fixedPoint.hpp"
 #include "FPGA_shim.hpp"
 #include "FAS_cfg.hpp"
@@ -14,7 +14,7 @@
 
 
 class AccelConfig : public Accel_Payload
-{	
+{
 	public:
 		AccelConfig();
 		~AccelConfig();
@@ -39,9 +39,10 @@ class AccelConfig : public Accel_Payload
 			uint64_t krnl1x1FetchTotal          ;
 			uint64_t krnl3x3BiasFetchTotal      ;
 			uint64_t krnl1x1BiasFetchTotal      ;
-			uint64_t resMapFetchTotal         	;			
+			uint64_t resMapFetchTotal         	;
 			uint64_t partMapFetchTotal        	;
 			uint64_t outMapStoreTotal			;
+			uint64_t inMapFetchFactor			;
 			uint64_t imAddrArr	                ;
 			uint64_t krnl3x3Addr	            ;
 			uint64_t krnl3x3BiasAddr	        ;
@@ -50,11 +51,12 @@ class AccelConfig : public Accel_Payload
 			uint64_t resMapAddr					;
 			uint64_t outMapAddr					;
 			uint64_t pixelSeqAddr               ;
+			uint64_t inMapDepth					;
 			uint64_t QUAD_id                    ;
 			uint64_t QUAD_en                    ;
 			uint64_t stride                     ;
 			uint64_t num_output_rows            ;
-			uint64_t num_output_col             ;
+			uint64_t num_output_cols            ;
 			uint64_t num_kernels                ;
 			uint64_t master_QUAD                ;
 			uint64_t cascade                    ;

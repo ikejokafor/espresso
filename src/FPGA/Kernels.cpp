@@ -25,7 +25,6 @@ Kernels::Kernels(int numKernels, int kernelDepth, int numKernelRows, int numKern
 			memcpy((void*)m_data[i][j], (void*)kernel, cpySize);
 		}
 	}
-	m_size = numKernels * kernelDepth * numKernelRows * numKernelCols * sizeof(fixedPoint_t);
 }
 
 
@@ -36,7 +35,6 @@ Kernels::Kernels(int numKernels, int kernelDepth, int numKernelRows, int numKern
 	m_numKernelRows = numKernelRows;
 	m_numKernelCols = numKernelCols;
 	m_data = data;
-	m_size = numKernels * kernelDepth * numKernelRows * numKernelCols * sizeof(fixedPoint_t);
 }
 
 
@@ -67,7 +65,7 @@ void Kernels::deallocate()
 			int idx = index2D(m_kernelDepth, i, j);
 			free(m_data[i][j]);
 #else
-			
+
 #endif
 		}
 	}
@@ -77,6 +75,7 @@ void Kernels::deallocate()
 void Kernels::serialize()
 {
 #ifdef SYSTEMC
+	m_size = m_numKernels * m_kernelDepth * m_numKernelRows * m_numKernelCols * PIXEL_SIZE;
 	m_address = -1;
 #else
 
@@ -87,7 +86,7 @@ void Kernels::serialize()
 void Kernels::deserialize()
 {
 #ifdef SYSTEMC
-	
+
 #else
 
 #endif
@@ -95,7 +94,7 @@ void Kernels::deserialize()
 
 
 Kernels* Kernels::GetVolume(int krnlBgn, int numKrnl, int depthBgn, int depthSize)
-{	
+{
 	krnl_data_t krnl_data;
 	krnl_data.resize(numKrnl);
 	int krnl_ofst = krnlBgn;
