@@ -20,6 +20,14 @@ Layer_Iteration::Layer_Iteration(
 	bool do_res_layer,
 	bool activation
 ) {
+	m_pxSeqCfg			= nullptr;
+	m_inputMaps 		= nullptr;
+	m_kernels3x3		= nullptr;
+	m_residualMaps		= nullptr;
+	m_outputMaps		= nullptr;
+	m_kernels3x3Bias	= nullptr;
+	m_kernels1x1		= nullptr;
+	m_kernels1x1Bias	= nullptr;
 	m_pxSeqCfg = new PixelSeqCfg(stride);
 	m_accelCfg = new AccelConfig();
 	m_inputMaps	= inputMaps;
@@ -60,6 +68,7 @@ Layer_Iteration::Layer_Iteration(
 			(do_kernels1x1) ? kernels1x1->m_size : 0,
 			kernels3x3Bias->m_size,
 			(do_kernels1x1) ? kernels1x1Bias->m_size : 0,
+			(do_kernels1x1) ? kernels1x1->m_numKernels : 0,
 			(!first_depth_iter) ? partialMaps->m_size : 0,
 			(do_res_layer) ? residualMaps->m_size : 0,
 			outputMaps->m_size
@@ -68,6 +77,7 @@ Layer_Iteration::Layer_Iteration(
 		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (residualMaps != nullptr) ? residualMaps->m_address : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapAddr = outputMaps->m_address;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapFetchFactor = m_inputMaps->m_numInputMapCols;
+		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapStoreFactor = m_outputMaps->m_outputMapDepth;
 		for (int j = 0; j < MAX_AWP_PER_FAS; j++)
 		{
 			m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr.push_back(new AWP_cfg(i ,j));
@@ -114,7 +124,7 @@ Layer_Iteration::Layer_Iteration(
 					QUAD_cfg_arr.push_back(new QUAD_cfg(i, j, k, false));
 					QUAD_en_arr.push_back(false);
 				}
-				remDepth -= QUAD_DPTH_SIMD;
+				remDepth -= QUAD_MAX_DEPTH;
 			}
 			m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_en_arr.push_back(true);
 		}
@@ -125,5 +135,22 @@ Layer_Iteration::Layer_Iteration(
 
 Layer_Iteration::~Layer_Iteration()
 {
-
+	delete m_pxSeqCfg;
+	delete m_accelCfg;
+	delete m_inputMaps;
+	delete m_kernels3x3;
+	if(m_residualMaps)
+	{
+		delete m_residualMaps;
+	}
+	delete m_outputMaps;
+	delete m_kernels3x3Bias;
+	if(m_kernels1x1)
+	{
+		delete m_kernels1x1;
+	}
+	if(m_kernels1x1Bias)
+	{
+		delete m_kernels1x1Bias;
+	}
 }

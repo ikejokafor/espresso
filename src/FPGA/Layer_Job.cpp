@@ -33,6 +33,13 @@ Layer_Job::Layer_Job(
 	int fxPtLength,
 	int numFracBits
 ) {
+	m_inputMaps 			= nullptr;
+	m_kernels3x3			= nullptr;
+	m_residualMaps			= nullptr;
+	m_outputMaps			= nullptr;
+	m_kernels3x3Bias		= nullptr;
+	m_kernels1x1			= nullptr;
+	m_kernels1x1Bias		= nullptr;
 	m_layerName				= layerName				;
     m_inputMapDepth         = inputMapDepth			;
     m_numInputMapRows       = numInputMapRows		;
@@ -59,11 +66,12 @@ Layer_Job::Layer_Job(
 		m_residualMaps		= new ResidualMaps(residualMapDepth, numResidualMapRows, numResidualMapCols, residualMapData);
 	}
 	m_outputMaps			= new OutputMaps(outputMapDepth, numOutputMapRows, numOutputMapCols);
-	m_kernel3x3Bias			= new KernelBias(numKernels, kernel3x3Bias);
+	m_kernels3x3Bias		= new KernelBias(numKernels, kernel3x3Bias);
 	if(do_kernels1x1)
 	{
-		m_kernels1x1		= new Kernels(numKernels, 1, 1, 1, kernel1x1Data);
-		m_kernel1x1Bias		= new KernelBias(numKernels, kernel1x1Bias);
+		// FIXME add 1x1 kernel depth instead of using inputMapDepth
+		m_kernels1x1		= new Kernels(numKernels, inputMapDepth, 1, 1, kernel1x1Data);
+		m_kernels1x1Bias	= new KernelBias(numKernels, kernel1x1Bias);
 	}
 #ifdef SYSTEMC
 	m_sysc_fpga_hndl		= reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
@@ -75,12 +83,27 @@ Layer_Job::Layer_Job(
 
 Layer_Job::~Layer_Job()
 {
-	for (int i = 0; i < m_lay_it_arr.size(); i++)
+	int i_end = m_lay_it_arr.size();
+	for (int i = 0; i < i_end; i++)
 	{
-		for(int j = 0; j < m_lay_it_arr[j].size(); j++)
+		int j_end = m_lay_it_arr[i].size();
+		for(int j = 0; j < j_end; j++)
 		{
 			delete m_lay_it_arr[i][j];
 		}
+	}
+	delete m_inputMaps;
+	delete m_kernels3x3;
+	if(m_do_res_layer)
+	{
+		delete m_residualMaps;
+	}
+	delete m_outputMaps;
+	delete m_kernels3x3Bias;
+	if(m_do_kernels1x1)
+	{
+		delete m_kernels1x1;
+		delete m_kernels1x1Bias;
 	}
 }
 
@@ -146,12 +169,12 @@ layAclPrm_t* Layer_Job::createAccelParams(
 	memset(layAclPrm, 0x0, sizeof(layAclPrm_t));
 	layAclPrm->inputMaps = m_inputMaps->GetVolume(depthBgn, depth);
 	layAclPrm->kernels3x3 = m_kernels3x3->GetVolume(krnlBgn, numKrnl, depthBgn, depth);
-	layAclPrm->kernels3x3Bias = m_kernel3x3Bias->GetVolume(krnlBgn, numKrnl);
+	layAclPrm->kernels3x3Bias = m_kernels3x3Bias->GetVolume(krnlBgn, numKrnl);
 	layAclPrm->outputMaps = m_outputMaps->GetVolume(krnlBgn, numKrnl);
 	if(m_do_kernels1x1)
 	{
 		layAclPrm->kernels1x1 = m_kernels1x1->GetVolume(krnlBgn, numKrnl, 1, 1);
-		layAclPrm->kernels1x1Bias = m_kernel1x1Bias->GetVolume(krnlBgn, numKrnl);
+		layAclPrm->kernels1x1Bias = m_kernels1x1Bias->GetVolume(krnlBgn, numKrnl);
 	}
 	if(j == 0)
 	{

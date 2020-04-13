@@ -22,26 +22,26 @@ class Layer_Iteration
 	public:
 		Layer_Iteration(
 			bool first_depth_iter,
-			bool last_depth_iter, 
-			InputMaps* inputMaps, 
+			bool last_depth_iter,
+			InputMaps* inputMaps,
 			Kernels* kernels3x3,
 			Kernels* kernels1x1,
 			KernelBias*	 kernels3x3Bias,
 			KernelBias*	 kernels1x1Bias,
 			PartialMaps* partialMaps,
 			ResidualMaps* residualMaps,
-			OutputMaps* outputMaps, 
-			int stride, 
-			bool upsample, 
-			int padding, 
-			bool do_kernels1x1, 
-			bool do_res_layer, 
+			OutputMaps* outputMaps,
+			int stride,
+			bool upsample,
+			int padding,
+			bool do_kernels1x1,
+			bool do_res_layer,
 			bool activation
-		);		
+		);
 		~Layer_Iteration();
-	
+
 		AccelConfig* m_accelCfg			;
-		PixelSeqCfg* m_pxSeqCfg			;		
+		PixelSeqCfg* m_pxSeqCfg			;
 		InputMaps* m_inputMaps			;
 		Kernels* m_kernels3x3			;
 		Kernels* m_kernels1x1			;

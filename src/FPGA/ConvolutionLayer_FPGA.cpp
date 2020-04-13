@@ -7,14 +7,14 @@ ConvolutionLayer_FPGA::ConvolutionLayer_FPGA(espresso::layerInfo_obj layerInfo) 
 ConvolutionLayer_FPGA::~ConvolutionLayer_FPGA() { }
 
 
-void ConvolutionLayer_FPGA::ComputeLayer() 
+void ConvolutionLayer_FPGA::ComputeLayer()
 {
-	if (m_bottomLayers[0]->m_precision == espresso::FLOAT) 
+	if (m_bottomLayers[0]->m_precision == espresso::FLOAT)
 	{
 		int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
 		fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
 		float        *flData = m_bottomLayers[0]->m_blob.flData;
-		for (int i = 0; i < blobSize; i++) 
+		for (int i = 0; i < blobSize; i++)
 		{
 			fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
 		}
@@ -26,7 +26,7 @@ void ConvolutionLayer_FPGA::ComputeLayer()
 void ConvolutionLayer_FPGA::ComputeLayer_FlPt() { }
 
 
-void ConvolutionLayer_FPGA::ComputeLayer_FxPt() 
+void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
 {
 	if (m_numKernelRows == 1)
 	{
@@ -34,15 +34,15 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
 	}
 	else
 	{
-		Layer_Job layer_job(
+		Layer_Job* m_layer_job = new Layer_Job(
 			m_layerName,
-			m_inputDepth, 
-			m_numInputRows, 
+			m_inputDepth,
+			m_numInputRows,
 			m_numInputCols,
-			m_blob.fxData,
-			m_numKernels, 
-			m_kernelDepth, 
-			m_numKernelRows, 
+			m_bottomLayers[0]->m_blob.fxData,
+			m_numKernels,
+			m_kernelDepth,
+			m_numKernelRows,
 			m_numKernelCols,
 			m_fxFilterData,
 			m_outputDepth,
@@ -58,19 +58,19 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
 			m_stride,
 			m_fpga_upsample,
 			m_padding,
-			m_fpga_do_kernel1x1,
 			m_fpga_do_res_layer,
 			m_activation,
+			m_fpga_do_kernel1x1,
 			m_fpga_hndl
 		);
-		layer_job.createLayerIters();
-		layer_job.process();
+		m_layer_job->createLayerIters();
+		m_layer_job->process();
 	}
 
 }
 
 
-void ConvolutionLayer_FPGA::ComputeLayerParam() 
+void ConvolutionLayer_FPGA::ComputeLayerParam()
 {
 	m_inputDepth = m_bottomLayers[0]->m_outputDepth;
 	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;

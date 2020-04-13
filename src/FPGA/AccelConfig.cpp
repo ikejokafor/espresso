@@ -11,6 +11,21 @@ AccelConfig::AccelConfig() : Accel_Payload()
 AccelConfig::~AccelConfig()
 {
     deallocate();
+    int i_end = m_FAS_cfg_arr.size();
+    for(int i = 0; i < i_end; i++)
+    {
+        int j_end = m_FAS_cfg_arr[i]->m_AWP_cfg_arr.size();
+        for(int j = 0; j < j_end; j++)
+        {
+            int k_end = m_FAS_cfg_arr[i]->m_AWP_cfg_arr[j]->m_QUAD_cfg_arr.size();
+            for(int k = 0; k < k_end; k++)
+            {
+                delete m_FAS_cfg_arr[i]->m_AWP_cfg_arr[j]->m_QUAD_cfg_arr[k];
+            }
+            delete m_FAS_cfg_arr[i]->m_AWP_cfg_arr[j];
+        }
+        delete m_FAS_cfg_arr[i];
+    }
 }
 
 
@@ -64,11 +79,14 @@ void AccelConfig::serialize()
                 cfg[idx].krnl3x3FetchTotal			= m_FAS_cfg_arr[f]->m_krnl3x3FetchTotal;
                 cfg[idx].krnl1x1FetchTotal          = m_FAS_cfg_arr[f]->m_krnl1x1FetchTotal;
                 cfg[idx].krnl3x3BiasFetchTotal		= m_FAS_cfg_arr[f]->m_krnl3x3BiasFetchTotal;
+                cfg[idx].krnl1x1BiasFetchTotal      = m_FAS_cfg_arr[f]->m_krnl1x1BiasFetchTotal;
                 cfg[idx].krnl1x1FetchTotal         	= m_FAS_cfg_arr[f]->m_krnl1x1FetchTotal;
+                cfg[idx].num_1x1_kernels            = m_FAS_cfg_arr[f]->m_num_1x1_kernels;
                 cfg[idx].resMapFetchTotal       	= m_FAS_cfg_arr[f]->m_resMapFetchTotal;
                 cfg[idx].partMapFetchTotal      	= m_FAS_cfg_arr[f]->m_partMapFetchTotal;
                 cfg[idx].outMapStoreTotal			= m_FAS_cfg_arr[f]->m_outMapStoreTotal;
                 cfg[idx].inMapFetchFactor           = m_FAS_cfg_arr[f]->m_inMapFetchFactor;
+                cfg[idx].outMapStoreFactor          = m_FAS_cfg_arr[f]->m_outMapStoreFactor;
                 cfg[idx].imAddrArr 					= imAddrArr[q];
                 cfg[idx].krnl3x3Addr	 			= krnl3x3AddrArr[q];
                 cfg[idx].krnl3x3BiasAddr			= krnl3x3BiasAddrArr[q];
@@ -77,9 +95,9 @@ void AccelConfig::serialize()
                 cfg[idx].resMapAddr					= m_FAS_cfg_arr[f]->m_resMapAddr;
                 cfg[idx].outMapAddr					= m_FAS_cfg_arr[f]->m_outMapAddr;
                 cfg[idx].pixelSeqAddr 				= m_FAS_cfg_arr[f]->m_pixelSeqAddr;
-                cfg[idx].inMapDepth					= QUAD_cfg_arr[q]->m_inMapDepth;
                 cfg[idx].QUAD_id 					= QUAD_cfg_arr[q]->m_QUAD_id;
                 cfg[idx].QUAD_en					= QUAD_en_arr[q];
+                cfg[idx].inMapDepth                 = QUAD_cfg_arr[q]->m_inMapDepth;
                 cfg[idx].stride 					= QUAD_cfg_arr[q]->m_stride;
                 cfg[idx].num_output_rows 			= QUAD_cfg_arr[q]->m_num_output_rows;
                 cfg[idx].num_output_cols	        = QUAD_cfg_arr[q]->m_num_output_cols;
@@ -134,11 +152,14 @@ void AccelConfig::deserialize()
                 m_FAS_cfg_arr[f]->m_krnl3x3FetchTotal		= cfg[idx].krnl3x3FetchTotal;
                 m_FAS_cfg_arr[f]->m_krnl1x1FetchTotal       = cfg[idx].krnl1x1FetchTotal;
                 m_FAS_cfg_arr[f]->m_krnl3x3BiasFetchTotal   = cfg[idx].krnl3x3BiasFetchTotal;
+                m_FAS_cfg_arr[f]->m_krnl1x1BiasFetchTotal   = cfg[idx].krnl1x1BiasFetchTotal;
                 m_FAS_cfg_arr[f]->m_krnl1x1FetchTotal		= cfg[idx].krnl1x1FetchTotal;
+                m_FAS_cfg_arr[f]->m_num_1x1_kernels         = cfg[idx].num_1x1_kernels;
                 m_FAS_cfg_arr[f]->m_resMapFetchTotal		= cfg[idx].resMapFetchTotal;
                 m_FAS_cfg_arr[f]->m_partMapFetchTotal		= cfg[idx].partMapFetchTotal;
                 m_FAS_cfg_arr[f]->m_outMapStoreTotal		= cfg[idx].outMapStoreTotal;
                 m_FAS_cfg_arr[f]->m_inMapFetchFactor        = cfg[idx].inMapFetchFactor;
+                m_FAS_cfg_arr[f]->m_outMapStoreFactor       = cfg[idx].outMapStoreFactor;
                 imAddrArr[q]				                = cfg[idx].imAddrArr;
                 krnl3x3AddrArr[q]				            = cfg[idx].krnl3x3Addr;
                 krnl3x3BiasAddrArr[q]				        = cfg[idx].krnl3x3BiasAddr;
@@ -147,9 +168,9 @@ void AccelConfig::deserialize()
                 m_FAS_cfg_arr[f]->m_resMapAddr				= cfg[idx].resMapAddr;
                 m_FAS_cfg_arr[f]->m_outMapAddr				= cfg[idx].outMapAddr;
                 m_FAS_cfg_arr[f]->m_pixelSeqAddr			= cfg[idx].pixelSeqAddr;
-                QUAD_cfg_arr[q]->m_inMapDepth				= cfg[idx].inMapDepth;
                 QUAD_cfg_arr[q]->m_QUAD_id				    = cfg[idx].QUAD_id;
                 QUAD_en_arr[q]				                = cfg[idx].QUAD_en;
+                QUAD_cfg_arr[q]->m_inMapDepth               = cfg[idx].inMapDepth;
                 QUAD_cfg_arr[q]->m_stride				    = cfg[idx].stride;
                 QUAD_cfg_arr[q]->m_num_output_rows			= cfg[idx].num_output_rows;
                 QUAD_cfg_arr[q]->m_num_output_cols			= cfg[idx].num_output_cols;

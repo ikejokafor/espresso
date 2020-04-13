@@ -13,7 +13,7 @@ class AWP_cfg
         AWP_cfg();
 	    AWP_cfg(int FAS_id, int AWP_id);
         ~AWP_cfg();
-        
+
         int m_FAS_id;
         int m_AWP_id;
         std::vector<uint64_t> m_imAddrArr;

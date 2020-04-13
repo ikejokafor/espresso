@@ -27,6 +27,7 @@ class FAS_cfg
 			int krnl1x1FetchTotal,
 			int krnl3x3BiasFetchTotal,
 			int krnl1x1BiasFetchTotal,
+			int num_1x1_kernels,
 			int partMapFetchTotal,
 			int resMapFetchTotal,
 			int outMapStoreTotal
@@ -49,10 +50,12 @@ class FAS_cfg
 		int m_krnl3x3BiasFetchTotal;
 		int	m_krnl1x1FetchTotal;
 		int m_krnl1x1BiasFetchTotal;
+		int m_num_1x1_kernels;
 		int	m_partMapFetchTotal;
 		int	m_resMapFetchTotal;
 		int m_outMapStoreTotal;
 		int m_inMapFetchFactor;
+		int m_outMapStoreFactor;
 	    std::vector<AWP_cfg*> m_AWP_cfg_arr;
 		std::vector<bool> m_AWP_en_arr;
 };

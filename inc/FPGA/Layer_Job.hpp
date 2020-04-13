@@ -100,8 +100,8 @@ class Layer_Job
 	    InputMaps* m_inputMaps;
 	    Kernels* m_kernels3x3;
 		Kernels* m_kernels1x1;
-		KernelBias* m_kernel3x3Bias;
-		KernelBias* m_kernel1x1Bias;
+		KernelBias* m_kernels3x3Bias;
+		KernelBias* m_kernels1x1Bias;
 		ResidualMaps* m_residualMaps;
 		OutputMaps*	m_outputMaps;
 		std::vector<std::vector<Layer_Iteration*>> m_lay_it_arr;
