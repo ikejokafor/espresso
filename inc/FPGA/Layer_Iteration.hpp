@@ -22,7 +22,6 @@ class Layer_Iteration
 	public:
 		Layer_Iteration(
 			bool first_depth_iter,
-			bool last_depth_iter,
 			InputMaps* inputMaps,
 			Kernels* kernels3x3,
 			Kernels* kernels1x1,

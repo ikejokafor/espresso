@@ -4,7 +4,6 @@ using namespace std;
 
 Layer_Iteration::Layer_Iteration(
 	bool first_depth_iter,
-	bool last_depth_iter,
 	InputMaps* inputMaps,
 	Kernels* kernels3x3,
 	Kernels* kernels1x1,
@@ -56,8 +55,8 @@ Layer_Iteration::Layer_Iteration(
 			do_kernels1x1,
 			do_res_layer,
 			first_depth_iter,
-			last_depth_iter,
 			m_pxSeqCfg->m_address,
+			(do_kernels1x1) ? kernels1x1->m_address : 0,
 			(do_kernels1x1) ? kernels1x1Bias->m_address : 0,
 			(!first_depth_iter) ? partialMaps->m_address : 0,
 			(do_res_layer) ? residualMaps->m_address : 0,
@@ -69,6 +68,7 @@ Layer_Iteration::Layer_Iteration(
 			kernels3x3Bias->m_size,
 			(do_kernels1x1) ? kernels1x1Bias->m_size : 0,
 			(do_kernels1x1) ? kernels1x1->m_numKernels : 0,
+			(do_kernels1x1) ? kernels1x1->m_kernelDepth : 0,
 			(!first_depth_iter) ? partialMaps->m_size : 0,
 			(do_res_layer) ? residualMaps->m_size : 0,
 			outputMaps->m_size
@@ -78,12 +78,12 @@ Layer_Iteration::Layer_Iteration(
 		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapAddr = outputMaps->m_address;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapFetchFactor = m_inputMaps->m_numInputMapCols;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapStoreFactor = m_outputMaps->m_outputMapDepth;
+		auto& imAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_inMapAddrArr;
+		auto& krnl3x3AddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3AddrArr;
+		auto& krnl3x3BiasAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3BiasAddrArr;
 		for (int j = 0; j < MAX_AWP_PER_FAS; j++)
 		{
 			m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr.push_back(new AWP_cfg(i ,j));
-			auto& imAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr[j]->m_imAddrArr;
-			auto& krnl3x3AddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr[j]->m_krnl3x3AddrArr;
-			auto& krnl3x3BiasAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr[j]->m_krnl3x3BiasAddrArr;
 			for (int k = 0; k < MAX_QUAD_PER_AWP; k++)
 			{
 				auto& QUAD_cfg_arr = m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr[j]->m_QUAD_cfg_arr;
@@ -115,9 +115,9 @@ Layer_Iteration::Layer_Iteration(
 					QUAD_en_arr.push_back(true);
 					int imDepthStep = QUAD_MAX_DEPTH * inputMaps->m_numInputMapRows * inputMaps->m_numInputMapCols;
 					int krn3x3DepthStep = QUAD_MAX_DEPTH * 3 * 3;
-					imAddrArr[k] = inputMaps->m_address + (k * imDepthStep);
-					krnl3x3AddrArr[k] = kernels3x3->m_address + (k * krn3x3DepthStep);
-					krnl3x3BiasAddrArr[k] = kernels3x3Bias->m_address;
+					imAddrArr[j][k] = inputMaps->m_address + (k * imDepthStep);
+					krnl3x3AddrArr[j][k] = kernels3x3->m_address + (k * krn3x3DepthStep);
+					krnl3x3BiasAddrArr[j][k] = kernels3x3Bias->m_address;
 				}
 				else
 				{

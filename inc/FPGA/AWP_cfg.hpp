@@ -16,9 +16,6 @@ class AWP_cfg
 
         int m_FAS_id;
         int m_AWP_id;
-        std::vector<uint64_t> m_imAddrArr;
-        std::vector<uint64_t> m_krnl3x3AddrArr;
-        std::vector<uint64_t> m_krnl3x3BiasAddrArr;
 	    std::vector<QUAD_cfg*> m_QUAD_cfg_arr;
 	    std::vector<bool> m_QUAD_en_arr;
 };

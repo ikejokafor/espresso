@@ -65,8 +65,8 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
 		);
 		m_layer_job->createLayerIters();
 		m_layer_job->process();
+		delete m_layer_job;
 	}
-
 }
 
 

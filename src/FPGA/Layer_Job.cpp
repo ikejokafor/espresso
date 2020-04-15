@@ -134,7 +134,6 @@ void Layer_Job::createLayerIters()
 			);
 			m_lay_it_arr[i].push_back(new Layer_Iteration(
 				(j == 0) ? true : false,
-				(j == m_num_depth_iter) ? true : false,
 				layAclPrm->inputMaps,
 				layAclPrm->kernels3x3,
 				layAclPrm->kernels1x1,
@@ -147,7 +146,7 @@ void Layer_Job::createLayerIters()
 				m_upsample,
 				m_padding,
 				m_do_kernels1x1,
-				m_do_res_layer,
+				(j == 0 && m_do_res_layer) ? true : false,
 				m_activation
 			));
 			remDepth -= depth;
@@ -245,7 +244,6 @@ void Layer_Job::printConfig()
 						fd << "\t\t\t\tAWP_id: "					<< QUAD_cfg_arr[q]->m_AWP_id                  	<< endl;
 						fd << "\t\t\t\tresidual	"					<< FAS_cfg_arr[0]->m_do_res_layer				<< endl;
 						fd << "\t\t\t\tfirst_depth_iter: "			<< FAS_cfg_arr[0]->m_first_depth_iter			<< endl;
-						fd << "\t\t\t\tlast_depth_iter: "			<< FAS_cfg_arr[0]->m_last_depth_iter		   	<< endl;
 						fd << "\t\t\t\tkernel_1x1"					<< FAS_cfg_arr[0]->m_do_kernels1x1			    << endl;
 						fd << "\t\t\t\tstride: "					<< QUAD_cfg_arr[q]->m_stride                  	<< endl;
 						fd << "\t\t\t\tnum_expd_input_rows: "		<< QUAD_cfg_arr[q]->m_num_expd_input_rows     	<< endl;

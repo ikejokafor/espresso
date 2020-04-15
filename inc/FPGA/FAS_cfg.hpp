@@ -15,8 +15,8 @@ class FAS_cfg
 			bool do_kernels1x1,
 			bool do_res_layer,
 			bool first_depth_iter,
-			bool last_depth_iter,
 			uint64_t pixelSeqAddr,
+			uint64_t krnl1x1Addr,
 			uint64_t krnl1x1BiasAddr,
 			uint64_t partMapAddr,
 			uint64_t resMapAddr,
@@ -28,6 +28,7 @@ class FAS_cfg
 			int krnl3x3BiasFetchTotal,
 			int krnl1x1BiasFetchTotal,
 			int num_1x1_kernels,
+			int krnl1x1Depth,
 			int partMapFetchTotal,
 			int resMapFetchTotal,
 			int outMapStoreTotal
@@ -38,19 +39,23 @@ class FAS_cfg
 		bool m_do_kernels1x1;
 		bool m_do_res_layer;
 		bool m_first_depth_iter;
-		bool m_last_depth_iter;
+		uint64_t m_krnl1x1Addr;
         uint64_t m_krnl1x1BiasAddr;
         uint64_t m_pixelSeqAddr;
 		uint64_t m_partMapAddr;
 		uint64_t m_resMapAddr;
 		uint64_t m_outMapAddr;
 		int m_pixSeqCfgFetchTotal;
+		std::vector<std::vector<uint64_t>> m_inMapAddrArr;
+		std::vector<std::vector<uint64_t>> m_krnl3x3AddrArr;
+		std::vector<std::vector<uint64_t>> m_krnl3x3BiasAddrArr;
 		int	m_inMapFetchTotal;
 		int m_krnl3x3FetchTotal;
 		int m_krnl3x3BiasFetchTotal;
 		int	m_krnl1x1FetchTotal;
 		int m_krnl1x1BiasFetchTotal;
 		int m_num_1x1_kernels;
+		int m_krnl1x1Depth;
 		int	m_partMapFetchTotal;
 		int	m_resMapFetchTotal;
 		int m_outMapStoreTotal;

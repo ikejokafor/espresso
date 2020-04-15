@@ -10,8 +10,8 @@ FAS_cfg::FAS_cfg(
 	bool do_kernels1x1,
 	bool do_res_layer,
 	bool first_depth_iter,
-	bool last_depth_iter,
 	uint64_t pixelSeqAddr,
+	uint64_t krnl1x1Addr,
 	uint64_t krnl1x1BiasAddr,
 	uint64_t partMapAddr,
 	uint64_t resMapAddr,
@@ -23,6 +23,7 @@ FAS_cfg::FAS_cfg(
 	int krnl3x3BiasFetchTotal,
 	int krnl1x1BiasFetchTotal,
 	int num_1x1_kernels,
+	int krnl1x1Depth,
 	int partMapFetchTotal,
 	int resMapFetchTotal,
 	int outMapStoreTotal
@@ -31,7 +32,7 @@ FAS_cfg::FAS_cfg(
 	m_do_kernels1x1 = do_kernels1x1;
 	m_do_res_layer = do_res_layer;
 	m_first_depth_iter = first_depth_iter;
-	m_last_depth_iter = last_depth_iter;
+	m_krnl1x1Addr = krnl1x1Addr;
 	m_krnl1x1BiasAddr = krnl1x1BiasAddr;
 	m_pixelSeqAddr = pixelSeqAddr;
 	m_partMapAddr = partMapAddr;
@@ -44,6 +45,7 @@ FAS_cfg::FAS_cfg(
 	m_krnl3x3BiasFetchTotal = krnl3x3BiasFetchTotal;
 	m_krnl1x1BiasFetchTotal = krnl1x1BiasFetchTotal;
 	m_num_1x1_kernels = num_1x1_kernels;
+	m_krnl1x1Depth = krnl1x1Depth;
 	m_partMapFetchTotal = partMapFetchTotal;
 	m_resMapFetchTotal = resMapFetchTotal;
 	m_outMapStoreTotal = outMapStoreTotal;
