@@ -52,6 +52,8 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
 			m_numResidualMapRows,
 			m_numResidualMapsCols,
 			m_residualMapData,
+			m_num1x1Kernels,
+			m_kernel1x1Depth,
 			m_kernel1x1Data,
 			m_fxBiasData,
 			m_bias1x1Data,

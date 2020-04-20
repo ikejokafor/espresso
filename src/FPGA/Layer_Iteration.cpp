@@ -115,6 +115,8 @@ Layer_Iteration::Layer_Iteration(
 					QUAD_en_arr.push_back(true);
 					int imDepthStep = QUAD_MAX_DEPTH * inputMaps->m_numInputMapRows * inputMaps->m_numInputMapCols;
 					int krn3x3DepthStep = QUAD_MAX_DEPTH * 3 * 3;
+					// FIXME: 	I dont think these addresses are correct. I think you need to
+					//
 					imAddrArr[j][k] = inputMaps->m_address + (k * imDepthStep);
 					krnl3x3AddrArr[j][k] = kernels3x3->m_address + (k * krn3x3DepthStep);
 					krnl3x3BiasAddrArr[j][k] = kernels3x3Bias->m_address;

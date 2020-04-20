@@ -23,6 +23,8 @@ espresso::Layer::Layer(layerInfo_obj layerInfo) {
 	m_leakyNumFracBits			= layerInfo.leakyNumFracBits;
     m_numKernelRows				= layerInfo.numKernelRows;
     m_numKernelCols				= layerInfo.numKernelCols;
+	m_numKernels				= layerInfo.numKernels;
+	m_kernelDepth				= layerInfo.kernelDepth;
     m_stride					= layerInfo.stride;
     m_padding					= layerInfo.padding;
     m_globalPooling				= layerInfo.globalPooling;

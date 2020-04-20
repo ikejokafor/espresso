@@ -180,9 +180,10 @@ void espresso::CNN_Network::getBgnEndLayer(int& startIdx, string start, int& end
                 endIdx = i;
             }
         }
+        endIdx++;
     }
     if((startIdx == -1 || endIdx == -1) || (endIdx < startIdx)) {
-        cout << "No start layer: " << start << " or end layer: " << end  << " or direction wrong" << endl;
+        cout << "[ESPRESSO]: No start layer: " << start << " or end layer: " << end  << " or direction wrong" << endl;
         exit(0);
     }
 }
@@ -220,6 +221,8 @@ void espresso::CNN_Network::cfgLayers(int startIdx, int endIdx)
         if (m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_numKernelRows == 1)
         {
             m_cnn[i]->m_fpga_do_kernel1x1 = true;
+			m_cnn[i]->m_num1x1Kernels = m_cnn[i + 1]->m_numKernels;
+			m_cnn[i]->m_kernel1x1Depth = m_cnn[i + 1]->m_kernelDepth;
             m_cnn[i]->m_kernel1x1Data = m_cnn[i + 1]->m_fxFilterData;
             m_cnn[i]->m_bias1x1Data = m_cnn[i + 1]->m_fxBiasData;
         }
@@ -234,29 +237,13 @@ void espresso::CNN_Network::Forward(string start, string end)
     getBgnEndLayer(startIdx, start, endIdx, end);
     cfgLayers(startIdx, endIdx);
     // Forward Propagation
-    for (int i = startIdx; i < (endIdx + 1); i++)
+    // FIXME: should be "for(int i = startIdx; i < endIdx; i++)""
+    for(int i = 2; i < endIdx; i++)
     {
-        // printLayerStats(i);
+        printLayerStats(i);
+        cout << "[ESPRESSO]: Processing Layer" << " " << m_cnn[i]->m_layerName << endl;
         m_cnn[i]->ComputeLayer();
-        // cout << "Finished Layer" << " " << m_cnn[i]->m_layerName << endl << endl << endl;
-
-        // int c, h, w;
-        // char buf[100];
-        // sprintf(buf, "layers/esp_layer_%05d.txt", i);
-        // FILE *fd = fopen(buf, "w");
-        // for (c = 0; c < m_cnn[i]->m_outputDepth; c++)
-        // {
-        // 	for (h = 0; h < m_cnn[i]->m_numOutputRows; h++)
-        // 	{
-        // 		for (w = 0; w < m_cnn[i]->m_numOutputCols; w++)
-        // 		{
-        // 			fprintf(fd, "%f ", m_cnn[i]->m_blob.flData[(c * m_cnn[i]->m_numOutputRows + h) * m_cnn[i]->m_numOutputCols + w]);
-        // 		}
-        // 		fprintf(fd, "\n");
-        // 	}
-        // 	fprintf(fd, "\n\n\n");
-        // }
-        // fclose(fd);
+        cout << "[ESPRESSO]: Finished Layer" << " " << m_cnn[i]->m_layerName << endl;
     }
 }
 

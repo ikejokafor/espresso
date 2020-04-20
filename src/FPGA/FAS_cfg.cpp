@@ -2,7 +2,11 @@
 using namespace std;
 
 
-FAS_cfg::FAS_cfg() { }
+FAS_cfg::FAS_cfg() :
+   	m_inMapAddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
+	m_krnl3x3AddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
+	m_krnl3x3BiasAddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP))
+{ }
 
 
 FAS_cfg::FAS_cfg(
@@ -27,7 +31,11 @@ FAS_cfg::FAS_cfg(
 	int partMapFetchTotal,
 	int resMapFetchTotal,
 	int outMapStoreTotal
-) {
+) :
+   	m_inMapAddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
+	m_krnl3x3AddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
+	m_krnl3x3BiasAddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP))
+{
 	m_FAS_id = FAS_id;
 	m_do_kernels1x1 = do_kernels1x1;
 	m_do_res_layer = do_res_layer;

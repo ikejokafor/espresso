@@ -59,9 +59,9 @@ void AccelConfig::serialize()
         for (int a = 0; a < MAX_AWP_PER_FAS; a++)
         {
             auto& AWP_en_arr = m_FAS_cfg_arr[f]->m_AWP_en_arr;
-            auto& imAddrArr = m_FAS_cfg_arr[f]->m_AWP_cfg_arr[a]->m_imAddrArr;
-            auto& krnl3x3AddrArr = m_FAS_cfg_arr[f]->m_AWP_cfg_arr[a]->m_krnl3x3AddrArr;
-            auto& krnl3x3BiasAddrArr = m_FAS_cfg_arr[f]->m_AWP_cfg_arr[a]->m_krnl3x3BiasAddrArr;
+            auto& inMapAddrArr = m_FAS_cfg_arr[f]->m_inMapAddrArr;
+            auto& krnl3x3AddrArr = m_FAS_cfg_arr[f]->m_krnl3x3AddrArr;
+            auto& krnl3x3BiasAddrArr = m_FAS_cfg_arr[f]->m_krnl3x3BiasAddrArr;
             auto& QUAD_cfg_arr = m_FAS_cfg_arr[f]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr;
             auto& QUAD_en_arr = m_FAS_cfg_arr[f]->m_AWP_cfg_arr[a]->m_QUAD_en_arr;
             for (int q = 0; q < NUM_TOTAL_QUADS; q++)
@@ -87,9 +87,9 @@ void AccelConfig::serialize()
                 cfg[idx].outMapStoreTotal			= m_FAS_cfg_arr[f]->m_outMapStoreTotal;
                 cfg[idx].inMapFetchFactor           = m_FAS_cfg_arr[f]->m_inMapFetchFactor;
                 cfg[idx].outMapStoreFactor          = m_FAS_cfg_arr[f]->m_outMapStoreFactor;
-                cfg[idx].imAddrArr 					= imAddrArr[q];
-                cfg[idx].krnl3x3Addr	 			= krnl3x3AddrArr[q];
-                cfg[idx].krnl3x3BiasAddr			= krnl3x3BiasAddrArr[q];
+                cfg[idx].imAddrArr 					= inMapAddrArr[a][q];
+                cfg[idx].krnl3x3Addr	 			= krnl3x3AddrArr[a][q];
+                cfg[idx].krnl3x3BiasAddr			= krnl3x3BiasAddrArr[a][q];
                 cfg[idx].krnl1x1Addr                = m_FAS_cfg_arr[f]->m_krnl1x1Addr;
                 cfg[idx].krnl1x1BiasAddr 			= m_FAS_cfg_arr[f]->m_krnl1x1BiasAddr;
                 cfg[idx].partMapAddr				= m_FAS_cfg_arr[f]->m_partMapAddr;
@@ -133,9 +133,9 @@ void AccelConfig::deserialize()
         for (int a = 0; a < MAX_AWP_PER_FAS; a++)
         {
             auto& AWP_en_arr = m_FAS_cfg_arr[f]->m_AWP_en_arr;
-            auto& imAddrArr = m_FAS_cfg_arr[f]->m_AWP_cfg_arr[a]->m_imAddrArr;
-            auto& krnl3x3AddrArr = m_FAS_cfg_arr[f]->m_AWP_cfg_arr[a]->m_krnl3x3AddrArr;
-            auto& krnl3x3BiasAddrArr = m_FAS_cfg_arr[f]->m_AWP_cfg_arr[a]->m_krnl3x3BiasAddrArr;
+            auto& inMapAddrArr = m_FAS_cfg_arr[f]->m_inMapAddrArr;
+            auto& krnl3x3AddrArr = m_FAS_cfg_arr[f]->m_krnl3x3AddrArr;
+            auto& krnl3x3BiasAddrArr = m_FAS_cfg_arr[f]->m_krnl3x3BiasAddrArr;
             auto& QUAD_cfg_arr = m_FAS_cfg_arr[f]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr;
             auto& QUAD_en_arr = m_FAS_cfg_arr[f]->m_AWP_cfg_arr[a]->m_QUAD_en_arr;
             for (int q = 0; q < NUM_TOTAL_QUADS; q++)
@@ -161,9 +161,9 @@ void AccelConfig::deserialize()
                 m_FAS_cfg_arr[f]->m_outMapStoreTotal		= cfg[idx].outMapStoreTotal;
                 m_FAS_cfg_arr[f]->m_inMapFetchFactor        = cfg[idx].inMapFetchFactor;
                 m_FAS_cfg_arr[f]->m_outMapStoreFactor       = cfg[idx].outMapStoreFactor;
-                imAddrArr[q]				                = cfg[idx].imAddrArr;
-                krnl3x3AddrArr[q]				            = cfg[idx].krnl3x3Addr;
-                krnl3x3BiasAddrArr[q]				        = cfg[idx].krnl3x3BiasAddr;
+                inMapAddrArr[a][q]				            = cfg[idx].imAddrArr;
+                krnl3x3AddrArr[a][q]				        = cfg[idx].krnl3x3Addr;
+                krnl3x3BiasAddrArr[a][q]				    = cfg[idx].krnl3x3BiasAddr;
                 m_FAS_cfg_arr[f]->m_krnl1x1Addr             = cfg[idx].krnl1x1Addr;
                 m_FAS_cfg_arr[f]->m_krnl1x1BiasAddr			= cfg[idx].krnl1x1BiasAddr;
                 m_FAS_cfg_arr[f]->m_partMapAddr				= cfg[idx].partMapAddr;

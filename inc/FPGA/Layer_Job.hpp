@@ -36,15 +36,15 @@ class Layer_Job
     public:
         Layer_Job(
 			std::string layerName,
-		    int inputMapDepth,
-		    int numInputMapRows,
-		    int numInputMapCols,
+			int inputMapDepth,
+			int numInputMapRows,
+			int numInputMapCols,
 			fixedPoint_t* inputMapData,
-		    int numKernels,
-		    int kernelDepth,
-		    int numKernelRows,
-		    int numKernelCols,
-			fixedPoint_t* kernelData,
+			int num3x3Kernels,
+			int kernelDepth,
+			int numKernelRows,
+			int numKernelCols,
+			fixedPoint_t* kernel3x3Data,
 			int outputMapDepth,
 			int numOutputMapRows,
 			int numOutputMapCols,
@@ -52,6 +52,8 @@ class Layer_Job
 			int numResidualMapRows,
 			int numResidualMapCols,
 			fixedPoint_t* residualMapData,
+			int num1x1Kernels,
+			int kernel1x1Depth,
 			fixedPoint_t* kernel1x1Data,
 			fixedPoint_t* kernel3x3Bias,
 			fixedPoint_t* kernel1x1Bias,
@@ -62,8 +64,8 @@ class Layer_Job
 			bool activation,
 			bool do_kernels1x1,
 			FPGA_hndl* fpga_hndl,
-		    int fxPtLength = 16,
-		    int numFracBits = 14
+			int fxPtLength = 16,
+			int numFracBits = 14
 	    );
         ~Layer_Job();
         void createLayerIters();
@@ -75,7 +77,7 @@ class Layer_Job
 			int krnlBgn,
 			int numKrnl
 		);
-		void printConfig();
+		void printConfig(int k, int d);
         void process();
 
 		std::string m_layerName;
@@ -85,7 +87,9 @@ class Layer_Job
 		int m_outputMapDepth;
 		int m_numOutputMapRows;
 		int m_numOutputMapCols;
-        int m_numKernels;
+        int m_num3x3Kernels;
+		int m_num1x1Kernels;
+		int m_kernel1x1Depth;
         int m_kernelDepth;
         int m_numKernelRows;
         int m_numKernelCols;

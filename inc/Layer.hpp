@@ -57,8 +57,8 @@
 
 
 
-namespace espresso 
-{	
+namespace espresso
+{
 	// Definitions
 	#define HIGH_PERF
 	const float THRESH = 0.5f;
@@ -69,7 +69,7 @@ namespace espresso
 	const int YOLO_MAX_NUM_INT_BITS = (YOLO_DEF_FXPT_LEN - 1);
 	const int YOLO_MAX_NUM_FRAC_BITS = (YOLO_DEF_FXPT_LEN - 2);
 
-	
+
 	// User Defined Types
 	typedef struct
 	{
@@ -81,30 +81,30 @@ namespace espresso
 		int depth;
 	}  Blob_t;
 
-		
-	typedef enum 
+
+	typedef enum
 	{
 		FLOAT = 0,
 		FIXED = 1
 	} precision_t;
 
 
-	typedef enum 
+	typedef enum
 	{
 		LEAKY = 0,
 		RELU = 1,
 		LINEAR = 2
 	} activation_t;
-	
-	
-	typedef enum 
+
+
+	typedef enum
 	{
 		FPGA_BACKEND = 0,
 		DARKNET_BACKEND = 1,
 		ESPRESSO_BACKEND = 2
 	} backend_t;
-	
-	
+
+
 	typedef enum
 	{
 		INPUT = 0,
@@ -114,14 +114,14 @@ namespace espresso
 		YOLO = 4,
 		UPSAMPLE = 5
 	} layerType_t;
-	
-	   
-    class layerInfo_obj 
+
+
+    class layerInfo_obj
 	{
 		public:
 			layerInfo_obj()
 			{
-				precision = espresso::FLOAT; 
+				precision = espresso::FLOAT;
 				layerType = espresso::INPUT;
 				numInputRows = 1;
 				numInputCols = 1;
@@ -132,11 +132,13 @@ namespace espresso
 				whtFxPtLength = YOLO_DEF_FXPT_LEN;
 				whtNumFracBits = YOLO_DEF_NUM_FRAC_BITS;
 				doutFxPtLength = YOLO_DEF_FXPT_LEN;
-				doutNumFracBits = YOLO_DEF_NUM_FRAC_BITS;	
+				doutNumFracBits = YOLO_DEF_NUM_FRAC_BITS;
 				biasFxPtLength = YOLO_DEF_FXPT_LEN;
 				biasNumFracBits = YOLO_DEF_NUM_FRAC_BITS;
 				leakyFxPtLength = YOLO_DEF_FXPT_LEN;
 				leakyNumFracBits = YOLO_DEF_NUM_FRAC_BITS;
+				numKernels = 1;
+				kernelDepth = 1;
 				numKernelRows = 1;
 				numKernelCols = 1;
 				stride = 1;
@@ -162,8 +164,8 @@ namespace espresso
 				net_idx = -1;
 			}
 			~layerInfo_obj() {};
-		
-			precision_t precision;       
+
+			precision_t precision;
 			std::string layerName;
 			std::vector<std::string> topLayerNames;
 			std::vector<std::string> bottomLayerNames;
@@ -177,21 +179,23 @@ namespace espresso
 			int whtFxPtLength;
 			int whtNumFracBits;
 			int doutFxPtLength;
-			int doutNumFracBits;	    
+			int doutNumFracBits;
 			int biasFxPtLength;
 			int biasNumFracBits;
 			int leakyFxPtLength;
 			int	leakyNumFracBits;
+			int	numKernels = 1;
+			int	kernelDepth = 1;
 			int numKernelRows;
 			int numKernelCols;
 			int stride;
 			int padding;
 			bool globalPooling;
-			int numFilterValues;	    
+			int numFilterValues;
 			float* flFilterData;
 			float* flBiasData;
 			fixedPoint_t* fxFilterData;
-			fixedPoint_t* fxBiasData; 
+			fixedPoint_t* fxBiasData;
 			int group;
 			int localSize;
 			float alpha;
@@ -205,7 +209,7 @@ namespace espresso
 			int darknet_outputs_param;
 			int numKernelGroups;
 			int numKrlPerGrp;
-			int numKernelDepthGroups; 
+			int numKernelDepthGroups;
 			std::vector<std::vector<kernel_group*> >	kernel_group_arr;
 			backend_t backend;
 			int net_idx;
@@ -215,16 +219,16 @@ namespace espresso
 
 	// We can compute the spatial size of the output volume as a function of the input volume size (W), the
 	// the receptive field size of the Conv Layer neurons (F), the stride with which they are applied (S), and
-	// the amount of zero padding used (P) on the border.You can convince yourself that the correct formula for 
-	// calculating how many neurons �fit� is given by ((W - F + (2 * P)) / S) + 1. For example for a 7x7 input and a 
+	// the amount of zero padding used (P) on the border.You can convince yourself that the correct formula for
+	// calculating how many neurons fit is given by ((W - F + (2 * P)) / S) + 1. For example for a 7x7 input and a
 	// 3x3 filter with stride 1 and pad 0 we would get a 5x5 output.With stride 2 we would get a 3x3 output.
 
-	// Blob memory is row-major in layout, so the last / rightmost dimension changes fastest. For example, in a 4D blob, the value at index (n, k, h, w) is physically 
-	// located at index ((n * K + k) * H + h) * W + w. Number / N is the batch size of the data. Batch processing achieves better throughput for communication and device processing. 
+	// Blob memory is row-major in layout, so the last / rightmost dimension changes fastest. For example, in a 4D blob, the value at index (n, k, h, w) is physically
+	// located at index ((n * K + k) * H + h) * W + w. Number / N is the batch size of the data. Batch processing achieves better throughput for communication and device processing.
 	// For an ImageNet training batch of 256 images N = 256. Channel / K is the feature dimension e.g. for RGB images K = 3.
 
 
-	class Layer 
+	class Layer
 	{
 		public:
 			Layer(espresso::layerInfo_obj layerInfo);
@@ -233,6 +237,7 @@ namespace espresso
 			virtual void ComputeLayer_FlPt() = 0;
 			virtual void ComputeLayer_FxPt() = 0;
 			virtual void ComputeLayerParam() = 0;
+
 			espresso::precision_t m_precision;
 			std::string m_layerName;
 			std::vector<std::string> m_topLayerNames;
@@ -247,7 +252,7 @@ namespace espresso
 			int m_dinFxPtLength;
 			int m_dinNumFracBits;
 			int m_whtFxPtLength;
-			int m_whtNumFracBits;  
+			int m_whtNumFracBits;
 			int m_doutFxPtLength;
 			int m_doutNumFracBits;
 			int m_biasFxPtLength;
@@ -270,7 +275,7 @@ namespace espresso
 			float* m_flBiasData;
 			fixedPoint_t* m_fxFilterData;
 			fixedPoint_t* m_fxBiasData;
-			int m_group;      
+			int m_group;
 			int m_localSize;
 			float m_alpha;
 			float m_flBeta;
@@ -288,7 +293,7 @@ namespace espresso
 			espresso::backend_t m_backend;
 			int m_net_idx;
 			network* m_yolo_net;
-		
+
 			espresso::Blob_t m_blob;
 			std::vector<Layer*> m_topLayers;
 			std::vector<Layer*> m_bottomLayers;
@@ -298,6 +303,8 @@ namespace espresso
 			fixedPoint_t* m_residualMapData;
 			FPGA_hndl* m_fpga_hndl;
 			fixedPoint_t* m_kernel1x1Data;
-			fixedPoint_t* m_bias1x1Data;			
+			int m_num1x1Kernels;
+			int m_kernel1x1Depth;
+			fixedPoint_t* m_bias1x1Data;
 	};
 }
