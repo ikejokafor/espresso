@@ -85,6 +85,7 @@ void AccelConfig::serialize()
                 cfg[idx].resMapFetchTotal       	= m_FAS_cfg_arr[f]->m_resMapFetchTotal;
                 cfg[idx].partMapFetchTotal      	= m_FAS_cfg_arr[f]->m_partMapFetchTotal;
                 cfg[idx].outMapStoreTotal			= m_FAS_cfg_arr[f]->m_outMapStoreTotal;
+                cfg[idx].co_high_watermark			= m_FAS_cfg_arr[f]->m_co_high_watermark;
                 cfg[idx].inMapFetchFactor           = m_FAS_cfg_arr[f]->m_inMapFetchFactor;
                 cfg[idx].outMapStoreFactor          = m_FAS_cfg_arr[f]->m_outMapStoreFactor;
                 cfg[idx].imAddrArr 					= inMapAddrArr[a][q];
@@ -161,6 +162,7 @@ void AccelConfig::deserialize()
                 m_FAS_cfg_arr[f]->m_outMapStoreTotal		= cfg[idx].outMapStoreTotal;
                 m_FAS_cfg_arr[f]->m_inMapFetchFactor        = cfg[idx].inMapFetchFactor;
                 m_FAS_cfg_arr[f]->m_outMapStoreFactor       = cfg[idx].outMapStoreFactor;
+                m_FAS_cfg_arr[f]->m_co_high_watermark       = cfg[idx].co_high_watermark;
                 inMapAddrArr[a][q]				            = cfg[idx].imAddrArr;
                 krnl3x3AddrArr[a][q]				        = cfg[idx].krnl3x3Addr;
                 krnl3x3BiasAddrArr[a][q]				    = cfg[idx].krnl3x3BiasAddr;

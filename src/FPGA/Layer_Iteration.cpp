@@ -71,7 +71,8 @@ Layer_Iteration::Layer_Iteration(
 			(do_kernels1x1) ? kernels1x1->m_kernelDepth : 0,
 			(!first_depth_iter) ? partialMaps->m_size : 0,
 			(do_res_layer) ? residualMaps->m_size : 0,
-			outputMaps->m_size
+			outputMaps->m_size,
+			(kernels1x1->m_kernelDepth * CO_HIGH_WATERMARK_FACTOR)
 		));
 		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (partialMaps != nullptr) ? partialMaps->m_address : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (residualMaps != nullptr) ? residualMaps->m_address : -1;
