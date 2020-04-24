@@ -19,14 +19,11 @@ void ConvolutionLayer_FPGA::ComputeLayer()
 			fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
 		}
 	}
-	ComputeLayer_FxPt();
+	ComputeLayer_FlPt();
 }
 
 
-void ConvolutionLayer_FPGA::ComputeLayer_FlPt() { }
-
-
-void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
+void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
 {
 	if (m_numKernelRows == 1)
 	{
@@ -39,12 +36,12 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
 			m_inputDepth,
 			m_numInputRows,
 			m_numInputCols,
-			m_bottomLayers[0]->m_blob.fxData,
+			m_bottomLayers[0]->m_blob.flData,
 			m_numKernels,
 			m_kernelDepth,
 			m_numKernelRows,
 			m_numKernelCols,
-			m_fxFilterData,
+			m_flFilterData,
 			m_outputDepth,
 			m_numOutputRows,
 			m_numOutputCols,
@@ -55,7 +52,7 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
 			m_num1x1Kernels,
 			m_kernel1x1Depth,
 			m_kernel1x1Data,
-			m_fxBiasData,
+			m_flBiasData,
 			m_bias1x1Data,
 			m_stride,
 			m_fpga_upsample,
@@ -67,8 +64,14 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
 		);
 		m_layer_job->createLayerIters();
 		m_layer_job->process();
-		delete m_layer_job;
+		// delete m_layer_job;
 	}
+}
+
+
+void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
+{
+
 }
 
 

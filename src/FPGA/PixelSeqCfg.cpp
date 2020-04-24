@@ -4,6 +4,7 @@
 PixelSeqCfg::PixelSeqCfg(int stride)
 {
 	m_stride = stride;
+#ifdef FPGA
 	m_address = allocate(MAX_NUM_INPUT_COLS * NUM_CE_PER_QUAD * PIX_SEQ_CONFIG_SIZE);
 	if(stride == 1)
 	{
@@ -13,6 +14,7 @@ PixelSeqCfg::PixelSeqCfg(int stride)
 	{
 		stride2_config();
 	}
+#endif
 }
 
 
@@ -24,29 +26,19 @@ PixelSeqCfg::~PixelSeqCfg()
 
 uint64_t PixelSeqCfg::allocate(int size)
 {
-	m_size = size;
-#ifdef SYSTEMC
-	m_address = (uint64_t)malloc(size);
-#else
 
-#endif
-	return m_address;
 }
 
 
 void PixelSeqCfg::deallocate()
 {
-#ifdef SYSTEMC
-	free((uint64_t*)m_address);
-#else
 
-#endif
 }
 
 
 void PixelSeqCfg::serialize()
 {
-
+	m_size;
 }
 
 

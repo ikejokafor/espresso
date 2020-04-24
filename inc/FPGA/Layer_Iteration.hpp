@@ -7,7 +7,6 @@
 #include "InputMaps.hpp"
 #include "Kernels.hpp"
 #include "KernelBias.hpp"
-#include "PartialMaps.hpp"
 #include "ResidualMaps.hpp"
 #include "OutputMaps.hpp"
 #include "espresso_FPGA_common.hpp"

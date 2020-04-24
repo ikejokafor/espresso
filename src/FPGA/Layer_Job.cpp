@@ -7,24 +7,24 @@ Layer_Job::Layer_Job(
     int inputMapDepth,
     int numInputMapRows,
     int numInputMapCols,
-    fixedPoint_t* inputMapData,
+    float* inputMapData,
     int num3x3Kernels,
     int kernelDepth,
     int numKernelRows,
     int numKernelCols,
-    fixedPoint_t* kernel3x3Data,
+    float* kernel3x3Data,
     int outputMapDepth,
     int numOutputMapRows,
     int numOutputMapCols,
     int residualMapDepth,
     int numResidualMapRows,
     int numResidualMapCols,
-    fixedPoint_t* residualMapData,
+    float* residualMapData,
     int num1x1Kernels,
     int kernel1x1Depth,
-    fixedPoint_t* kernel1x1Data,
-    fixedPoint_t* kernel3x3Bias,
-    fixedPoint_t* kernel1x1Bias,
+    float* kernel1x1Data,
+    float* kernel3x3Bias,
+    float* kernel1x1Bias,
     int stride,
     bool upsample,
     int padding,
@@ -72,14 +72,8 @@ Layer_Job::Layer_Job(
     m_kernels3x3Bias        = new KernelBias(num3x3Kernels, kernel3x3Bias);
     if(do_kernels1x1)
     {
-        // FIXME add 1x1 kernel depth instead of using inputMapDepth
         m_kernels1x1        = new Kernels(num1x1Kernels, m_kernel1x1Depth, 1, 1, kernel1x1Data);
         m_kernels1x1Bias    = new KernelBias(num1x1Kernels, kernel1x1Bias);
-        m_outputMaps        = new OutputMaps(num1x1Kernels, numOutputMapRows, numOutputMapCols);
-    }
-    else
-    {
-        m_outputMaps        = new OutputMaps(outputMapDepth, numOutputMapRows, numOutputMapCols);
     }
 #ifdef SYSTEMC
     m_sysc_fpga_hndl        = reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
@@ -181,11 +175,11 @@ layAclPrm_t* Layer_Job::createAccelParams(
     {
         layAclPrm->kernels1x1 = m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, 0, m_kernels1x1->m_kernelDepth);
         layAclPrm->kernels1x1Bias = m_kernels1x1Bias->GetVolume(0, m_kernels1x1Bias->m_numKernels);
-        layAclPrm->outputMaps = m_outputMaps->GetVolume(0, m_kernels1x1->m_numKernels);
+        layAclPrm->outputMaps = m_outputMaps = new OutputMaps(m_kernels1x1->m_numKernels, m_numOutputMapRows, m_numOutputMapCols);
     }
     else
     {
-        layAclPrm->outputMaps = m_outputMaps->GetVolume(krnlBgn, numKrnl);
+        layAclPrm->outputMaps = m_outputMaps = new OutputMaps(m_outputMapDepth, m_numOutputMapRows, m_numOutputMapCols);
     }
     if(j == 0)
     {
@@ -193,13 +187,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
     }
     else
     {
-        auto& prevOutMap = m_lay_it_arr[i][j - 1]->m_outputMaps;
-        layAclPrm->partialMaps = new PartialMaps(
-            prevOutMap->m_outputMapDepth,
-            prevOutMap->m_numOutputMapRows,
-            prevOutMap->m_numOutputMapCols,
-            prevOutMap->m_data
-        );
+        layAclPrm->partialMaps = m_lay_it_arr[i][j - 1]->m_outputMaps;
     }
     if(j == 0 && m_do_res_layer)
     {

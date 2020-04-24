@@ -10,7 +10,7 @@
 class ResidualMaps : public Accel_Payload
 {
 	public:
-		ResidualMaps(int inputMapDepth, int numInputMapRows, int numInputMapCols, fixedPoint_t* data);
+		ResidualMaps(int inputMapDepth, int numInputMapRows, int numInputMapCols, float* data);
 		~ResidualMaps();
 		uint64_t allocate(int size);
 		void deallocate();
@@ -18,14 +18,9 @@ class ResidualMaps : public Accel_Payload
         void deserialize();
 		void permuteData();
 		ResidualMaps* GetVolume(int depthBgn, int depthSize);
-	
+
 		int m_residualMapDepth;
 		int m_numResidualMapRows;
 		int m_numResidualMapCols;
-		fixedPoint_t* m_data;
-#ifdef SYSTEMC
-		int m_shm_fd;
-#else
-
-#endif
+		float* m_data;
 };

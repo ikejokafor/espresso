@@ -10,19 +10,14 @@
 class KernelBias : public Accel_Payload
 {
 	public:
-		KernelBias(int numKernels, fixedPoint_t* data);
+		KernelBias(int numKernels, float* data);
 		~KernelBias();
 		uint64_t allocate(int size);
 		void deallocate();
 		void serialize();
         void deserialize();
 		KernelBias* GetVolume(int krnlBgn, int numKrnl);
-	
-		int m_numKernels;
-		fixedPoint_t* m_data;
-#ifdef SYSTEMC
-		int m_shm_fd;
-#else
 
-#endif
+		int m_numKernels;
+		float* m_data;
 };

@@ -191,7 +191,7 @@ void espresso::CNN_Network::getBgnEndLayer(int& startIdx, string start, int& end
 
 void espresso::CNN_Network::cfgLayers(int startIdx, int endIdx)
 {
-    for (int i = startIdx; i < (endIdx + 1); i++)
+    for (int i = startIdx; i < endIdx; i++)
     {
         m_cnn[i]->ComputeLayerParam();
         if(i == 0)
@@ -208,7 +208,7 @@ void espresso::CNN_Network::cfgLayers(int startIdx, int endIdx)
             m_cnn[i]->m_numResidualMapsCols
                 = m_cnn[i + 1]->m_bottomLayers[0]->m_blob.numCols;
             m_cnn[i]->m_residualMapData
-                = m_cnn[i + 1]->m_bottomLayers[0]->m_blob.fxData;
+                = m_cnn[i + 1]->m_bottomLayers[0]->m_blob.flData;
         }
         if(m_cnn[i - 1]->m_layerType == UPSAMPLE)
         {
@@ -223,8 +223,8 @@ void espresso::CNN_Network::cfgLayers(int startIdx, int endIdx)
             m_cnn[i]->m_fpga_do_kernel1x1 = true;
 			m_cnn[i]->m_num1x1Kernels = m_cnn[i + 1]->m_numKernels;
 			m_cnn[i]->m_kernel1x1Depth = m_cnn[i + 1]->m_kernelDepth;
-            m_cnn[i]->m_kernel1x1Data = m_cnn[i + 1]->m_fxFilterData;
-            m_cnn[i]->m_bias1x1Data = m_cnn[i + 1]->m_fxBiasData;
+            m_cnn[i]->m_kernel1x1Data = m_cnn[i + 1]->m_flFilterData;
+            m_cnn[i]->m_bias1x1Data = m_cnn[i + 1]->m_flBiasData;
         }
     }
 }
@@ -237,7 +237,8 @@ void espresso::CNN_Network::Forward(string start, string end)
     getBgnEndLayer(startIdx, start, endIdx, end);
     cfgLayers(startIdx, endIdx);
     // Forward Propagation
-    // FIXME: should be "for(int i = startIdx; i < endIdx; i++)""
+    // FIXME: should be
+    // for(int i = startIdx; i < endIdx; i++)
     for(int i = 2; i < endIdx; i++)
     {
         printLayerStats(i);

@@ -10,21 +10,16 @@
 class InputMaps : public Accel_Payload
 {
 	public:
-		InputMaps(int inputMapDepth, int numInputMapRows, int numInputMapCols, fixedPoint_t* data);
+		InputMaps(int inputMapDepth, int numInputMapRows, int numInputMapCols, float* data);
 		~InputMaps();
 		uint64_t allocate(int size);
 		void deallocate();
 		void serialize();
         void deserialize();
 		InputMaps* GetVolume(int depthBgn, int depthSize);
-	
+
 		int m_inputMapDepth;
 		int m_numInputMapRows;
 		int m_numInputMapCols;
-		fixedPoint_t* m_data;
-#ifdef SYSTEMC
-
-#else
-
-#endif
+		float* m_data;
 };

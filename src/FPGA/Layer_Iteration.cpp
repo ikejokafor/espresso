@@ -36,7 +36,7 @@ Layer_Iteration::Layer_Iteration(
 	m_kernels1x1Bias = kernels1x1Bias;
 	m_partialMaps = partialMaps;
 	m_residualMaps = residualMaps;
-	m_outputMaps =	outputMaps;
+	m_outputMaps = outputMaps;
 
 	m_inputMaps->serialize();
 	m_kernels3x3->serialize();
@@ -72,7 +72,7 @@ Layer_Iteration::Layer_Iteration(
 			(!first_depth_iter) ? partialMaps->m_size : 0,
 			(do_res_layer) ? residualMaps->m_size : 0,
 			outputMaps->m_size,
-			(kernels1x1->m_kernelDepth * CO_HIGH_WATERMARK_FACTOR)
+			(do_kernels1x1) ? (kernels1x1->m_kernelDepth * CO_HIGH_WATERMARK_FACTOR) : 0
 		));
 		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (partialMaps != nullptr) ? partialMaps->m_address : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (residualMaps != nullptr) ? residualMaps->m_address : -1;
@@ -116,8 +116,6 @@ Layer_Iteration::Layer_Iteration(
 					QUAD_en_arr.push_back(true);
 					int imDepthStep = QUAD_MAX_DEPTH * inputMaps->m_numInputMapRows * inputMaps->m_numInputMapCols;
 					int krn3x3DepthStep = QUAD_MAX_DEPTH * 3 * 3;
-					// FIXME: 	I dont think these addresses are correct. I think you need to
-					//
 					imAddrArr[j][k] = inputMaps->m_address + (k * imDepthStep);
 					krnl3x3AddrArr[j][k] = kernels3x3->m_address + (k * krn3x3DepthStep);
 					krnl3x3BiasAddrArr[j][k] = kernels3x3Bias->m_address;

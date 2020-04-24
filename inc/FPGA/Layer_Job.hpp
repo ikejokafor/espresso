@@ -12,10 +12,8 @@
 #include "InputMaps.hpp"
 #include "Kernels.hpp"
 #include "KernelBias.hpp"
-#include "PartialMaps.hpp"
 #include "ResidualMaps.hpp"
 #include "OutputMaps.hpp"
-
 
 
 typedef struct
@@ -39,24 +37,24 @@ class Layer_Job
 			int inputMapDepth,
 			int numInputMapRows,
 			int numInputMapCols,
-			fixedPoint_t* inputMapData,
+			float* inputMapData,
 			int num3x3Kernels,
 			int kernelDepth,
 			int numKernelRows,
 			int numKernelCols,
-			fixedPoint_t* kernel3x3Data,
+			float* kernel3x3Data,
 			int outputMapDepth,
 			int numOutputMapRows,
 			int numOutputMapCols,
 			int residualMapDepth,
 			int numResidualMapRows,
 			int numResidualMapCols,
-			fixedPoint_t* residualMapData,
+			float* residualMapData,
 			int num1x1Kernels,
 			int kernel1x1Depth,
-			fixedPoint_t* kernel1x1Data,
-			fixedPoint_t* kernel3x3Bias,
-			fixedPoint_t* kernel1x1Bias,
+			float* kernel1x1Data,
+			float* kernel3x3Bias,
+			float* kernel1x1Bias,
 			int stride,
 			bool upsample,
 			int padding,

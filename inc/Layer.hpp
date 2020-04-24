@@ -300,11 +300,11 @@ namespace espresso
 			int m_residualMapDepth;
 			int m_numResidualMapRows;
 			int m_numResidualMapsCols;
-			fixedPoint_t* m_residualMapData;
+			float* m_residualMapData;
 			FPGA_hndl* m_fpga_hndl;
-			fixedPoint_t* m_kernel1x1Data;
+			float* m_kernel1x1Data;
 			int m_num1x1Kernels;
 			int m_kernel1x1Depth;
-			fixedPoint_t* m_bias1x1Data;
+			float* m_bias1x1Data;
 	};
 }
