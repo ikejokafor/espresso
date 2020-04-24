@@ -32,7 +32,9 @@ class FAS_cfg
             int partMapFetchTotal,
             int resMapFetchTotal,
             int outMapStoreTotal,
-            int co_high_watermark
+            int co_high_watermark,
+            int rm_low_watermark,
+            int pm_low_watermark
         );
         ~FAS_cfg();
 
@@ -63,6 +65,8 @@ class FAS_cfg
         int m_inMapFetchFactor;
         int m_outMapStoreFactor;
         int m_co_high_watermark;
+        int m_rm_low_watermark;
+        int m_pm_low_watermark;
         int m_numOutputTotal;
         std::vector<AWP_cfg*> m_AWP_cfg_arr;
         std::vector<bool> m_AWP_en_arr;

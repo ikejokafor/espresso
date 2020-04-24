@@ -44,6 +44,8 @@ class AccelConfig : public Accel_Payload
 			uint64_t inMapFetchFactor			;
 			uint64_t outMapStoreFactor			;
 			uint64_t co_high_watermark			;
+			uint64_t rm_low_watermark			;
+			uint64_t pm_low_watermark			;
 			uint64_t imAddrArr	                ;
 			uint64_t krnl3x3Addr	            ;
 			uint64_t krnl3x3BiasAddr	        ;

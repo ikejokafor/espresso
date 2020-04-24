@@ -31,7 +31,9 @@ FAS_cfg::FAS_cfg(
 	int partMapFetchTotal,
 	int resMapFetchTotal,
 	int outMapStoreTotal,
-	int co_high_watermark
+	int co_high_watermark,
+	int rm_low_watermark,
+	int pm_low_watermark
 ) :
    	m_inMapAddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
 	m_krnl3x3AddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
@@ -59,6 +61,8 @@ FAS_cfg::FAS_cfg(
 	m_resMapFetchTotal = resMapFetchTotal;
 	m_outMapStoreTotal = outMapStoreTotal;
 	m_co_high_watermark = co_high_watermark;
+    m_rm_low_watermark = rm_low_watermark;
+    m_pm_low_watermark = pm_low_watermark;
 }
 
 

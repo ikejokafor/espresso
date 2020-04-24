@@ -191,7 +191,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
     }
     if(j == 0 && m_do_res_layer)
     {
-        layAclPrm->residualMaps = m_residualMaps->GetVolume(depthBgn, depth);
+        layAclPrm->residualMaps = m_residualMaps->GetVolume(krnlBgn, numKrnl);
     }
     return layAclPrm;
 }

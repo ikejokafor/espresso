@@ -38,6 +38,7 @@ void ResidualMaps::serialize()
 	m_size = m_residualMapDepth * m_numResidualMapRows * m_numResidualMapCols * PIXEL_SIZE;
 }
 
+
 void ResidualMaps::deserialize()
 {
 
