@@ -174,12 +174,12 @@ layAclPrm_t* Layer_Job::createAccelParams(
     if(m_do_kernels1x1)
     {
         layAclPrm->kernels1x1 = m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
-        layAclPrm->kernels1x1Bias = m_kernels1x1Bias->GetVolume(0, m_kernels1x1Bias->m_numKernels);
+        layAclPrm->kernels1x1Bias = m_kernels1x1Bias->GetVolume(0, m_kernels1x1->m_numKernels);
         layAclPrm->outputMaps = new OutputMaps(m_kernels1x1->m_numKernels, m_numOutputMapRows, m_numOutputMapCols);
     }
     else
     {
-        layAclPrm->outputMaps = new OutputMaps((krnl3x3Bgn + numKrnl3x3), m_numOutputMapRows, m_numOutputMapCols);
+        layAclPrm->outputMaps = new OutputMaps(numKrnl3x3, m_numOutputMapRows, m_numOutputMapCols);
     }
     if(j == 0)
     {
@@ -199,11 +199,15 @@ layAclPrm_t* Layer_Job::createAccelParams(
 
 void Layer_Job::process()
 {
+    cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iterations" << endl;
+    cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations" << endl;
     // Get configuration
     for(int k = 0; k < m_lay_it_arr.size(); k++)
     {
         for (int d = 0; d < m_lay_it_arr[k].size(); d++)
         {
+            cout << "[ESPRESSO]: Kernel Iteration - " << k << endl;
+            cout << "[ESPRESSO]: Depth Iteration - " << d << endl;
 			// printConfig(k, d);
             m_sysc_fpga_hndl->setConfig(m_lay_it_arr[k][d]->m_accelCfg);
             // m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_inputMaps);

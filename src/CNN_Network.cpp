@@ -198,7 +198,7 @@ void espresso::CNN_Network::cfgLayers(int startIdx, int endIdx)
         {
             continue;
         }
-        if (m_cnn[i + 1]->m_layerType == RESIDUAL)
+        if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_layerType == RESIDUAL)
         {
             m_cnn[i]->m_fpga_do_res_layer = true;
             m_cnn[i]->m_residualMapDepth
@@ -209,6 +209,14 @@ void espresso::CNN_Network::cfgLayers(int startIdx, int endIdx)
                 = m_cnn[i + 1]->m_bottomLayers[0]->m_blob.numCols;
             m_cnn[i]->m_residualMapData
                 = m_cnn[i + 1]->m_bottomLayers[0]->m_blob.flData;
+            if(m_cnn[i + 2]->m_layerType == CONVOLUTION && m_cnn[i + 2]->m_numKernelRows == 1)
+            {
+                m_cnn[i]->m_fpga_do_kernel1x1 = true;
+                m_cnn[i]->m_num1x1Kernels = m_cnn[i + 2]->m_numKernels;
+                m_cnn[i]->m_kernel1x1Depth = m_cnn[i + 2]->m_kernelDepth;
+                m_cnn[i]->m_kernel1x1Data = m_cnn[i + 2]->m_flFilterData;
+                m_cnn[i]->m_bias1x1Data = m_cnn[i + 2]->m_flBiasData;
+            }
         }
         if(m_cnn[i - 1]->m_layerType == UPSAMPLE)
         {
@@ -218,7 +226,7 @@ void espresso::CNN_Network::cfgLayers(int startIdx, int endIdx)
         {
             m_cnn[i]->m_fpga_activation = true;
         }
-        if (m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_numKernelRows == 1)
+        if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_layerType == CONVOLUTION && m_cnn[i + 1]->m_numKernelRows == 1)
         {
             m_cnn[i]->m_fpga_do_kernel1x1 = true;
 			m_cnn[i]->m_num1x1Kernels = m_cnn[i + 1]->m_numKernels;
@@ -239,8 +247,9 @@ void espresso::CNN_Network::Forward(string start, string end)
     // Forward Propagation
     // FIXME: should be
     // for(int i = startIdx; i < endIdx; i++)
-    for(int i = 0; i < endIdx; i++)
+    for(int i = 81; i < endIdx; i++)
     {
+        if(i == 83 || i == 95 || i == 107) continue;
         printLayerStats(i);
         cout << "[ESPRESSO]: Processing Layer" << " " << m_cnn[i]->m_layerName << endl;
         m_cnn[i]->ComputeLayer();
