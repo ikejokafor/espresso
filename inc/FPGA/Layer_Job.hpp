@@ -72,8 +72,8 @@ class Layer_Job
 			int j,
 			int depthBgn,
 			int depth,
-			int krnlBgn,
-			int numKrnl
+			int krnl3x3Bgn,
+			int numKrnl3x3
 		);
 		void printConfig(int k, int d);
         void process();

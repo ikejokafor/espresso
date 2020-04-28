@@ -163,23 +163,23 @@ layAclPrm_t* Layer_Job::createAccelParams(
     int j,
     int depthBgn,
     int depth,
-    int krnlBgn,
-    int numKrnl
+    int krnl3x3Bgn,
+    int numKrnl3x3
 ) {
     layAclPrm_t* layAclPrm = new layAclPrm_t;
     memset(layAclPrm, 0x0, sizeof(layAclPrm_t));
     layAclPrm->inputMaps = m_inputMaps->GetVolume(depthBgn, depth);
-    layAclPrm->kernels3x3 = m_kernels3x3->GetVolume(krnlBgn, numKrnl, depthBgn, depth);
-    layAclPrm->kernels3x3Bias = m_kernels3x3Bias->GetVolume(krnlBgn, numKrnl);
+    layAclPrm->kernels3x3 = m_kernels3x3->GetVolume(krnl3x3Bgn, numKrnl3x3, depthBgn, depth);
+    layAclPrm->kernels3x3Bias = m_kernels3x3Bias->GetVolume(krnl3x3Bgn, numKrnl3x3);
     if(m_do_kernels1x1)
     {
-        layAclPrm->kernels1x1 = m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, 0, m_kernels1x1->m_kernelDepth);
+        layAclPrm->kernels1x1 = m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
         layAclPrm->kernels1x1Bias = m_kernels1x1Bias->GetVolume(0, m_kernels1x1Bias->m_numKernels);
-        layAclPrm->outputMaps = m_outputMaps = new OutputMaps(m_kernels1x1->m_numKernels, m_numOutputMapRows, m_numOutputMapCols);
+        layAclPrm->outputMaps = new OutputMaps(m_kernels1x1->m_numKernels, m_numOutputMapRows, m_numOutputMapCols);
     }
     else
     {
-        layAclPrm->outputMaps = m_outputMaps = new OutputMaps(m_outputMapDepth, m_numOutputMapRows, m_numOutputMapCols);
+        layAclPrm->outputMaps = new OutputMaps((krnl3x3Bgn + numKrnl3x3), m_numOutputMapRows, m_numOutputMapCols);
     }
     if(j == 0)
     {
@@ -191,7 +191,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
     }
     if(j == 0 && m_do_res_layer)
     {
-        layAclPrm->residualMaps = m_residualMaps->GetVolume(krnlBgn, numKrnl);
+        layAclPrm->residualMaps = m_residualMaps->GetVolume(krnl3x3Bgn, numKrnl3x3);
     }
     return layAclPrm;
 }
