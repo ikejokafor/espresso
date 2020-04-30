@@ -2,6 +2,12 @@
 using namespace std;
 
 
+bool isPowerOfTwo(ulong x)
+{
+    return (x & (x - 1)) == 0;
+}
+
+
 Layer_Job::Layer_Job(
     string layerName,
     int inputMapDepth,
@@ -63,6 +69,7 @@ Layer_Job::Layer_Job(
     m_do_res_layer          = do_res_layer      ;
     m_activation            = activation        ;
     m_do_kernels1x1         = do_kernels1x1     ;
+    m_krnl1x1_pding         = false             ;
     m_inputMaps             = new InputMaps(inputMapDepth, numInputMapRows, numInputMapCols, inputMapData);
     m_kernels3x3            = new Kernels(m_num3x3Kernels, kernelDepth, numKernelRows, numKernelCols, kernel3x3Data);
     if(do_res_layer)
@@ -72,6 +79,17 @@ Layer_Job::Layer_Job(
     m_kernels3x3Bias        = new KernelBias(num3x3Kernels, kernel3x3Bias);
     if(do_kernels1x1)
     {
+        if(!isPowerOfTwo(num1x1Kernels))
+        {
+            m_krnl1x1_pding = true;
+            m_krnl1x1_pad_bgn = num1x1Kernels;
+            m_krnl1x1_pad_end = pow((float)2, (int)ceil(log2(num1x1Kernels)));
+        }
+        else
+        {
+            m_krnl1x1_pad_bgn = num1x1Kernels;
+            m_krnl1x1_pad_end = num1x1Kernels;
+        }
         m_kernels1x1        = new Kernels(num1x1Kernels, m_kernel1x1Depth, 1, 1, kernel1x1Data);
         m_kernels1x1Bias    = new KernelBias(num1x1Kernels, kernel1x1Bias);
     }
@@ -149,7 +167,10 @@ void Layer_Job::createLayerIters()
                 m_padding,
                 m_do_kernels1x1,
                 (j == 0 && m_do_res_layer) ? true : false,
-                m_activation
+                m_activation,
+                m_krnl1x1_pding,
+                m_krnl1x1_pad_bgn,
+                m_krnl1x1_pad_end
             ));
             remDepth -= depth;
         }
@@ -175,7 +196,14 @@ layAclPrm_t* Layer_Job::createAccelParams(
     {
         layAclPrm->kernels1x1 = m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
         layAclPrm->kernels1x1Bias = m_kernels1x1Bias->GetVolume(0, m_kernels1x1->m_numKernels);
-        layAclPrm->outputMaps = new OutputMaps(m_kernels1x1->m_numKernels, m_numOutputMapRows, m_numOutputMapCols);
+        if(!m_krnl1x1_pding)
+        {
+            layAclPrm->outputMaps = new OutputMaps(m_kernels1x1->m_numKernels, m_numOutputMapRows, m_numOutputMapCols);
+        }
+        else
+        {
+            layAclPrm->outputMaps = new OutputMaps(m_kernels1x1->m_numKernels + (m_krnl1x1_pad_end - m_krnl1x1_pad_bgn), m_numOutputMapRows, m_numOutputMapCols);
+        }
     }
     else
     {

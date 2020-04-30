@@ -34,7 +34,10 @@ class FAS_cfg
             int outMapStoreTotal,
             int co_high_watermark,
             int rm_low_watermark,
-            int pm_low_watermark
+            int pm_low_watermark,
+			bool krnl1x1_pding,
+			int krnl1x1_pad_bgn,
+			int krnl1x1_pad_end
         );
         ~FAS_cfg();
 
@@ -68,6 +71,9 @@ class FAS_cfg
         int m_rm_low_watermark;
         int m_pm_low_watermark;
         int m_numOutputTotal;
+        bool m_krnl1x1_pding;
+        int m_krnl1x1_pad_bgn;
+        int m_krnl1x1_pad_end;
         std::vector<AWP_cfg*> m_AWP_cfg_arr;
         std::vector<bool> m_AWP_en_arr;
 };

@@ -99,6 +99,9 @@ class Layer_Job
 		bool m_do_res_layer;
 		bool m_do_kernels1x1;
 		bool m_activation;
+		bool m_krnl1x1_pding;
+		int m_krnl1x1_pad_bgn;
+		int m_krnl1x1_pad_end;
 	    InputMaps* m_inputMaps;
 	    Kernels* m_kernels3x3;
 		Kernels* m_kernels1x1;

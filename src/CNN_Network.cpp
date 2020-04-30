@@ -247,9 +247,9 @@ void espresso::CNN_Network::Forward(string start, string end)
     // Forward Propagation
     // FIXME: should be
     // for(int i = startIdx; i < endIdx; i++)
-    for(int i = 81; i < endIdx; i++)
+    for(int i = 0; i < endIdx; i++)
     {
-        if(i == 83 || i == 95 || i == 107) continue;
+        if(m_cnn[i]->m_layerType == espresso::YOLO) continue;
         printLayerStats(i);
         cout << "[ESPRESSO]: Processing Layer" << " " << m_cnn[i]->m_layerName << endl;
         m_cnn[i]->ComputeLayer();

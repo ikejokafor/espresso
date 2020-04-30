@@ -17,7 +17,10 @@ Layer_Iteration::Layer_Iteration(
 	int padding,
 	bool do_kernels1x1,
 	bool do_res_layer,
-	bool activation
+	bool activation,
+	bool krnl1x1_pding,
+	int krnl1x1_pad_bgn,
+	int krnl1x1_pad_end
 ) {
 	m_pxSeqCfg			= nullptr;
 	m_inputMaps 		= nullptr;
@@ -74,7 +77,10 @@ Layer_Iteration::Layer_Iteration(
 			outputMaps->m_size,
 			(do_kernels1x1) ? (kernels1x1->m_kernelDepth * CO_HIGH_WATERMARK_FACTOR) : (outputMaps->m_outputMapDepth * CO_HIGH_WATERMARK_FACTOR),
 			(do_res_layer) ? residualMaps->m_residualMapDepth * RM_LOW_WATERMARK_FACTOR : 0,
-			(partialMaps) ? partialMaps->m_outputMapDepth * PM_LOW_WATERMARK_FACTOR : 0
+			(partialMaps) ? partialMaps->m_outputMapDepth * PM_LOW_WATERMARK_FACTOR : 0,
+			krnl1x1_pding,
+			krnl1x1_pad_bgn,
+			krnl1x1_pad_end
 		));
 		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (partialMaps != nullptr) ? partialMaps->m_address : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (residualMaps != nullptr) ? residualMaps->m_address : -1;

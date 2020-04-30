@@ -34,7 +34,10 @@ class Layer_Iteration
 			int padding,
 			bool do_kernels1x1,
 			bool do_res_layer,
-			bool activation
+			bool activation,
+			bool krnl1x1_pding,
+			int krnl1x1_pad_bgn,
+			int krnl1x1_pad_end
 		);
 		~Layer_Iteration();
 
