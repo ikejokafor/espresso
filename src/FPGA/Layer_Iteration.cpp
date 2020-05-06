@@ -99,8 +99,8 @@ Layer_Iteration::Layer_Iteration(
 				auto& QUAD_en_arr = m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr[j]->m_QUAD_en_arr;
 				if (remDepth > 0)
 				{
-					bool master_QUAD = (k == 0) ? true : false;
-					bool cascade = true;
+					bool master_QUAD = ((remDepth - QUAD_MAX_DEPTH) <= 0) ? true : false;
+					bool cascade = ((remDepth - QUAD_MAX_DEPTH) <= 0 && !master_QUAD) ? false : true;
 					QUAD_cfg* quad_cfg = new QUAD_cfg(
 						i,
 						j,

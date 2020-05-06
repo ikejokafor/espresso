@@ -77,6 +77,8 @@ Layer_Job::Layer_Job(
         m_residualMaps      = new ResidualMaps(residualMapDepth, numResidualMapRows, numResidualMapCols, residualMapData);
     }
     m_kernels3x3Bias        = new KernelBias(num3x3Kernels, kernel3x3Bias);
+    m_krnl1x1_pad_bgn = -1;
+    m_krnl1x1_pad_end = -1;
     if(do_kernels1x1)
     {
         if(!isPowerOfTwo(num1x1Kernels))

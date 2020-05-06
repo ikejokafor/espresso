@@ -163,13 +163,13 @@ void espresso::CNN_Network::GetOutputLayers(vector<int> &outputLayers)
 
 void espresso::CNN_Network::getBgnEndLayer(int& startIdx, string start, int& endIdx, string end)
 {
-    if(start == " ")
+    if(start == "")
     {
         startIdx = 0;
     }
-    if(end == " ")
+    if(end == "")
     {
-        endIdx = m_cnn.size() - 1;
+        endIdx = m_cnn.size();
     }
     if(startIdx < 0 || endIdx < 0) {
         for(uint32_t i = 0; i < m_cnn.size(); i++){
@@ -180,7 +180,6 @@ void espresso::CNN_Network::getBgnEndLayer(int& startIdx, string start, int& end
                 endIdx = i;
             }
         }
-        endIdx++;
     }
     if((startIdx == -1 || endIdx == -1) || (endIdx < startIdx)) {
         cout << "[ESPRESSO]: No start layer: " << start << " or end layer: " << end  << " or direction wrong" << endl;
