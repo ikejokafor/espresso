@@ -78,6 +78,8 @@ espresso::Layer::Layer(layerInfo_obj layerInfo) {
 	m_fpga_activation 			= false;
 	m_fpga_do_res_layer 		= false;
 	m_fpga_do_kernel1x1		 	= false;
+	m_fpga_merged_1x1			= false;
+	m_fpga_krnl_1x1_layer		= false;
 }
 
 

@@ -9,63 +9,63 @@ ConvolutionLayer_FPGA::~ConvolutionLayer_FPGA() { }
 
 void ConvolutionLayer_FPGA::ComputeLayer()
 {
-	if (m_bottomLayers[0]->m_precision == espresso::FLOAT)
-	{
-		int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
-		fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
-		float        *flData = m_bottomLayers[0]->m_blob.flData;
-		for (int i = 0; i < blobSize; i++)
-		{
-			fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
-		}
-	}
+	// if(m_bottomLayers[0]->m_precision == espresso::FLOAT)
+	// {
+	// 	int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
+	// 	fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
+	// 	float        *flData = m_bottomLayers[0]->m_blob.flData;
+	// 	for (int i = 0; i < blobSize; i++)
+	// 	{
+	// 		fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
+	// 	}
+	// }
 	ComputeLayer_FlPt();
 }
 
 
 void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
 {
-	if (m_numKernelRows == 1)
+	if(m_numKernelRows == 1 && m_fpga_merged_1x1)
 	{
 		cout << m_layerName << " Merged" << endl;
+		return;
 	}
-	else
-	{
-		Layer_Job* m_layer_job = new Layer_Job(
-			m_layerName,
-			m_inputDepth,
-			m_numInputRows,
-			m_numInputCols,
-			m_bottomLayers[0]->m_blob.flData,
-			m_numKernels,
-			m_kernelDepth,
-			m_numKernelRows,
-			m_numKernelCols,
-			m_flFilterData,
-			m_outputDepth,
-			m_numOutputRows,
-			m_numOutputCols,
-			m_residualMapDepth,
-			m_numResidualMapRows,
-			m_numResidualMapsCols,
-			m_residualMapData,
-			m_num1x1Kernels,
-			m_kernel1x1Depth,
-			m_kernel1x1Data,
-			m_flBiasData,
-			m_bias1x1Data,
-			m_stride,
-			m_fpga_upsample,
-			m_padding,
-			m_fpga_do_res_layer,
-			m_activation,
-			m_fpga_do_kernel1x1,
-			m_fpga_hndl
-		);
-		m_layer_job->createLayerIters();
-		m_layer_job->process();
-		delete m_layer_job;
-	}
+
+	Layer_Job* m_layer_job = new Layer_Job(
+		m_layerName,
+		m_inputDepth,
+		m_numInputRows,
+		m_numInputCols,
+		m_bottomLayers[0]->m_blob.flData,
+		m_numKernels,
+		m_kernelDepth,
+		m_numKernelRows,
+		m_numKernelCols,
+		m_flFilterData,
+		m_outputDepth,
+		m_numOutputRows,
+		m_numOutputCols,
+		m_residualMapDepth,
+		m_numResidualMapRows,
+		m_numResidualMapsCols,
+		m_residualMapData,
+		m_num1x1Kernels,
+		m_kernel1x1Depth,
+		m_kernel1x1Data,
+		m_flBiasData,
+		m_bias1x1Data,
+		m_stride,
+		m_fpga_upsample,
+		m_padding,
+		m_fpga_do_res_layer,
+		m_activation,
+		m_fpga_do_kernel1x1,
+		m_fpga_hndl,
+		m_fpga_krnl_1x1_layer
+	);
+	m_layer_job->createLayerIters();
+	m_layer_job->process();
+	// delete m_layer_job;
 }
 
 

@@ -24,6 +24,3 @@ class OutputMaps : public Accel_Payload
 		int m_numOutputMapCols;
 		float* m_data;
 };
-
-
-typedef OutputMaps PartialMaps;

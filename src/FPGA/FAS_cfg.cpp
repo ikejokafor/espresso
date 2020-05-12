@@ -36,7 +36,8 @@ FAS_cfg::FAS_cfg(
 	int pm_low_watermark,
 	bool krnl1x1_pding,
 	int krnl1x1_pad_bgn,
-	int krnl1x1_pad_end
+	int krnl1x1_pad_end,
+	bool krnl_1x1_layer
 ) :
    	m_inMapAddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
 	m_krnl3x3AddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
@@ -69,6 +70,7 @@ FAS_cfg::FAS_cfg(
 	m_krnl1x1_pding = krnl1x1_pding;
 	m_krnl1x1_pad_bgn = krnl1x1_pad_bgn;
 	m_krnl1x1_pad_end = krnl1x1_pad_end;
+	m_krnl_1x1_layer = krnl_1x1_layer;
 }
 
 

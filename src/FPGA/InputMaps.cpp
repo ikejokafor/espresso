@@ -33,6 +33,7 @@ void InputMaps::serialize()
 	m_size = m_inputMapDepth * m_numInputMapRows * m_numInputMapCols * PIXEL_SIZE;
 }
 
+
 void InputMaps::deserialize()
 {
 

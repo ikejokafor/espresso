@@ -269,6 +269,8 @@ namespace espresso
 			bool m_fpga_activation;
 			bool m_fpga_do_res_layer;
 			bool m_fpga_do_kernel1x1;
+			bool m_fpga_krnl_1x1_layer;
+			bool m_fpga_merged_1x1;
 			bool m_globalPooling;
 			int m_numFilterValues;
 			float* m_flFilterData;

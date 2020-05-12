@@ -49,6 +49,7 @@ class AccelConfig : public Accel_Payload
 			uint64_t krnl1x1_pding				;
 			uint64_t krnl1x1_pad_bgn			;
 			uint64_t krnl1x1_pad_end			;
+			uint64_t krnl_1x1_layer				;
 			uint64_t imAddrArr	                ;
 			uint64_t krnl3x3Addr	            ;
 			uint64_t krnl3x3BiasAddr	        ;

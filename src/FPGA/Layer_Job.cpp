@@ -38,6 +38,7 @@ Layer_Job::Layer_Job(
     bool activation,
     bool do_kernels1x1,
     FPGA_hndl* fpga_hndl,
+    bool krnl_1x1_layer,
     int fxPtLength,
     int numFracBits
 ) {
@@ -81,20 +82,20 @@ Layer_Job::Layer_Job(
     m_krnl1x1_pad_end = -1;
     if(do_kernels1x1)
     {
+        m_krnl1x1_pad_bgn = num1x1Kernels;
         if(!isPowerOfTwo(num1x1Kernels))
         {
             m_krnl1x1_pding = true;
-            m_krnl1x1_pad_bgn = num1x1Kernels;
             m_krnl1x1_pad_end = pow((float)2, (int)ceil(log2(num1x1Kernels)));
         }
         else
         {
-            m_krnl1x1_pad_bgn = num1x1Kernels;
             m_krnl1x1_pad_end = num1x1Kernels;
         }
         m_kernels1x1        = new Kernels(num1x1Kernels, m_kernel1x1Depth, 1, 1, kernel1x1Data);
         m_kernels1x1Bias    = new KernelBias(num1x1Kernels, kernel1x1Bias);
     }
+    m_krnl_1x1_layer = krnl_1x1_layer;
 #ifdef SYSTEMC
     m_sysc_fpga_hndl        = reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
 #else
@@ -132,8 +133,8 @@ Layer_Job::~Layer_Job()
 
 void Layer_Job::createLayerIters()
 {
-    m_num_krnl_iter = ceil((double)m_num3x3Kernels / (double)QUAD_MAX_KERNELS);
-    m_num_depth_iter = ceil((double)m_inputMapDepth / (double)QUAD_DPTH_SIMD);
+    m_num_krnl_iter = (m_krnl_1x1_layer) ? 1 : ceil((double)m_num3x3Kernels / (double)QUAD_MAX_KERNELS);
+    m_num_depth_iter = (m_krnl_1x1_layer) ? 1 : ceil((double)m_inputMapDepth / (double)QUAD_DPTH_SIMD);
     int remNumKrnl = m_num3x3Kernels;
     int numKrnl;
     layAclPrm_t* layAclPrm;
@@ -172,7 +173,8 @@ void Layer_Job::createLayerIters()
                 m_activation,
                 m_krnl1x1_pding,
                 m_krnl1x1_pad_bgn,
-                m_krnl1x1_pad_end
+                m_krnl1x1_pad_end,
+                m_krnl_1x1_layer
             ));
             remDepth -= depth;
         }
@@ -192,12 +194,12 @@ layAclPrm_t* Layer_Job::createAccelParams(
     layAclPrm_t* layAclPrm = new layAclPrm_t;
     memset(layAclPrm, 0x0, sizeof(layAclPrm_t));
     layAclPrm->inputMaps = m_inputMaps->GetVolume(depthBgn, depth);
-    layAclPrm->kernels3x3 = m_kernels3x3->GetVolume(krnl3x3Bgn, numKrnl3x3, depthBgn, depth);
-    layAclPrm->kernels3x3Bias = m_kernels3x3Bias->GetVolume(krnl3x3Bgn, numKrnl3x3);
+    layAclPrm->kernels3x3 = (m_krnl_1x1_layer) ? nullptr : m_kernels3x3->GetVolume(krnl3x3Bgn, numKrnl3x3, depthBgn, depth);
+    layAclPrm->kernels3x3Bias = (m_krnl_1x1_layer) ? nullptr : m_kernels3x3Bias->GetVolume(krnl3x3Bgn, numKrnl3x3);
     if(m_do_kernels1x1)
     {
-        layAclPrm->kernels1x1 = m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
-        layAclPrm->kernels1x1Bias = m_kernels1x1Bias->GetVolume(0, m_kernels1x1->m_numKernels);
+        layAclPrm->kernels1x1 = (m_krnl_1x1_layer) ? m_kernels1x1 : m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
+        layAclPrm->kernels1x1Bias = (m_krnl_1x1_layer) ? m_kernels1x1Bias : m_kernels1x1Bias->GetVolume(0, m_kernels1x1->m_numKernels);
         if(!m_krnl1x1_pding)
         {
             layAclPrm->outputMaps = new OutputMaps(m_kernels1x1->m_numKernels, m_numOutputMapRows, m_numOutputMapCols);
@@ -211,14 +213,20 @@ layAclPrm_t* Layer_Job::createAccelParams(
     {
         layAclPrm->outputMaps = new OutputMaps(numKrnl3x3, m_numOutputMapRows, m_numOutputMapCols);
     }
-    if(j == 0)
+
+    if(m_krnl_1x1_layer)
+    {
+        layAclPrm->partialMaps = new PartialMaps(m_inputMaps);
+    }
+    else if(j == 0)
     {
         layAclPrm->partialMaps = nullptr;
     }
     else
     {
-        layAclPrm->partialMaps = m_lay_it_arr[i][j - 1]->m_outputMaps;
+        layAclPrm->partialMaps = new PartialMaps(m_lay_it_arr[i][j - 1]->m_outputMaps);
     }
+
     if(j == 0 && m_do_res_layer)
     {
         layAclPrm->residualMaps = m_residualMaps->GetVolume(krnl3x3Bgn, numKrnl3x3);

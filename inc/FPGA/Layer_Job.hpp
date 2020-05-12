@@ -14,6 +14,7 @@
 #include "KernelBias.hpp"
 #include "ResidualMaps.hpp"
 #include "OutputMaps.hpp"
+#include "PartialMaps.hpp"
 
 
 typedef struct
@@ -62,6 +63,7 @@ class Layer_Job
 			bool activation,
 			bool do_kernels1x1,
 			FPGA_hndl* fpga_hndl,
+			bool krnl_1x1_layer,
 			int fxPtLength = 16,
 			int numFracBits = 14
 	    );
@@ -112,6 +114,7 @@ class Layer_Job
 		std::vector<std::vector<Layer_Iteration*>> m_lay_it_arr;
 		int m_num_depth_iter;
 		int m_num_krnl_iter;
+		bool m_krnl_1x1_layer;
 #ifdef SYSTEMC
 		SYSC_FPGA_hndl* m_sysc_fpga_hndl;
 #else

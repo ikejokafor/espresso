@@ -9,6 +9,7 @@
 #include "KernelBias.hpp"
 #include "ResidualMaps.hpp"
 #include "OutputMaps.hpp"
+#include "PartialMaps.hpp"
 #include "espresso_FPGA_common.hpp"
 #include "AccelConfig.hpp"
 #include "FAS_cfg.hpp"
@@ -37,7 +38,8 @@ class Layer_Iteration
 			bool activation,
 			bool krnl1x1_pding,
 			int krnl1x1_pad_bgn,
-			int krnl1x1_pad_end
+			int krnl1x1_pad_end,
+			bool krnl_1x1_layer
 		);
 		~Layer_Iteration();
 
