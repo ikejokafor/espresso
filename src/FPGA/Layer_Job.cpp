@@ -96,6 +96,8 @@ Layer_Job::Layer_Job(
         m_kernels1x1Bias    = new KernelBias(num1x1Kernels, kernel1x1Bias);
     }
     m_krnl_1x1_layer = krnl_1x1_layer;
+    m_pyld = new DummyPayload();
+    m_pyld->m_address = (uint64_t)malloc(sizeof(double));
 #ifdef SYSTEMC
     m_sysc_fpga_hndl        = reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
 #else
@@ -240,6 +242,7 @@ void Layer_Job::process()
     cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iterations" << endl;
     cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations" << endl;
     // Get configuration
+    double elapsed_time = 0.0f;
     for(int k = 0; k < m_lay_it_arr.size(); k++)
     {
         for (int d = 0; d < m_lay_it_arr[k].size(); d++)
@@ -256,8 +259,11 @@ void Layer_Job::process()
             // m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_outputMaps);
             m_sysc_fpga_hndl->sendStart();
             m_sysc_fpga_hndl->waitComplete();
+            m_sysc_fpga_hndl->getOutput(reinterpret_cast<Accel_Payload*>(m_pyld));
+            elapsed_time += (*((double*)m_pyld->m_address));
         }
     }
+    cout << "[ESPRESSO]: Total Layer Processing Time - " <<  elapsed_time << " ns " << endl;
 }
 
 

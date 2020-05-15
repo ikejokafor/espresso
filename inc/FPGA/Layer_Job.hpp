@@ -30,6 +30,18 @@ typedef struct
 } layAclPrm_t;
 
 
+class DummyPayload : public Accel_Payload
+{
+    public:
+        DummyPayload() { }
+        ~DummyPayload() { }
+		uint64_t allocate(int size) { }
+		void deallocate() { }
+		void serialize() { }
+        void deserialize() { }
+};
+
+
 class Layer_Job
 {
     public:
@@ -115,6 +127,7 @@ class Layer_Job
 		int m_num_depth_iter;
 		int m_num_krnl_iter;
 		bool m_krnl_1x1_layer;
+		DummyPayload* m_pyld;
 #ifdef SYSTEMC
 		SYSC_FPGA_hndl* m_sysc_fpga_hndl;
 #else
