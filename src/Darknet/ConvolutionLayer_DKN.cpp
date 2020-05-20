@@ -1,21 +1,21 @@
 #include "ConvolutionLayer_DKN.hpp"
 
 
-ConvolutionLayer_DKN::ConvolutionLayer_DKN(espresso::layerInfo_obj layerInfo) : Layer(layerInfo) { }
+ConvolutionLayer_DKN::ConvolutionLayer_DKN(espresso::layerInfo_obj* layerInfo) : Layer(layerInfo) { }
 
 
 ConvolutionLayer_DKN::~ConvolutionLayer_DKN() { }
 
 
-void ConvolutionLayer_DKN::ComputeLayer() 
+void ConvolutionLayer_DKN::ComputeLayer()
 {
-	if (m_bottomLayers[0]->m_precision == espresso::FIXED) 
+	if (m_bottomLayers[0]->m_precision == espresso::FIXED)
 	{
 		int dinNumFracBits   = m_bottomLayers[0]->m_dinNumFracBits;
 		int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
 		fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
 		float        *flData = m_bottomLayers[0]->m_blob.flData;
-		for (int i = 0; i < blobSize; i++) 
+		for (int i = 0; i < blobSize; i++)
 		{
 			flData[i] = fixedPoint::toFloat(dinNumFracBits, fxData[i]);
 		}
@@ -33,7 +33,7 @@ void ConvolutionLayer_DKN::ComputeLayer_FlPt() { }
 void ConvolutionLayer_DKN::ComputeLayer_FxPt() { }
 
 
-void ConvolutionLayer_DKN::ComputeLayerParam() 
+void ConvolutionLayer_DKN::ComputeLayerParam()
 {
 	m_inputDepth = m_bottomLayers[0]->m_outputDepth;
 	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;

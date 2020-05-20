@@ -1,7 +1,7 @@
 #include "YOLOLayer.hpp"
 
 
-YOLOLayer::YOLOLayer(espresso::layerInfo_obj layerInfo) : Layer(layerInfo) 
+YOLOLayer::YOLOLayer(espresso::layerInfo_obj* layerInfo) : Layer(layerInfo)
 {
 	m_backend = espresso::ESPRESSO_BACKEND;
 }
@@ -10,22 +10,22 @@ YOLOLayer::YOLOLayer(espresso::layerInfo_obj layerInfo) : Layer(layerInfo)
 YOLOLayer::~YOLOLayer() {}
 
 
-void YOLOLayer::activate_array(float *x, const int n) 
+void YOLOLayer::activate_array(float *x, const int n)
 {
-	for (int i = 0; i < n; i++) 
+	for (int i = 0; i < n; i++)
 	{
 		x[i] = 1.0f / (1.0f + exp(-x[i]));
-	}	
+	}
 }
 
 
-void YOLOLayer::ComputeLayer() 
+void YOLOLayer::ComputeLayer()
 {
 	ComputeLayer_FlPt();
 }
 
 
-void YOLOLayer::ComputeLayer_FlPt() 
+void YOLOLayer::ComputeLayer_FlPt()
 {
 	if (m_bottomLayers[0]->m_precision == espresso::FIXED) {
         int dinNumFracBits   = m_bottomLayers[0]->m_dinNumFracBits;
@@ -36,16 +36,16 @@ void YOLOLayer::ComputeLayer_FlPt()
             flData[i] = fixedPoint::toFloat(dinNumFracBits, fxData[i]);
         }
     }
-       
-	
+
+
     // get input
     float *datain = m_bottomLayers[0]->m_blob.flData;
 
-        
+
     // output
     float *dataout = m_topLayers[0]->m_blob.flData;
-	
-		
+
+
 	memcpy(dataout, datain, m_bottomLayers[0]->m_blob.blobSize * sizeof(float));
     for(int n = 0; n < m_darknet_n_param; n++){
         int index = entry_index(n * m_numInputCols * m_numInputRows, 0);
@@ -70,7 +70,7 @@ void YOLOLayer::ComputeLayerParam() {
 	m_outputDepth = m_inputDepth;
 	m_numOutputRows = m_numInputRows;
 	m_numOutputCols = m_numInputCols;
-    
+
 	// create output blob
 	m_blob.depth = m_outputDepth;
 	m_blob.numRows = m_numOutputRows;
@@ -80,7 +80,7 @@ void YOLOLayer::ComputeLayerParam() {
 }
 
 
-int YOLOLayer::entry_index(int location, int entry) 
+int YOLOLayer::entry_index(int location, int entry)
 {
 	int n = location / (m_numInputCols * m_numInputRows);
 	int loc = location % (m_numInputCols * m_numInputRows);

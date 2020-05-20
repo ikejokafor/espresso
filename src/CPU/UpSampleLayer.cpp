@@ -1,19 +1,19 @@
 #include "UpSampleLayer.hpp"
 
 
-UpSampleLayer::UpSampleLayer(espresso::layerInfo_obj layerInfo) : Layer(layerInfo) { }
+UpSampleLayer::UpSampleLayer(espresso::layerInfo_obj* layerInfo) : Layer(layerInfo) { }
 
 
 UpSampleLayer::~UpSampleLayer() { }
 
 
 void UpSampleLayer::ComputeLayer() {
-	if (m_precision == espresso::FLOAT) 
-	{  
+	if (m_precision == espresso::FLOAT)
+	{
 		ComputeLayer_FlPt();
-	} 
-	else if(m_precision == espresso::FIXED) 
-	{ 
+	}
+	else if(m_precision == espresso::FIXED)
+	{
 		ComputeLayer_FxPt();
 	}
 }
@@ -29,19 +29,19 @@ void UpSampleLayer::ComputeLayer_FlPt() {
             flData[i] = fixedPoint::toFloat(dinNumFracBits, fxData[i]);
         }
     }
-        
-	
+
+
     // get input
     float *datain = m_bottomLayers[0]->m_blob.flData;
     int numInputBlobRows = m_bottomLayers[0]->m_blob.numRows;
     int numInputBlobCols = m_bottomLayers[0]->m_blob.numCols;
     int inputBlobDepth = m_bottomLayers[0]->m_blob.depth;
-        
-	
+
+
     // output
     float *dataout = m_topLayers[0]->m_blob.flData;
-	
-	
+
+
 	for(int k = 0; k < inputBlobDepth; ++k){
 		for(int j = 0; j < numInputBlobRows * m_stride; ++j){
 			for(int i = 0; i < numInputBlobCols * m_stride; ++i){
@@ -63,17 +63,17 @@ void UpSampleLayer::ComputeLayer_FxPt() {
             fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
         }
     }
-        
+
     // get input
     fixedPoint_t *datain = m_bottomLayers[0]->m_blob.fxData;
     int numInputBlobRows = m_bottomLayers[0]->m_blob.numRows;
     int numInputBlobCols = m_bottomLayers[0]->m_blob.numCols;
     int inputBlobDepth = m_bottomLayers[0]->m_blob.depth;
-        
+
     // output
     fixedPoint_t *dataout = m_topLayers[0]->m_blob.fxData;
-	
-	
+
+
 	for(int k = 0; k < inputBlobDepth; ++k){
 		for(int j = 0; j < numInputBlobRows * m_stride; ++j){
 			for(int i = 0; i < numInputBlobCols * m_stride; ++i){
@@ -97,7 +97,7 @@ void UpSampleLayer::ComputeLayerParam()
 	m_outputDepth = m_inputDepth;
 	m_numOutputRows = m_numInputRows * m_stride;
 	m_numOutputCols = m_numInputCols * m_stride;
-    
+
 	// create output blob
 	m_blob.depth = m_outputDepth;
 	m_blob.numRows = m_numOutputRows;

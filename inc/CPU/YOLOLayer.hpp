@@ -5,11 +5,11 @@
 
 
 class YOLOLayer : public espresso::Layer {
-	
+
 	public:
-		YOLOLayer(espresso::layerInfo_obj layerInfo = espresso::layerInfo_obj()); 
-        ~YOLOLayer();      
-        void ComputeLayerParam();  
+		YOLOLayer(espresso::layerInfo_obj* layerInfo = nullptr);
+        ~YOLOLayer();
+        void ComputeLayerParam();
         void ComputeLayer();
 	    void ComputeLayer_FlPt();
         void ComputeLayer_FxPt();

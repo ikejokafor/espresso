@@ -91,28 +91,37 @@ namespace espresso
 
 	typedef enum
 	{
-		LEAKY = 0,
-		RELU = 1,
-		LINEAR = 2
+		LEAKY   = 0,
+		RELU    = 1,
+		LINEAR  = 2
 	} activation_t;
 
 
 	typedef enum
 	{
-		FPGA_BACKEND = 0,
-		DARKNET_BACKEND = 1,
-		ESPRESSO_BACKEND = 2
+		FPGA_BACKEND        = 0,
+		DARKNET_BACKEND     = 1,
+		ESPRESSO_BACKEND    = 2
 	} backend_t;
 
 
 	typedef enum
 	{
-		INPUT = 0,
-		CONVOLUTION = 1,
-		CONCAT = 2,
-		RESIDUAL = 3,
-		YOLO = 4,
-		UPSAMPLE = 5
+        INPUT               = 0,
+        CONVOLUTION         = 1,
+        POOLING_MAX         = 2,
+        POOLING_AVE         = 3,
+        PERMUTE             = 4,
+        FLATTEN             = 5,
+        RESIDUAL            = 6,
+        DETECTION_OUTPUT    = 7,
+        PRIOR_BOX           = 8,
+        RESHAPE             = 9,
+        InnerProduct        = 10,
+        SOFTMAX             = 11,
+        CONCAT              = 12,
+        YOLO                = 13,
+        UPSAMPLE            = 14
 	} layerType_t;
 
 
@@ -231,7 +240,7 @@ namespace espresso
 	class Layer
 	{
 		public:
-			Layer(espresso::layerInfo_obj layerInfo);
+			Layer(espresso::layerInfo_obj* layerInfo);
 			virtual ~Layer();
 			virtual void ComputeLayer() = 0;
 			virtual void ComputeLayer_FlPt() = 0;
@@ -270,7 +279,8 @@ namespace espresso
 			bool m_fpga_do_res_layer;
 			bool m_fpga_do_kernel1x1;
 			bool m_fpga_krnl_1x1_layer;
-			bool m_fpga_merged_1x1;
+			bool m_fpga_merged;
+            std::vector<std::string> m_mergdArr;
 			bool m_globalPooling;
 			int m_numFilterValues;
 			float* m_flFilterData;
@@ -308,5 +318,9 @@ namespace espresso
 			int m_num1x1Kernels;
 			int m_kernel1x1Depth;
 			float* m_bias1x1Data;
+			std::vector<std::string> m_linked_layers;
+			int m_sequence_id;
+			int m_base_bandwidth;
+			int m_opt_bandwidth;
 	};
 }

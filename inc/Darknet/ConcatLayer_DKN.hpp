@@ -4,12 +4,12 @@
 #include "Layer.hpp"
 
 
-class ConcatLayer_DKN : public espresso::Layer 
+class ConcatLayer_DKN : public espresso::Layer
 {
-	
+
 	public:
-		ConcatLayer_DKN(espresso::layerInfo_obj layerInfo = espresso::layerInfo_obj());
-		~ConcatLayer_DKN();         
+		ConcatLayer_DKN(espresso::layerInfo_obj* layerInfo = nullptr);
+		~ConcatLayer_DKN();
         void ComputeLayer();
 		void ComputeLayer_FlPt();
 		void ComputeLayer_FxPt();

@@ -7,11 +7,13 @@ InputMaps::InputMaps(int inputMapDepth, int numInputMapRows, int numInputMapCols
 	m_inputMapDepth = inputMapDepth;
 	m_numInputMapRows = numInputMapRows;
 	m_numInputMapCols = numInputMapCols;
+	m_data = (float*)malloc(m_inputMapDepth * m_numInputMapRows * m_numInputMapCols * sizeof(float));
 }
 
 
 InputMaps::~InputMaps()
 {
+	free(m_data);
 	deallocate();
 }
 
@@ -42,9 +44,6 @@ void InputMaps::deserialize()
 
 InputMaps* InputMaps::GetVolume(int depthBgn, int depthSize)
 {
-	float* ptr;
-#ifdef FPGA
 	float* ptr = (float*)(m_data + (depthBgn * m_numInputMapRows * m_numInputMapCols));
-#endif
 	return new InputMaps(depthSize, m_numInputMapRows, m_numInputMapCols, ptr);
 }

@@ -1,7 +1,7 @@
 #include "DataLayer.hpp"
 
 
-DataLayer::DataLayer(espresso::layerInfo_obj layerInfo) : Layer(layerInfo) { }
+DataLayer::DataLayer(espresso::layerInfo_obj* layerInfo) : Layer(layerInfo) { }
 
 
 DataLayer::~DataLayer() { }
@@ -16,7 +16,7 @@ void DataLayer::ComputeLayer_FlPt() {}
 void DataLayer::ComputeLayer_FxPt() {}
 
 
-void DataLayer::ComputeLayerParam() 
+void DataLayer::ComputeLayerParam()
 {
 	m_numOutputRows = m_numInputRows;
 	m_numOutputCols = m_numInputCols;

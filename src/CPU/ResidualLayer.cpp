@@ -1,16 +1,16 @@
 #include "ResidualLayer.hpp"
 
 
-ResidualLayer::ResidualLayer(espresso::layerInfo_obj layerInfo) : Layer(layerInfo) { }
+ResidualLayer::ResidualLayer(espresso::layerInfo_obj* layerInfo) : Layer(layerInfo) { }
 
 
 ResidualLayer::~ResidualLayer() { }
 
 
 void ResidualLayer::ComputeLayer() {
-	if (m_precision == espresso::FLOAT) {  
+	if (m_precision == espresso::FLOAT) {
 		ComputeLayer_FlPt();
-	} else if(m_precision == espresso::FIXED) { 
+	} else if(m_precision == espresso::FIXED) {
 		ComputeLayer_FxPt();
 	}
 }
@@ -26,12 +26,12 @@ void ResidualLayer::ComputeLayer_FlPt() {
             flData[i] = fixedPoint::toFloat(dinNumFracBits, fxData[i]);
         }
     }
-        
-	
+
+
     // output
     float *dataout = m_topLayers[0]->m_blob.flData;
 	int numValues = m_outputDepth * m_numOutputRows * m_numOutputCols;
-	
+
 #ifdef HIGH_PERF
 	int nthreads = std::thread::hardware_concurrency();
 #else
@@ -39,10 +39,10 @@ void ResidualLayer::ComputeLayer_FlPt() {
 #endif
 	std::vector<std::thread> threads(nthreads);
 
-	    
+
 	for (int t = 0; t < nthreads; t++) {
 		threads[t] = std::thread(std::bind(
-		[&](const int bi_m, const int ei_m, const int t) {       
+		[&](const int bi_m, const int ei_m, const int t) {
 			for (int m = bi_m; m < ei_m; m++) {
 				dataout[m] = m_bottomLayers[0]->m_blob.flData[m] + m_bottomLayers[1]->m_blob.flData[m];
 			}
@@ -61,12 +61,12 @@ void ResidualLayer::ComputeLayer_FxPt() {
             fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
         }
     }
-        
-	
+
+
     // output
     fixedPoint_t *dataout = m_topLayers[0]->m_blob.fxData;
 	int numValues = m_outputDepth * m_numOutputRows * m_numOutputCols;
-	
+
 #ifdef HIGH_PERF
 	int nthreads = std::thread::hardware_concurrency();
 #else
@@ -74,10 +74,10 @@ void ResidualLayer::ComputeLayer_FxPt() {
 #endif
 	std::vector<std::thread> threads(nthreads);
 
-	    
+
 	for (int t = 0; t < nthreads; t++) {
 		threads[t] = std::thread(std::bind(
-		[&](const int bi_m, const int ei_m, const int t) {       
+		[&](const int bi_m, const int ei_m, const int t) {
 			for (int m = bi_m; m < ei_m; m++) {
 				dataout[m] = m_bottomLayers[0]->m_blob.fxData[m] + m_bottomLayers[1]->m_blob.fxData[m];
 			}
@@ -97,7 +97,7 @@ void ResidualLayer::ComputeLayerParam() {
 	m_outputDepth = m_inputDepth;
 	m_numOutputRows = m_numInputRows;
 	m_numOutputCols = m_numInputCols;
-    
+
 	// create output blob
 	m_blob.depth = m_outputDepth;
 	m_blob.numRows = m_numOutputRows;
