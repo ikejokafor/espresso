@@ -2,7 +2,7 @@
 using namespace std;
 
 
-espresso::CNN_Network::CNN_Network(vector<espresso::layerInfo_obj*> layerInfoArr, vector<int> &outputLayers) {
+espresso::CNN_Network::CNN_Network(vector<espresso::layerInfo_obj*>& layerInfoArr, vector<int>& outputLayers) {
 
     for(int i = 0; i < layerInfoArr.size(); i++)
     {
@@ -58,6 +58,42 @@ espresso::CNN_Network::CNN_Network(vector<espresso::layerInfo_obj*> layerInfoArr
         {
             m_cnn.push_back(new ResidualLayer_FPGA(layerInfoArr[i]));
         }
+        else if(layerInfoArr[i]->layerType == espresso::POOLING_MAX && layerInfoArr[i]->backend == espresso::FPGA_BACKEND)
+        {
+            m_cnn.push_back(new PoolingMAXLayer_FPGA(layerInfoArr[i]));
+        }
+        else if(layerInfoArr[i]->layerType == espresso::POOLING_AVG && layerInfoArr[i]->backend == espresso::FPGA_BACKEND)
+        {
+            m_cnn.push_back(new PoolingAVGLayer_FPGA(layerInfoArr[i]));
+        }
+        else if(layerInfoArr[i]->layerType == espresso::PERMUTE && layerInfoArr[i]->backend == espresso::FPGA_BACKEND)
+        {
+            m_cnn.push_back(new PermuteLayer_FPGA(layerInfoArr[i]));
+        }
+        else if(layerInfoArr[i]->layerType == espresso::FLATTEN && layerInfoArr[i]->backend == espresso::FPGA_BACKEND)
+        {
+            m_cnn.push_back(new FlattenLayer_FPGA(layerInfoArr[i]));
+        }
+        else if(layerInfoArr[i]->layerType == espresso::DETECTION_OUTPUT && layerInfoArr[i]->backend == espresso::FPGA_BACKEND)
+        {
+            m_cnn.push_back(new DetectionOutputLayer_FPGA(layerInfoArr[i]));
+        }
+        else if(layerInfoArr[i]->layerType == espresso::PRIOR_BOX && layerInfoArr[i]->backend == espresso::FPGA_BACKEND)
+        {
+            m_cnn.push_back(new PriorBoxLayer_FPGA(layerInfoArr[i]));
+        }
+        else if(layerInfoArr[i]->layerType == espresso::RESHAPE && layerInfoArr[i]->backend == espresso::FPGA_BACKEND)
+        {
+            m_cnn.push_back(new ReshapeLayer_FPGA(layerInfoArr[i]));
+        }
+        else if(layerInfoArr[i]->layerType == espresso::INNERPRODUCT && layerInfoArr[i]->backend == espresso::FPGA_BACKEND)
+        {
+            m_cnn.push_back(new InnerProductLayer_FPGA(layerInfoArr[i]));
+        }
+        else if(layerInfoArr[i]->layerType == espresso::SOFTMAX && layerInfoArr[i]->backend == espresso::FPGA_BACKEND)
+        {
+            m_cnn.push_back(new SoftMaxLayer_FPGA(layerInfoArr[i]));
+        }
         else if(layerInfoArr[i]->layerType == espresso::YOLO)
         {
             m_cnn.push_back(new YOLOLayer(layerInfoArr[i]));
@@ -72,18 +108,23 @@ espresso::CNN_Network::CNN_Network(vector<espresso::layerInfo_obj*> layerInfoArr
         cout << "[ESPRESSO]: Loaded Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
     }
     GetTopAndBottomLayers();
-    // GetOutputLayers(outputLayers);
+    for (int i = 0; i < m_cnn.size(); i++)
+    {
+        m_cnn[i]->ComputeLayerParam();
+    }
 }
-
 
 
 espresso::CNN_Network::~CNN_Network()
 {
+    if(m_cnn[0]->m_yolo_net)
+    {
+        free_network(m_cnn[0]->m_yolo_net);
+    }
     for(int i = 0; i < m_cnn.size(); i++)
     {
         delete m_cnn[i];
     }
-    free_network(m_cnn[0]->m_yolo_net);
 }
 
 
@@ -188,164 +229,69 @@ void espresso::CNN_Network::getBgnEndLayer(int& startIdx, string start, int& end
 }
 
 
+void espresso::CNN_Network::mergeLayers(int idx, int seqID, vector<string>& sequence)
+{
+    m_cnn[idx]->m_fpga_merged = true;
+    m_cnn[idx]->m_sequence_id = seqID;
+    for(int i = 0; i < sequence.size(); i++)
+    {
+        int lay_idx = findLayer(sequence[i]);
+        if(m_cnn[lay_idx]->m_layerType == RESIDUAL)
+        {
+            m_cnn[idx]->m_merged_layers.push_back(lay_idx);
+            m_cnn[lay_idx]->m_fpga_merged     = true;
+            m_cnn[idx]->m_fpga_do_res_layer   = true;
+            m_cnn[idx]->m_residualMapDepth    = m_cnn[lay_idx]->m_bottomLayers[0]->m_blob.depth;
+            m_cnn[idx]->m_numResidualMapRows  = m_cnn[lay_idx]->m_bottomLayers[0]->m_blob.numRows;
+            m_cnn[idx]->m_numResidualMapsCols = m_cnn[lay_idx]->m_bottomLayers[0]->m_blob.numCols;
+            m_cnn[idx]->m_residualMapData     = m_cnn[lay_idx]->m_bottomLayers[0]->m_blob.flData;
+        }
+        else if(m_cnn[lay_idx]->m_layerType == CONVOLUTION)
+        {
+            m_cnn[idx]->m_merged_layers.push_back(lay_idx);
+            m_cnn[lay_idx]->m_fpga_merged     = true;
+            m_cnn[idx]->m_fpga_do_kernel1x1   = true;
+            m_cnn[idx]->m_num1x1Kernels       = m_cnn[lay_idx]->m_numKernels;
+            m_cnn[idx]->m_kernel1x1Depth      = m_cnn[lay_idx]->m_kernelDepth;
+            m_cnn[idx]->m_kernel1x1Data       = m_cnn[lay_idx]->m_flFilterData;
+            m_cnn[idx]->m_bias1x1Data         = m_cnn[lay_idx]->m_flBiasData;
+        }
+    }
+}
+
+
 void espresso::CNN_Network::cfgFPGALayers(string mrgFmt_fn)
 {
     ifstream infile(mrgFmt_fn);
     string line;
     while(getline(infile, line))
     {
-        string sequence;
+        string sequence_str;
         stringstream check1(line);
         vector<string> sequence_tokens;
-        while(getline(check1, sequence, ','))
+        while(getline(check1, sequence_str, ','))
         {
-            sequence_tokens.push_back(sequence);
+            sequence_tokens.push_back(sequence_str);
         }
         int seqID = stoi(sequence_tokens[0]);
         string SW_layer = sequence_tokens[1];
+        vector<string> sequence(sequence_tokens.begin() + 2, sequence_tokens.end());
         int i = findLayer(SW_layer);
-        m_cnn[i]->m_fpga_merged = true;
-        m_cnn[i]->m_sequence_id = seqID;
-        vector<string> tmp(sequence_tokens.begin() + 2, sequence_tokens.end());
-        m_cnn[i]->m_mergdArr = tmp;
+        seqBgnIdxArr.push_back(i);
+        mergeLayers(i, seqID, sequence);
     }
-    /*
-    int sequence_id = 0;
-    for(int i = (endIdx - 2); i >= startIdx; i--)
+    for(int i = 0; i < m_cnn.size(); i++)
     {
-        if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows > 1 && m_cnn[i]->m_darknetAct)
+        if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1 && !m_cnn[i]->m_fpga_merged)
         {
-            m_cnn[i]->m_fpga_activation = true;
-        }
-        if((i + 1) < endIdx && m_cnn[i + 1]->m_layerType == UPSAMPLE)
-        {
-            m_cnn[i]->m_fpga_upsample = true;
-        }
-        // Standalone 1x1
-        if((i - 1) >= 0)
-        {
-            espresso::Layer* layer = m_cnn[i];
-            if( m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1
-                && ((m_cnn[i - 1]->m_layerType != CONVOLUTION || m_cnn[i - 1]->m_numKernelRows <= 1)
-                    && m_cnn[i - 1]->m_layerType != RESIDUAL)
-            ) {
-                m_cnn[i]->m_kernel1x1Data           = m_cnn[i]->m_flFilterData;
-                m_cnn[i]->m_bias1x1Data             = m_cnn[i]->m_flBiasData;
-                m_cnn[i]->m_num1x1Kernels           = m_cnn[i]->m_numKernels;
-                m_cnn[i]->m_kernel1x1Depth          = m_cnn[i]->m_kernelDepth;
-                m_cnn[i]->m_fpga_do_kernel1x1       = true;
-                m_cnn[i]->m_fpga_krnl_1x1_layer     = true;
-            }
-        }
-        // SW followed by Res followed by 1x1
-        if((i - 1) >= 0 && (i - 2) >= 0)
-        {
-            if( m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1
-                && m_cnn[i - 1]->m_layerType == RESIDUAL
-                && m_cnn[i - 2]->m_layerType == CONVOLUTION && m_cnn[i - 2]->m_numKernelRows > 1
-            ) {
-                m_cnn[i]->m_fpga_merged_1x1 = true;
-                // Residual
-                m_cnn[i - 2]->m_fpga_do_res_layer   = true;
-                m_cnn[i - 2]->m_residualMapDepth    = m_cnn[i - 1]->m_bottomLayers[0]->m_blob.depth;
-                m_cnn[i - 2]->m_numResidualMapRows  = m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numRows;
-                m_cnn[i - 2]->m_numResidualMapsCols = m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numCols;
-                m_cnn[i - 2]->m_residualMapData     = m_cnn[i - 1]->m_bottomLayers[0]->m_blob.flData;
-                // 1x1 Kernel
-                m_cnn[i - 2]->m_fpga_do_kernel1x1   = true;
-                m_cnn[i - 2]->m_num1x1Kernels       = m_cnn[i]->m_numKernels;
-                m_cnn[i - 2]->m_kernel1x1Depth      = m_cnn[i]->m_kernelDepth;
-                m_cnn[i - 2]->m_kernel1x1Data       = m_cnn[i]->m_flFilterData;
-                m_cnn[i - 2]->m_bias1x1Data         = m_cnn[i]->m_flBiasData;
-                m_cnn[i - 2]->m_sequence_id         = sequence_id;
-                m_cnn[i - 1]->m_sequence_id         = sequence_id;
-                m_cnn[i]->m_sequence_id             = sequence_id;
-                sequence_id++;
-                m_cnn[i - 2]->m_base_bandwidth = (
-                    + m_cnn[i - 2]->m_numKernels * m_cnn[i - 2]->m_kernelDepth * m_cnn[i - 2]->m_numKernelRows * m_cnn[i - 2]->m_numKernelCols * PIXEL_SIZE
-                    + m_cnn[i - 2]->m_bottomLayers[0]->m_blob.depth * m_cnn[i - 2]->m_bottomLayers[0]->m_blob.numRows * m_cnn[i - 2]->m_bottomLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i - 2]->m_topLayers[0]->m_blob.depth * m_cnn[i - 2]->m_topLayers[0]->m_blob.numRows * m_cnn[i - 2]->m_topLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i - 1]->m_bottomLayers.size() * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.depth * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numRows * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i - 1]->m_topLayers[0]->m_blob.depth * m_cnn[i - 1]->m_topLayers[0]->m_blob.numRows * m_cnn[i - 1]->m_topLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i]->m_numKernels * m_cnn[i]->m_kernelDepth * m_cnn[i]->m_numKernelRows * m_cnn[i]->m_numKernelCols * PIXEL_SIZE
-                    + m_cnn[i]->m_bottomLayers[0]->m_blob.depth * m_cnn[i]->m_bottomLayers[0]->m_blob.numRows * m_cnn[i]->m_bottomLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i]->m_topLayers[0]->m_blob.depth * m_cnn[i]->m_topLayers[0]->m_blob.numRows * m_cnn[i]->m_topLayers[0]->m_blob.numCols * PIXEL_SIZE
-                );
-                m_cnn[i - 2]->m_opt_bandwidth = (
-                    m_cnn[i - 2]->m_numKernels * m_cnn[i - 2]->m_kernelDepth * m_cnn[i - 2]->m_numKernelRows * m_cnn[i - 2]->m_numKernelCols * PIXEL_SIZE
-                    + m_cnn[i - 2]->m_bottomLayers[0]->m_blob.depth * m_cnn[i - 2]->m_bottomLayers[0]->m_blob.numRows * m_cnn[i - 2]->m_bottomLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + (m_cnn[i - 1]->m_bottomLayers.size() - 1) * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.depth * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numRows * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i]->m_numKernels * m_cnn[i]->m_kernelDepth * m_cnn[i]->m_numKernelRows * m_cnn[i]->m_numKernelCols * PIXEL_SIZE
-                    + m_cnn[i]->m_topLayers[0]->m_blob.depth * m_cnn[i]->m_topLayers[0]->m_blob.numRows * m_cnn[i]->m_topLayers[0]->m_blob.numCols * PIXEL_SIZE
-                );
-                i -= 2;
-            }
-
-        }
-        // SW followed by 1x1
-        if(i - 1 > 0)
-        {
-            if( m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1
-                && m_cnn[i - 1]->m_layerType == CONVOLUTION && m_cnn[i - 1]->m_numKernelRows > 1
-            ) {
-                m_cnn[i]->m_fpga_merged_1x1         = true;
-                m_cnn[i - 1]->m_fpga_do_kernel1x1   = true;
-                m_cnn[i - 1]->m_num1x1Kernels       = m_cnn[i]->m_numKernels;
-                m_cnn[i - 1]->m_kernel1x1Depth      = m_cnn[i]->m_kernelDepth;
-                m_cnn[i - 1]->m_kernel1x1Data       = m_cnn[i]->m_flFilterData;
-                m_cnn[i - 1]->m_bias1x1Data         = m_cnn[i]->m_flBiasData;
-                m_cnn[i - 1]->m_sequence_id         = sequence_id;
-                m_cnn[i]->m_sequence_id             = sequence_id;
-                sequence_id++;
-                m_cnn[i - 1]->m_base_bandwidth = (
-                    m_cnn[i - 1]->m_numKernels * m_cnn[i - 1]->m_kernelDepth * m_cnn[i - 1]->m_numKernelRows * m_cnn[i - 1]->m_numKernelCols * PIXEL_SIZE
-                    + m_cnn[i - 1]->m_bottomLayers[0]->m_blob.depth * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numRows * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i - 1]->m_topLayers[0]->m_blob.depth * m_cnn[i - 1]->m_topLayers[0]->m_blob.numRows * m_cnn[i - 1]->m_topLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i]->m_numKernels * m_cnn[i]->m_kernelDepth * m_cnn[i]->m_numKernelRows * m_cnn[i]->m_numKernelCols * PIXEL_SIZE
-                    + m_cnn[i]->m_bottomLayers[0]->m_blob.depth * m_cnn[i]->m_bottomLayers[0]->m_blob.numRows * m_cnn[i]->m_bottomLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i]->m_topLayers[0]->m_blob.depth * m_cnn[i]->m_topLayers[0]->m_blob.numRows * m_cnn[i]->m_topLayers[0]->m_blob.numCols * PIXEL_SIZE
-                );
-                m_cnn[i - 1]->m_opt_bandwidth = (
-                    m_cnn[i - 1]->m_numKernels * m_cnn[i - 1]->m_kernelDepth * m_cnn[i - 1]->m_numKernelRows * m_cnn[i - 1]->m_numKernelCols * PIXEL_SIZE
-                    + m_cnn[i - 1]->m_bottomLayers[0]->m_blob.depth * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numRows * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i]->m_numKernels * m_cnn[i]->m_kernelDepth * m_cnn[i]->m_numKernelRows * m_cnn[i]->m_numKernelCols * PIXEL_SIZE
-                    + m_cnn[i]->m_topLayers[0]->m_blob.depth * m_cnn[i]->m_topLayers[0]->m_blob.numRows * m_cnn[i]->m_topLayers[0]->m_blob.numCols * PIXEL_SIZE
-                );
-                i--;
-            }
-        }
-        // SW followed by Res
-        if(i - 1 > 0)
-        {
-            if( m_cnn[i]->m_layerType == RESIDUAL
-                && m_cnn[i - 1]->m_layerType == CONVOLUTION && m_cnn[i - 1]->m_numKernelRows > 1
-            ) {
-                m_cnn[i - 1]->m_fpga_do_res_layer   = true;
-                m_cnn[i - 1]->m_residualMapDepth    = m_cnn[i]->m_bottomLayers[0]->m_blob.depth;
-                m_cnn[i - 1]->m_numResidualMapRows  = m_cnn[i]->m_bottomLayers[0]->m_blob.numRows;
-                m_cnn[i - 1]->m_numResidualMapsCols = m_cnn[i]->m_bottomLayers[0]->m_blob.numCols;
-                m_cnn[i - 1]->m_residualMapData     = m_cnn[i]->m_bottomLayers[0]->m_blob.flData;
-                m_cnn[i - 1]->m_sequence_id         = sequence_id;
-                m_cnn[i]->m_sequence_id             = sequence_id;
-                sequence_id++;
-                m_cnn[i - 1]->m_base_bandwidth = (
-                    m_cnn[i - 1]->m_numKernels * m_cnn[i - 1]->m_kernelDepth * m_cnn[i - 1]->m_numKernelRows * m_cnn[i - 1]->m_numKernelCols * PIXEL_SIZE
-                    + m_cnn[i - 1]->m_bottomLayers[0]->m_blob.depth * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numRows * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i - 1]->m_topLayers[0]->m_blob.depth * m_cnn[i - 1]->m_topLayers[0]->m_blob.numRows * m_cnn[i - 1]->m_topLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i]->m_bottomLayers.size() * m_cnn[i]->m_bottomLayers[0]->m_blob.depth * m_cnn[i]->m_bottomLayers[0]->m_blob.numRows * m_cnn[i]->m_bottomLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i]->m_topLayers[0]->m_blob.depth * m_cnn[i]->m_topLayers[0]->m_blob.numRows * m_cnn[i]->m_topLayers[0]->m_blob.numCols * PIXEL_SIZE
-                );
-                m_cnn[i - 1]->m_opt_bandwidth = (
-                    m_cnn[i - 1] ->m_numKernels *m_cnn[i - 1]->m_kernelDepth * m_cnn[i - 1]->m_numKernelRows * m_cnn[i - 1]->m_numKernelCols * PIXEL_SIZE
-                    + m_cnn[i - 1]->m_bottomLayers[0]->m_blob.depth * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numRows * m_cnn[i - 1]->m_bottomLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + (m_cnn[i]->m_bottomLayers.size() - 1) * m_cnn[i]->m_bottomLayers[0]->m_blob.depth * m_cnn[i]->m_bottomLayers[0]->m_blob.numRows * m_cnn[i]->m_bottomLayers[0]->m_blob.numCols * PIXEL_SIZE
-                    + m_cnn[i]->m_topLayers[0]->m_blob.depth * m_cnn[i]->m_topLayers[0]->m_blob.numRows * m_cnn[i]->m_topLayers[0]->m_blob.numCols * PIXEL_SIZE
-                );
-                i--;
-            }
+            m_cnn[i]->m_kernel1x1Data           = m_cnn[i]->m_flFilterData;
+            m_cnn[i]->m_bias1x1Data             = m_cnn[i]->m_flBiasData;
+            m_cnn[i]->m_num1x1Kernels           = m_cnn[i]->m_numKernels;
+            m_cnn[i]->m_kernel1x1Depth          = m_cnn[i]->m_kernelDepth;
+            m_cnn[i]->m_fpga_do_kernel1x1       = true;
+            m_cnn[i]->m_fpga_krnl_1x1_layer     = true;
         }
     }
-    */
 }
 
 
@@ -355,19 +301,6 @@ void espresso::CNN_Network::Forward(string start, string end)
     int startIdx = -1;
     int endIdx = -1;
     getBgnEndLayer(startIdx, start, endIdx, end);
-    for (int i = startIdx; i < endIdx; i++)
-    {
-        m_cnn[i]->ComputeLayerParam();
-    }
-    // print FPGA stats
-    for (int i = startIdx; i < endIdx; i++)
-    {
-        // cout << m_cnn[i]->m_layerName << "    " << m_cnn[i]->m_sequence_id << endl;
-        if(m_cnn[i]->m_sequence_id != -1 && m_cnn[i]->m_base_bandwidth != 0)
-        {
-            cout << "Sequence" + to_string(m_cnn[i]->m_sequence_id) << "," << m_cnn[i]->m_base_bandwidth << "," << m_cnn[i]->m_opt_bandwidth << endl;
-        }
-    }
     // Forward Propagation
     for(int i = 0; i < endIdx; i++)
     {
@@ -436,8 +369,8 @@ void espresso::CNN_Network::setHardware(FPGA_hndl* fpga_hndl)
 }
 
 
- int espresso::CNN_Network::findLayer(std::string layerName)
- {
+int espresso::CNN_Network::findLayer(string layerName)
+{
     for (int i = 0; i < m_cnn.size(); i++)
     {
         if(m_cnn[i]->m_layerName == layerName)
@@ -445,4 +378,88 @@ void espresso::CNN_Network::setHardware(FPGA_hndl* fpga_hndl)
             return i;
         }
     }
- }
+    cout << "[ESPRESSO]: Can't find layer: " << layerName << endl;
+    exit(0);
+}
+
+
+void espresso::CNN_Network::printMemBWStats()
+{
+    for(int i = 0; i < seqBgnIdxArr.size(); i++)
+    {
+        int sbi = seqBgnIdxArr[i];
+        int optBW = (
+            (m_cnn[sbi]->m_inputDepth
+            * m_cnn[sbi]->m_numInputRows
+            * m_cnn[sbi]->m_numInputCols)
+            + (m_cnn[sbi]->m_numKernels
+            * m_cnn[sbi]->m_kernelDepth
+            * m_cnn[sbi]->m_group
+            * m_cnn[sbi]->m_numKernelRows
+            * m_cnn[sbi]->m_numKernelCols)
+        ) * PIXEL_SIZE;
+        int baseBW = optBW + (
+            m_cnn[sbi]->m_outputDepth
+            * m_cnn[sbi]->m_numOutputRows
+            * m_cnn[sbi]->m_numOutputCols
+        ) * PIXEL_SIZE;
+        int j_loop_end = m_cnn[sbi]->m_merged_layers.size();
+        for(int j = 0; j < j_loop_end; j++)
+        {
+            int mli = m_cnn[sbi]->m_merged_layers[j];
+
+            if(m_cnn[mli]->m_layerType == CONVOLUTION)
+            {
+                baseBW += (
+                    (m_cnn[mli]->m_inputDepth
+                    * m_cnn[mli]->m_numInputRows
+                    * m_cnn[mli]->m_numInputCols)
+                    + (m_cnn[mli]->m_numKernels
+                    * m_cnn[mli]->m_kernelDepth
+                    * m_cnn[mli]->m_group
+                    * m_cnn[mli]->m_numKernelRows
+                    * m_cnn[mli]->m_numKernelCols)
+                    + (m_cnn[mli]->m_outputDepth
+                    * m_cnn[mli]->m_numOutputRows
+                    * m_cnn[mli]->m_numOutputCols)
+                ) * PIXEL_SIZE;
+                optBW += (
+                    m_cnn[mli]->m_numKernels
+                    * m_cnn[mli]->m_kernelDepth
+                    * m_cnn[mli]->m_group
+                    * m_cnn[mli]->m_numKernelRows
+                    * m_cnn[mli]->m_numKernelCols
+                ) * PIXEL_SIZE;
+            }
+            else if(m_cnn[mli]->m_layerType == RESIDUAL)
+            {
+                baseBW += (
+                    (m_cnn[mli]->m_inputDepth
+                    * m_cnn[mli]->m_numInputRows
+                    * m_cnn[mli]->m_numInputCols)
+                    + (m_cnn[mli]->m_outputDepth
+                    * m_cnn[mli]->m_numOutputRows
+                    * m_cnn[mli]->m_numOutputCols)
+                ) * PIXEL_SIZE;
+                int m_inputDepth = m_cnn[mli]->m_inputDepth / m_cnn[mli]->m_bottomLayers.size();
+                optBW += (
+                    m_inputDepth
+                    * (m_cnn[mli]->m_bottomLayers.size() - 1)
+                    * m_cnn[mli]->m_numInputRows
+                    * m_cnn[mli]->m_numInputCols
+                ) * PIXEL_SIZE;
+            }
+
+            if(j == (j_loop_end - 1))
+            {
+                optBW += (
+                    m_cnn[mli]->m_outputDepth
+                    * m_cnn[mli]->m_numOutputRows
+                    * m_cnn[mli]->m_numOutputCols
+                ) * PIXEL_SIZE;
+            }
+
+        }
+        cout << "Sequence" + to_string(m_cnn[sbi]->m_sequence_id) << "," << baseBW << "," << optBW << endl;
+    }
+}

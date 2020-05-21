@@ -82,7 +82,8 @@ void ConvolutionLayer_FPGA::ComputeLayerParam()
 	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
 	m_numOutputRows = (int)((m_numInputRows - m_numKernelRows + 2 * m_padding) / m_stride) + 1;
 	m_numOutputCols = (int)((m_numInputCols - m_numKernelCols + 2 * m_padding) / m_stride) + 1;
-	m_numKernels = m_outputDepth;
+	m_outputDepth = m_numKernels;
+    //FIXME
 	m_kernelDepth = m_inputDepth / m_group;
 	m_blob.depth = m_outputDepth;
 	m_blob.numRows = m_numOutputRows;

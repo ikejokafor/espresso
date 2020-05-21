@@ -1,14 +1,14 @@
-#include "ResidualLayer_FPGA.hpp"
+#include "PoolingMAXLayer_FPGA.hpp"
 using namespace std;
 
 
-ResidualLayer_FPGA::ResidualLayer_FPGA(espresso::layerInfo_obj* layerInfo) : Layer(layerInfo) { }
+PoolingMAXLayer_FPGA::PoolingMAXLayer_FPGA(espresso::layerInfo_obj* layerInfo) : Layer(layerInfo) { }
 
 
-ResidualLayer_FPGA::~ResidualLayer_FPGA() { }
+PoolingMAXLayer_FPGA::~PoolingMAXLayer_FPGA() { }
 
 
-void ResidualLayer_FPGA::ComputeLayer()
+void PoolingMAXLayer_FPGA::ComputeLayer()
 {
 	if (m_bottomLayers[0]->m_precision == espresso::FLOAT)
 	{
@@ -24,27 +24,27 @@ void ResidualLayer_FPGA::ComputeLayer()
 }
 
 
-void ResidualLayer_FPGA::ComputeLayer_FlPt() { }
+void PoolingMAXLayer_FPGA::ComputeLayer_FlPt() { }
 
 
-void ResidualLayer_FPGA::ComputeLayer_FxPt()
+void PoolingMAXLayer_FPGA::ComputeLayer_FxPt()
 {
 
 }
 
 
 
-void ResidualLayer_FPGA::ComputeLayerParam()
+void PoolingMAXLayer_FPGA::ComputeLayerParam()
 {
 	// input size
-	m_inputDepth = m_bottomLayers.size() * m_bottomLayers[0]->m_outputDepth;
+	m_inputDepth = m_bottomLayers[0]->m_outputDepth;
 	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;
 	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
 
 	// output size
-	m_outputDepth = m_bottomLayers[0]->m_outputDepth;
-	m_numOutputRows = m_numInputRows;
-	m_numOutputCols = m_numInputCols;
+	m_outputDepth = m_inputDepth;
+	m_numOutputRows = (int)((m_numInputRows - m_numKernelRows + 2 * m_padding) / m_stride) + 1;
+	m_numOutputCols = (int)((m_numInputCols - m_numKernelCols + 2 * m_padding) / m_stride) + 1;
 
 	// create output blob
 	m_blob.depth = m_outputDepth;

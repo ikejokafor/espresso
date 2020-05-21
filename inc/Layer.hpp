@@ -110,14 +110,14 @@ namespace espresso
         INPUT               = 0,
         CONVOLUTION         = 1,
         POOLING_MAX         = 2,
-        POOLING_AVE         = 3,
+        POOLING_AVG         = 3,
         PERMUTE             = 4,
         FLATTEN             = 5,
         RESIDUAL            = 6,
         DETECTION_OUTPUT    = 7,
         PRIOR_BOX           = 8,
         RESHAPE             = 9,
-        InnerProduct        = 10,
+        INNERPRODUCT        = 10,
         SOFTMAX             = 11,
         CONCAT              = 12,
         YOLO                = 13,
@@ -171,6 +171,7 @@ namespace espresso
 				darknet_outputs_param = 0;
 				backend = ESPRESSO_BACKEND;
 				net_idx = -1;
+                yolo_net = nullptr;
 			}
 			~layerInfo_obj() {};
 
@@ -318,7 +319,7 @@ namespace espresso
 			int m_num1x1Kernels;
 			int m_kernel1x1Depth;
 			float* m_bias1x1Data;
-			std::vector<std::string> m_linked_layers;
+			std::vector<int> m_merged_layers;
 			int m_sequence_id;
 			int m_base_bandwidth;
 			int m_opt_bandwidth;
