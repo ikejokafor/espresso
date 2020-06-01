@@ -121,7 +121,8 @@ namespace espresso
         SOFTMAX             = 11,
         CONCAT              = 12,
         YOLO                = 13,
-        UPSAMPLE            = 14
+        UPSAMPLE            = 14,
+        PSROIPoolingLayer   = 15
 	} layerType_t;
 
 

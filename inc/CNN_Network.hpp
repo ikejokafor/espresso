@@ -31,6 +31,7 @@
 #include "ReshapeLayer_FPGA.hpp"
 #include "SoftMaxLayer_FPGA.hpp"
 #include "DetectionOutputLayer_FPGA.hpp"
+#include "PSROIPoolingLayer_FPGA.hpp"
 
 
 namespace espresso

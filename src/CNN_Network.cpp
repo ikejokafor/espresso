@@ -94,6 +94,10 @@ espresso::CNN_Network::CNN_Network(vector<espresso::layerInfo_obj*>& layerInfoAr
         {
             m_cnn.push_back(new SoftMaxLayer_FPGA(layerInfoArr[i]));
         }
+        else if(layerInfoArr[i]->layerType == espresso::PSROIPoolingLayer && layerInfoArr[i]->backend == espresso::FPGA_BACKEND)
+        {
+            m_cnn.push_back(new PSROIPoolingLayer_FPGA(layerInfoArr[i]));
+        }
         else if(layerInfoArr[i]->layerType == espresso::YOLO)
         {
             m_cnn.push_back(new YOLOLayer(layerInfoArr[i]));
@@ -429,6 +433,12 @@ void espresso::CNN_Network::printMemBWStats()
                     * m_cnn[mli]->m_group
                     * m_cnn[mli]->m_numKernelRows
                     * m_cnn[mli]->m_numKernelCols
+                ) * PIXEL_SIZE;
+
+                optBW += (
+                    m_cnn[mli]->m_outputDepth
+                    * m_cnn[mli]->m_numOutputRows
+                    * m_cnn[mli]->m_numOutputCols
                 ) * PIXEL_SIZE;
             }
             else if(m_cnn[mli]->m_layerType == RESIDUAL)
