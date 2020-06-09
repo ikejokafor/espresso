@@ -29,9 +29,7 @@ class AccelConfig : public Accel_Payload
 			uint64_t FAS_id                     ;
 			uint64_t AWP_id                     ;
 			uint64_t AWP_en                     ;
-			uint64_t do_res_layer               ;
-			uint64_t first_depth_iter           ;
-			uint64_t do_kernels1x1              ;
+			uint64_t opcode                  	;
 			uint64_t pixSeqCfgFetchTotal		;
 			uint64_t inMapFetchTotal          	;
 			uint64_t krnl3x3FetchTotal          ;
@@ -41,15 +39,16 @@ class AccelConfig : public Accel_Payload
 			uint64_t resMapFetchTotal         	;
 			uint64_t partMapFetchTotal        	;
 			uint64_t outMapStoreTotal			;
+            uint64_t prev1x1MapFetchTotal       ;
 			uint64_t inMapFetchFactor			;
 			uint64_t outMapStoreFactor			;
 			uint64_t co_high_watermark			;
 			uint64_t rm_low_watermark			;
 			uint64_t pm_low_watermark			;
+            uint64_t pv_low_watermark           ;
 			uint64_t krnl1x1_pding				;
 			uint64_t krnl1x1_pad_bgn			;
 			uint64_t krnl1x1_pad_end			;
-			uint64_t krnl_1x1_layer				;
 			uint64_t imAddrArr	                ;
 			uint64_t krnl3x3Addr	            ;
 			uint64_t krnl3x3BiasAddr	        ;

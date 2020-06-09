@@ -34,11 +34,13 @@ Layer_Job::Layer_Job(
     int stride,
     bool upsample,
     int padding,
-    bool do_res_layer,
+    bool do_resLayer,
     bool activation,
     bool do_kernels1x1,
     FPGA_hndl* fpga_hndl,
     bool krnl_1x1_layer,
+    bool do_1x1_res,
+    bool do_res_1x1,
     int fxPtLength,
     int numFracBits
 ) {
@@ -67,13 +69,15 @@ Layer_Job::Layer_Job(
     m_stride                = stride            ;
     m_upsample              = upsample          ;
     m_padding               = padding           ;
-    m_do_res_layer          = do_res_layer      ;
+    m_do_resLayer           = do_resLayer       ;
     m_activation            = activation        ;
     m_do_kernels1x1         = do_kernels1x1     ;
     m_krnl1x1_pding         = false             ;
+    m_do_1x1_res            = do_1x1_res        ;
+    m_do_res_1x1            = do_res_1x1        ;
     m_inputMaps             = new InputMaps(inputMapDepth, numInputMapRows, numInputMapCols, inputMapData);
     m_kernels3x3            = new Kernels(m_num3x3Kernels, kernelDepth, numKernelRows, numKernelCols, kernel3x3Data);
-    if(do_res_layer)
+    if(do_resLayer)
     {
         m_residualMaps      = new ResidualMaps(residualMapDepth, numResidualMapRows, numResidualMapCols, residualMapData);
     }
@@ -119,7 +123,7 @@ Layer_Job::~Layer_Job()
     }
     delete m_inputMaps;
     delete m_kernels3x3;
-    if(m_do_res_layer)
+    if(m_do_resLayer)
     {
         delete m_residualMaps;
     }
@@ -151,7 +155,9 @@ void Layer_Job::createLayerIters()
             depth = min(QUAD_DPTH_SIMD, remDepth);
             layAclPrm = createAccelParams(
                 i,
+                m_num_krnl_iter,
                 j,
+                m_num_depth_iter,
                 depthBgn,
                 depth,
                 krnlBgn,
@@ -159,6 +165,9 @@ void Layer_Job::createLayerIters()
             );
             m_lay_it_arr[i].push_back(new Layer_Iteration(
                 (j == 0) ? true : false,
+                (j == (m_num_depth_iter - 1)) ? true : false,
+                (i == 0) ? true : false,
+                layAclPrm->opcode
                 layAclPrm->inputMaps,
                 layAclPrm->kernels3x3,
                 layAclPrm->kernels1x1,
@@ -167,16 +176,19 @@ void Layer_Job::createLayerIters()
                 layAclPrm->partialMaps,
                 layAclPrm->residualMaps,
                 layAclPrm->outputMaps,
+                layAclPrm->prev1x1maps,
                 m_stride,
                 m_upsample,
                 m_padding,
                 m_do_kernels1x1,
-                (j == 0 && m_do_res_layer) ? true : false,
+                (j == 0 && m_do_resLayer) ? true : false,
                 m_activation,
                 m_krnl1x1_pding,
                 m_krnl1x1_pad_bgn,
                 m_krnl1x1_pad_end,
-                m_krnl_1x1_layer
+                m_krnl_1x1_layer,
+                m_do_1x1_res,
+                m_do_res_1x1
             ));
             remDepth -= depth;
         }
@@ -186,8 +198,10 @@ void Layer_Job::createLayerIters()
 
 
 layAclPrm_t* Layer_Job::createAccelParams(
-    int i,
-    int j,
+    int krnl_iter,
+    int num_krnl_iter,
+    int dpth_iter,
+    int num_depth_iter,
     int depthBgn,
     int depth,
     int krnl3x3Bgn,
@@ -201,7 +215,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
     if(m_do_kernels1x1)
     {
         layAclPrm->kernels1x1 = (m_krnl_1x1_layer) ? m_kernels1x1 : m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
-        layAclPrm->kernels1x1Bias = (m_krnl_1x1_layer) ? m_kernels1x1Bias : m_kernels1x1Bias->GetVolume(0, m_kernels1x1->m_numKernels);
+        layAclPrm->kernels1x1Bias = m_kernels1x1Bias;
         if(!m_krnl1x1_pding)
         {
             layAclPrm->outputMaps = new OutputMaps(m_kernels1x1->m_numKernels, m_numOutputMapRows, m_numOutputMapCols);
@@ -215,26 +229,103 @@ layAclPrm_t* Layer_Job::createAccelParams(
     {
         layAclPrm->outputMaps = new OutputMaps(numKrnl3x3, m_numOutputMapRows, m_numOutputMapCols);
     }
-
+    //////
     if(m_krnl_1x1_layer)
     {
         layAclPrm->partialMaps = new PartialMaps(m_inputMaps);
     }
-    else if(j == 0)
+    else if(dpth_iter == 0)
     {
         layAclPrm->partialMaps = nullptr;
     }
     else
     {
-        layAclPrm->partialMaps = new PartialMaps(m_lay_it_arr[i][j - 1]->m_outputMaps);
+        layAclPrm->partialMaps = new PartialMaps(m_lay_it_arr[krnl_iter][dpth_iter - 1]->m_outputMaps);
     }
-
-    if(j == 0 && m_do_res_layer)
+    //////
+    if(dpth_iter == num_depth_iter && m_do_resLayer && !m_do_1x1_res)
     {
         layAclPrm->residualMaps = m_residualMaps->GetVolume(krnl3x3Bgn, numKrnl3x3);
     }
+    else if(dpth_iter == num_depth_iter && m_do_resLayer && !m_do_1x1_res && krnl_iter == 0)
+    {
+        layAclPrm->residualMaps = m_residualMaps;
+    }
+    //////
+    if((m_do_1x1_res || m_do_res_1x1 || m_krnl_1x1_layer || m_do_kernels1x1) && dpth_iter == num_depth_iter && krnl_iter > 0)
+    {
+        layAclPrm->prev1x1maps = new Prev1x1Maps(m_lay_it_arr[krnl_iter][dpth_iter]->m_outputMaps);
+    }
+    //////
+    if(m_do_1x1_res && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter == 1)
+    {
+        layAclPrm->opcode = OPCODE_0;
+    }
+    else if(m_do_1x1_res && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter != 1)
+    {
+        layAclPrm->opcode = OPCODE_1;
+    }
+    else if(m_do_1x1_res && dpth_iter == num_depth_iter && krnl_iter == 1)
+    {
+        layAclPrm->opcode2 = OPCODE_2;
+    }
+    else if(m_do_1x1_res && dpth_iter == num_depth_iter && krnl_iter != 1)
+    {
+        layAclPrm->opcode3 = OPCODE_3;
+    }
+    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter == 1)
+    {
+        layAclPrm->opcode4 = OPCODE_4;
+    }
+    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter != 1)
+    {
+        layAclPrm->opcode5 = OPCODE_5;
+    }
+    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && krnl_iter == 1)
+    {
+        layAclPrm->opcode6 = OPCODE_6;
+    }
+    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && krnl_iter != 1)
+    {
+        layAclPrm->opcode7 = OPCODE_7;
+    }
+    else if(m_do_resLayer && dpth_iter == num_depth_iter && num_depth_iter > 1)
+    {
+        layAclPrm->opcode8 = OPCODE_8;
+    }
+    else if(m_do_resLayer && dpth_iter == num_depth_iter && num_depth_iter == 1)
+    {
+        layAclPrm->opcode9 = OPCODE_9;
+    }
+    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter == 1)
+    {
+        layAclPrm->opcode10 = OPCODE_10;
+    }
+    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter != 1)
+    {
+        layAclPrm->opcode11 = OPCODE_11;
+    }
+    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && krnl_iter == 1)
+    {
+        layAclPrm->opcode12 = OPCODE_12;
+    }
+    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && krnl_iter != 1)
+    {
+        layAclPrm->opcode13 = OPCODE_13;
+    }
+    else if(m_krnl_1x1_layer)
+    {
+        layAclPrm->opcode14 = OPCODE_14;
+    }
+    else if(dpth_iter > 1)
+    {
+        layAclPrm->opcode15 = OPCODE_15;
+    }
     return layAclPrm;
 }
+
+
+
 
 
 void Layer_Job::process()
@@ -293,7 +384,7 @@ void Layer_Job::printConfig(int k, int d)
                     {
                         fd << "\t\t\t\tFAS_id:                  " << QUAD_cfg_arr[q]->m_FAS_id                  << endl;
                         fd << "\t\t\t\tAWP_id:                  " << QUAD_cfg_arr[q]->m_AWP_id                  << endl;
-                        fd << "\t\t\t\tresidual:                " << FAS_cfg_arr[0]->m_do_res_layer             << endl;
+                        fd << "\t\t\t\tresidual:                " << FAS_cfg_arr[0]->m_do_resLayer             << endl;
                         fd << "\t\t\t\tfirst_depth_iter:        " << FAS_cfg_arr[0]->m_first_depth_iter         << endl;
                         fd << "\t\t\t\tkernel_1x1:              " << FAS_cfg_arr[0]->m_do_kernels1x1            << endl;
                         fd << "\t\t\t\tstride:                  " << QUAD_cfg_arr[q]->m_stride                  << endl;

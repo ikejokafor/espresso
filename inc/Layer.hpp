@@ -51,7 +51,6 @@
 #include "util.hpp"
 #include "fixedPoint.hpp"
 // #ifdef FPGA
-#include "kernel_group.h"
 #include "Layer_Job.hpp"
 // #endif
 
@@ -221,7 +220,6 @@ namespace espresso
 			int numKernelGroups;
 			int numKrlPerGrp;
 			int numKernelDepthGroups;
-			std::vector<std::vector<kernel_group*> >	kernel_group_arr;
 			backend_t backend;
 			int net_idx;
 			network *yolo_net;
@@ -279,7 +277,7 @@ namespace espresso
 			bool m_fpga_upsample;
 			bool m_fpga_activation;
 			bool m_fpga_do_res_layer;
-			bool m_fpga_do_kernel1x1;
+			bool m_fpga_do_kernels1x1;
 			bool m_fpga_krnl_1x1_layer;
 			bool m_fpga_merged;
             std::vector<std::string> m_mergdArr;
@@ -303,10 +301,11 @@ namespace espresso
 			int m_numKernelGroups;
 			int m_numKrlPerGrp;
 			int m_numKernelDepthGroups;
-			std::vector<std::vector<kernel_group*> >	m_kernel_group_arr;
 			espresso::backend_t m_backend;
 			int m_net_idx;
 			network* m_yolo_net;
+            bool m_fpga_do_1x1_res;
+            bool m_fpga_do_res_1x1;
 
 			espresso::Blob_t m_blob;
 			std::vector<Layer*> m_topLayers;

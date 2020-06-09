@@ -15,6 +15,7 @@
 #include "ResidualMaps.hpp"
 #include "OutputMaps.hpp"
 #include "PartialMaps.hpp"
+#include "Prev1x1Maps.hpp"
 
 
 typedef struct
@@ -25,8 +26,10 @@ typedef struct
 	KernelBias* kernels3x3Bias;
 	KernelBias* kernels1x1Bias;
 	PartialMaps* partialMaps;
+    Prev1x1Maps* prev1x1maps;
 	ResidualMaps* residualMaps;
 	OutputMaps* outputMaps;
+    opcode_t opcode0;
 } layAclPrm_t;
 
 
@@ -71,23 +74,27 @@ class Layer_Job
 			int stride,
 			bool upsample,
 			int padding,
-			bool do_res_layer,
+			bool do_resLayer,
 			bool activation,
 			bool do_kernels1x1,
 			FPGA_hndl* fpga_hndl,
 			bool krnl_1x1_layer,
+            bool do_1x1_res,
+            bool do_res_1x1,
 			int fxPtLength = 16,
 			int numFracBits = 14
 	    );
         ~Layer_Job();
         void createLayerIters();
 		layAclPrm_t* createAccelParams(
-			int i,
-			int j,
-			int depthBgn,
-			int depth,
-			int krnl3x3Bgn,
-			int numKrnl3x3
+            int krnl_iter,
+            int num_krnl_iter,
+            int dpth_iter,
+            int num_depth_iter,
+            int depthBgn,
+            int depth,
+            int krnl3x3Bgn,
+            int numKrnl3x3
 		);
 		void printConfig(int k, int d);
         void process();
@@ -110,7 +117,7 @@ class Layer_Job
 		int m_stride;
 		bool m_upsample;
 		int m_padding;
-		bool m_do_res_layer;
+		bool m_do_resLayer;
 		bool m_do_kernels1x1;
 		bool m_activation;
 		bool m_krnl1x1_pding;
@@ -127,6 +134,8 @@ class Layer_Job
 		int m_num_depth_iter;
 		int m_num_krnl_iter;
 		bool m_krnl_1x1_layer;
+        bool m_do_1x1_res;
+        bool m_do_res_1x1;
 		DummyPayload* m_pyld;
 #ifdef SYSTEMC
 		SYSC_FPGA_hndl* m_sysc_fpga_hndl;

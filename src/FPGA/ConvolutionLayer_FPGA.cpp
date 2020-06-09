@@ -59,9 +59,11 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
 		m_padding,
 		m_fpga_do_res_layer,
 		m_activation,
-		m_fpga_do_kernel1x1,
+		m_fpga_do_kernels1x1,
 		m_fpga_hndl,
-		m_fpga_krnl_1x1_layer
+		m_fpga_krnl_1x1_layer,
+        m_fpga_do_1x1_res,
+        m_fpga_do_res_1x1
 	);
 	m_layer_job->createLayerIters();
 	m_layer_job->process();

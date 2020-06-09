@@ -4,6 +4,8 @@ using namespace std;
 
 Layer_Iteration::Layer_Iteration(
 	bool first_depth_iter,
+    bool last_depth_iter,
+    bool first_krnl_iter,
 	InputMaps* inputMaps,
 	Kernels* kernels3x3,
 	Kernels* kernels1x1,
@@ -12,6 +14,7 @@ Layer_Iteration::Layer_Iteration(
 	PartialMaps* partialMaps,
 	ResidualMaps* residualMaps,
 	OutputMaps* outputMaps,
+    Prev1x1Maps* prev1x1Maps,
 	int stride,
 	bool upsample,
 	int padding,
@@ -21,7 +24,9 @@ Layer_Iteration::Layer_Iteration(
 	bool krnl1x1_pding,
 	int krnl1x1_pad_bgn,
 	int krnl1x1_pad_end,
-	bool krnl_1x1_layer
+	bool krnl_1x1_layer,
+    bool do_1x1_res,
+    bool do_res_1x1
 ) {
 	m_pxSeqCfg			= nullptr;
 	m_inputMaps 		= nullptr;
@@ -41,6 +46,8 @@ Layer_Iteration::Layer_Iteration(
 	m_partialMaps = partialMaps;
 	m_residualMaps = residualMaps;
 	m_outputMaps = outputMaps;
+	m_prev1x1Maps = prev1x1Maps;
+
 
 	m_inputMaps->serialize();
 	(!krnl_1x1_layer) ? m_kernels3x3->serialize() : void();
@@ -50,6 +57,7 @@ Layer_Iteration::Layer_Iteration(
 	(do_kernels1x1) ? m_kernels1x1Bias->serialize() : void();
 	(!first_depth_iter || krnl_1x1_layer) ? m_partialMaps->serialize() : void();
 	(do_res_layer) ? m_residualMaps->serialize() : void();
+	(m_prev1x1Maps) ? m_prev1x1Maps->serialize() : void();
 
 	int remDepth = inputMaps->m_inputMapDepth;
 	for(int i = 0; i < NUM_FAS; i++)
@@ -59,6 +67,8 @@ Layer_Iteration::Layer_Iteration(
 			do_kernels1x1,
 			do_res_layer,
 			first_depth_iter,
+            last_depth_iter,
+            first_krnl_iter,
 			m_pxSeqCfg->m_address,
 			(do_kernels1x1) ? kernels1x1->m_address : 0,
 			(do_kernels1x1) ? kernels1x1Bias->m_address : 0,
@@ -76,13 +86,17 @@ Layer_Iteration::Layer_Iteration(
 			(!first_depth_iter || krnl_1x1_layer) ? partialMaps->m_size : 0,
 			(do_res_layer) ? residualMaps->m_size : 0,
 			outputMaps->m_size,
+            (prev1x1Maps) ? prev1x1Maps->m_size : 0,
 			(do_kernels1x1) ? (kernels1x1->m_kernelDepth * CO_HIGH_WATERMARK_FACTOR) : (outputMaps->m_outputMapDepth * CO_HIGH_WATERMARK_FACTOR),
 			(do_res_layer) ? residualMaps->m_residualMapDepth * RM_LOW_WATERMARK_FACTOR : 0,
 			(partialMaps) ? partialMaps->m_partialMapDepth * PM_LOW_WATERMARK_FACTOR : 0,
+            (prev1x1Maps) ? prev1x1Maps->m_prev1x1MapDepth * PV_LOW_WATERMARK_FACTOR : 0,
 			krnl1x1_pding,
 			krnl1x1_pad_bgn,
 			krnl1x1_pad_end,
-			krnl_1x1_layer
+			krnl_1x1_layer,
+            do_1x1_res,
+            do_res_1x1
 		));
 		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (partialMaps != nullptr) ? partialMaps->m_address : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (residualMaps != nullptr) ? residualMaps->m_address : -1;

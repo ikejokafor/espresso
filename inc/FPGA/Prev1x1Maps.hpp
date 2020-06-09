@@ -9,20 +9,19 @@
 #include "espresso_FPGA_common.hpp"
 
 
-class PartialMaps : public Accel_Payload
+class Prev1x1Maps : public Accel_Payload
 {
 	public:
-        PartialMaps(InputMaps* inputMaps);
-        PartialMaps(OutputMaps* outputMaps);
-		~PartialMaps();
+        Prev1x1Maps(OutputMaps* outputMaps);
+		~Prev1x1Maps();
 		uint64_t allocate(int size);
 		void deallocate();
 		void serialize();
         void deserialize();
 
 
-		int m_partialMapDepth;
-		int m_numPartialMapRows;
-		int m_numPartialMapCols;
+		int m_prev1x1MapDepth;
+		int m_numPrev1x1MapRows;
+		int m_numPrev1x1MapCols;
 		float* m_data;
 };

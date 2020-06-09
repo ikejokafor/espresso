@@ -10,6 +10,7 @@
 #include "ResidualMaps.hpp"
 #include "OutputMaps.hpp"
 #include "PartialMaps.hpp"
+#include "Prev1x1Maps.hpp"
 #include "espresso_FPGA_common.hpp"
 #include "AccelConfig.hpp"
 #include "FAS_cfg.hpp"
@@ -22,6 +23,8 @@ class Layer_Iteration
 	public:
 		Layer_Iteration(
 			bool first_depth_iter,
+            bool last_depth_iter,
+            bool first_krnl_iter,
 			InputMaps* inputMaps,
 			Kernels* kernels3x3,
 			Kernels* kernels1x1,
@@ -30,6 +33,7 @@ class Layer_Iteration
 			PartialMaps* partialMaps,
 			ResidualMaps* residualMaps,
 			OutputMaps* outputMaps,
+            Prev1x1Maps* prev1x1Maps,
 			int stride,
 			bool upsample,
 			int padding,
@@ -39,7 +43,9 @@ class Layer_Iteration
 			bool krnl1x1_pding,
 			int krnl1x1_pad_bgn,
 			int krnl1x1_pad_end,
-			bool krnl_1x1_layer
+			bool krnl_1x1_layer,
+            bool do_1x1_res,
+            bool do_res_1x1
 		);
 		~Layer_Iteration();
 
@@ -53,4 +59,5 @@ class Layer_Iteration
 		PartialMaps* m_partialMaps		;
 		ResidualMaps* m_residualMaps	;
 		OutputMaps* m_outputMaps		;
+		Prev1x1Maps* m_prev1x1Maps		;
 };
