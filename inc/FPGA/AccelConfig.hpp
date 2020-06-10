@@ -39,13 +39,16 @@ class AccelConfig : public Accel_Payload
 			uint64_t resMapFetchTotal         	;
 			uint64_t partMapFetchTotal        	;
 			uint64_t outMapStoreTotal			;
-            uint64_t prev1x1MapFetchTotal       ;
+            uint64_t prevMapFetchTotal         ;
 			uint64_t inMapFetchFactor			;
 			uint64_t outMapStoreFactor			;
 			uint64_t co_high_watermark			;
 			uint64_t rm_low_watermark			;
 			uint64_t pm_low_watermark			;
             uint64_t pv_low_watermark           ;
+			uint64_t rm_fetch_amount			;
+			uint64_t pm_fetch_amount			;
+			uint64_t pv_fetch_amount			;
 			uint64_t krnl1x1_pding				;
 			uint64_t krnl1x1_pad_bgn			;
 			uint64_t krnl1x1_pad_end			;

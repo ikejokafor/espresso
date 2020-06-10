@@ -29,7 +29,7 @@ typedef struct
     Prev1x1Maps* prev1x1maps;
 	ResidualMaps* residualMaps;
 	OutputMaps* outputMaps;
-    opcode_t opcode0;
+    opcode_t opcode;
 } layAclPrm_t;
 
 

@@ -8,22 +8,24 @@
 
 typedef enum
 {
-	OPCODE_0	= 0;
-    OPCODE_1    = 1; 
-    OPCODE_2    = 2; 
-    OPCODE_3    = 3; 
-    OPCODE_4    = 4;
-    OPCODE_5    = 5; 
-    OPCODE_6    = 6; 
-    OPCODE_7    = 7; 
-    OPCODE_8    = 8; 
-    OPCODE_9    = 9; 
-    OPCODE_10   = 10;
-    OPCODE_11   = 11;
-    OPCODE_12   = 12;
-    OPCODE_13   = 13;
-    OPCODE_14   = 14;
-    OPCODE_15   = 15;
+    NULL_OPCODE = -1,
+	OPCODE_0	= 0,
+    OPCODE_1    = 1, 
+    OPCODE_2    = 2, 
+    OPCODE_3    = 3, 
+    OPCODE_4    = 4,
+    OPCODE_5    = 5, 
+    OPCODE_6    = 6, 
+    OPCODE_7    = 7, 
+    OPCODE_8    = 8, 
+    OPCODE_9    = 9, 
+    OPCODE_10   = 10,
+    OPCODE_11   = 11,
+    OPCODE_12   = 12,
+    OPCODE_13   = 13,
+    OPCODE_14   = 14,
+    OPCODE_15   = 15,
+    OPCODE_16   = 16
 } opcode_t;
 
 
@@ -33,11 +35,7 @@ class FAS_cfg
         FAS_cfg();
         FAS_cfg(
             int FAS_id,
-            bool do_kernels1x1,
-            bool do_res_layer,
-            bool first_depth_iter,
-            bool last_depth_iter,
-            bool first_krnl_iter,
+            opcode_t opcode,
             uint64_t pixelSeqAddr,
             uint64_t krnl1x1Addr,
             uint64_t krnl1x1BiasAddr,
@@ -55,17 +53,17 @@ class FAS_cfg
             int partMapFetchTotal,
             int resMapFetchTotal,
             int outMapStoreTotal,
-            int prev1x1MapFetchTotal,
+            int prevMapFetchTotal,
             int co_high_watermark,
             int rm_low_watermark,
             int pm_low_watermark,
             int pv_low_watermark,
+            int rm_fetch_amount,
+            int pm_fetch_amount,
+            int pv_fetch_amount,
             bool krnl1x1_pding,
             int krnl1x1_pad_bgn,
-            int krnl1x1_pad_end,
-            bool krnl_1x1_layer,
-            bool do_1x1_res,
-            bool do_res_1x1
+            int krnl1x1_pad_end
         );
         ~FAS_cfg();
 
@@ -93,11 +91,14 @@ class FAS_cfg
         int m_outMapStoreTotal;
         int m_inMapFetchFactor;
         int m_outMapStoreFactor;
-        int m_prev1x1MapFetchTotal;
+        int m_prevMapFetchTotal;
         int m_co_high_watermark;
         int m_rm_low_watermark;
         int m_pm_low_watermark;
         int m_pv_low_watermark;
+        int m_rm_fetch_amount;
+        int m_pm_fetch_amount;
+        int m_pv_fetch_amount;
         int m_numOutputTotal;
         bool m_krnl1x1_pding;
         int m_krnl1x1_pad_bgn;

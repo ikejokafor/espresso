@@ -53,6 +53,8 @@ namespace espresso
             int findLayer(std::string layerName);
             void mergeLayers(int idx, int seqID, std::vector<std::string>& sequence);
             void printMemBWStats();
+			std::string to_string(layerType_t layerType);
+
 
             std::vector<int> seqBgnIdxArr;
 			std::vector<espresso::Layer*> m_cnn;

@@ -113,7 +113,7 @@ Layer_Job::Layer_Job(
 Layer_Job::~Layer_Job()
 {
     int i_end = m_lay_it_arr.size();
-    for (int i = 0; i < i_end; i++)
+    for(int i = 0; i < i_end; i++)
     {
         int j_end = m_lay_it_arr[i].size();
         for(int j = 0; j < j_end; j++)
@@ -145,12 +145,12 @@ void Layer_Job::createLayerIters()
     int numKrnl;
     layAclPrm_t* layAclPrm;
     m_lay_it_arr.resize(m_num_krnl_iter);
-    for (int i = 0, krnlBgn = 0; i < m_num_krnl_iter; i++, krnlBgn += numKrnl)
+    for(int i = 0, krnlBgn = 0; i < m_num_krnl_iter; i++, krnlBgn += numKrnl)
     {
         numKrnl = min(remNumKrnl, QUAD_MAX_KERNELS);
         int remDepth = m_inputMapDepth;
         int depth;
-        for (int j = 0, depthBgn = 0; j < m_num_depth_iter; j++, depthBgn += depth)
+        for(int j = 0, depthBgn = 0; j < m_num_depth_iter; j++, depthBgn += depth)
         {
             depth = min(QUAD_DPTH_SIMD, remDepth);
             layAclPrm = createAccelParams(
@@ -164,10 +164,7 @@ void Layer_Job::createLayerIters()
                 numKrnl
             );
             m_lay_it_arr[i].push_back(new Layer_Iteration(
-                (j == 0) ? true : false,
-                (j == (m_num_depth_iter - 1)) ? true : false,
-                (i == 0) ? true : false,
-                layAclPrm->opcode
+                layAclPrm->opcode,
                 layAclPrm->inputMaps,
                 layAclPrm->kernels3x3,
                 layAclPrm->kernels1x1,
@@ -180,15 +177,10 @@ void Layer_Job::createLayerIters()
                 m_stride,
                 m_upsample,
                 m_padding,
-                m_do_kernels1x1,
-                (j == 0 && m_do_resLayer) ? true : false,
                 m_activation,
                 m_krnl1x1_pding,
                 m_krnl1x1_pad_bgn,
-                m_krnl1x1_pad_end,
-                m_krnl_1x1_layer,
-                m_do_1x1_res,
-                m_do_res_1x1
+                m_krnl1x1_pad_end
             ));
             remDepth -= depth;
         }
@@ -257,69 +249,73 @@ layAclPrm_t* Layer_Job::createAccelParams(
         layAclPrm->prev1x1maps = new Prev1x1Maps(m_lay_it_arr[krnl_iter][dpth_iter]->m_outputMaps);
     }
     //////
-    if(m_do_1x1_res && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter == 1)
+    if(m_do_1x1_res && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter == 0)
     {
         layAclPrm->opcode = OPCODE_0;
     }
-    else if(m_do_1x1_res && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter != 1)
+    else if(m_do_1x1_res && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter != 0)
     {
         layAclPrm->opcode = OPCODE_1;
     }
-    else if(m_do_1x1_res && dpth_iter == num_depth_iter && krnl_iter == 1)
+    else if(m_do_1x1_res && dpth_iter == num_depth_iter && krnl_iter == 0)
     {
-        layAclPrm->opcode2 = OPCODE_2;
+        layAclPrm->opcode = OPCODE_2;
     }
-    else if(m_do_1x1_res && dpth_iter == num_depth_iter && krnl_iter != 1)
+    else if(m_do_1x1_res && dpth_iter == num_depth_iter && krnl_iter != 0)
     {
-        layAclPrm->opcode3 = OPCODE_3;
+        layAclPrm->opcode = OPCODE_3;
     }
-    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter == 1)
+    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter == 0)
     {
-        layAclPrm->opcode4 = OPCODE_4;
+        layAclPrm->opcode = OPCODE_4;
     }
-    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter != 1)
+    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter != 0)
     {
-        layAclPrm->opcode5 = OPCODE_5;
+        layAclPrm->opcode = OPCODE_5;
     }
-    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && krnl_iter == 1)
+    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && krnl_iter == 0)
     {
-        layAclPrm->opcode6 = OPCODE_6;
+        layAclPrm->opcode = OPCODE_6;
     }
-    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && krnl_iter != 1)
+    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && krnl_iter != 0)
     {
-        layAclPrm->opcode7 = OPCODE_7;
+        layAclPrm->opcode = OPCODE_7;
     }
     else if(m_do_resLayer && dpth_iter == num_depth_iter && num_depth_iter > 1)
     {
-        layAclPrm->opcode8 = OPCODE_8;
+        layAclPrm->opcode = OPCODE_8;
     }
-    else if(m_do_resLayer && dpth_iter == num_depth_iter && num_depth_iter == 1)
+    else if(m_do_resLayer && dpth_iter == num_depth_iter && num_depth_iter == 0)
     {
-        layAclPrm->opcode9 = OPCODE_9;
+        layAclPrm->opcode = OPCODE_9;
     }
-    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter == 1)
+    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter == 0)
     {
-        layAclPrm->opcode10 = OPCODE_10;
+        layAclPrm->opcode = OPCODE_10;
     }
-    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter != 1)
+    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter != 0)
     {
-        layAclPrm->opcode11 = OPCODE_11;
+        layAclPrm->opcode = OPCODE_11;
     }
-    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && krnl_iter == 1)
+    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && krnl_iter == 0)
     {
-        layAclPrm->opcode12 = OPCODE_12;
+        layAclPrm->opcode = OPCODE_12;
     }
-    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && krnl_iter != 1)
+    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && krnl_iter != 0)
     {
-        layAclPrm->opcode13 = OPCODE_13;
+        layAclPrm->opcode = OPCODE_13;
     }
     else if(m_krnl_1x1_layer)
     {
-        layAclPrm->opcode14 = OPCODE_14;
+        layAclPrm->opcode = OPCODE_14;
     }
-    else if(dpth_iter > 1)
+    else if(dpth_iter > 0)
     {
-        layAclPrm->opcode15 = OPCODE_15;
+        layAclPrm->opcode = OPCODE_15;
+    }
+    else if(m_num_depth_iter == 1)
+    {
+        layAclPrm->opcode = OPCODE_16;
     }
     return layAclPrm;
 }
@@ -337,7 +333,7 @@ void Layer_Job::process()
     double memPower = 0.0f;
     for(int k = 0; k < m_lay_it_arr.size(); k++)
     {
-        for (int d = 0; d < m_lay_it_arr[k].size(); d++)
+        for(int d = 0; d < m_lay_it_arr[k].size(); d++)
         {
             cout << "[ESPRESSO]: Kernel Iteration - " << k << endl;
             cout << "[ESPRESSO]: Depth Iteration - " << d << endl;
@@ -363,53 +359,34 @@ void Layer_Job::process()
 
 void Layer_Job::printConfig(int k, int d)
 {
-    ofstream fd;
-    fd.open(string("./layer_cfg/") + m_layerName + string(".txt"));
-    fd << m_layerName << endl;
-    for(int k = 0; k < m_lay_it_arr.size(); k++)
+    cout << "[ESPRESSO]: " << m_layerName << endl;
+    for(int a = 0; a < 1; a++)
     {
-        fd << "\tKernel Iteration: " << k << endl;
-        for (int d = 0; d < m_lay_it_arr[k].size(); d++)
+        auto& QUAD_en_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_en_arr;
+        auto& QUAD_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr;
+        for(int q = 0; q < 1; q++)
         {
-            fd << "\t\tDepth Iteration: " << d << endl;
-            auto& FAS_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr;
-            for (int a = 0; a < MAX_AWP_PER_FAS; a++)
+            cout << "[ESPRESSO]: \t QUAD_id: "                 << QUAD_cfg_arr[q]->m_QUAD_id                 << endl;
+            if(QUAD_en_arr[q])
             {
-                auto& QUAD_en_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_en_arr;
-                auto& QUAD_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr;
-                for (int q = 0; q < NUM_TOTAL_QUADS; q++)
-                {
-                    fd << "\t\t\tQUAD_id: "                 << QUAD_cfg_arr[q]->m_QUAD_id                 << endl;
-                    if (QUAD_en_arr[q])
-                    {
-                        fd << "\t\t\t\tFAS_id:                  " << QUAD_cfg_arr[q]->m_FAS_id                  << endl;
-                        fd << "\t\t\t\tAWP_id:                  " << QUAD_cfg_arr[q]->m_AWP_id                  << endl;
-                        fd << "\t\t\t\tresidual:                " << FAS_cfg_arr[0]->m_do_resLayer             << endl;
-                        fd << "\t\t\t\tfirst_depth_iter:        " << FAS_cfg_arr[0]->m_first_depth_iter         << endl;
-                        fd << "\t\t\t\tkernel_1x1:              " << FAS_cfg_arr[0]->m_do_kernels1x1            << endl;
-                        fd << "\t\t\t\tstride:                  " << QUAD_cfg_arr[q]->m_stride                  << endl;
-                        fd << "\t\t\t\tnum_expd_input_rows:     " << QUAD_cfg_arr[q]->m_num_expd_input_rows     << endl;
-                        fd << "\t\t\t\tnum_expd_input_cols:     " << QUAD_cfg_arr[q]->m_num_expd_input_cols     << endl;
-                        fd << "\t\t\t\tcrpd_input_row_start:    " << QUAD_cfg_arr[q]->m_crpd_input_row_start    << endl;
-                        fd << "\t\t\t\tcrpd_input_col_start:    " << QUAD_cfg_arr[q]->m_crpd_input_col_start    << endl;
-                        fd << "\t\t\t\tcrpd_input_row_end:      " << QUAD_cfg_arr[q]->m_crpd_input_row_end      << endl;
-                        fd << "\t\t\t\tcrpd_input_col_end:      " << QUAD_cfg_arr[q]->m_crpd_input_col_end      << endl;
-                        fd << "\t\t\t\tnum_output_rows:         " << QUAD_cfg_arr[q]->m_num_output_rows         << endl;
-                        fd << "\t\t\t\tnum_output_col:          " << QUAD_cfg_arr[q]->m_num_output_cols         << endl;
-                        fd << "\t\t\t\tnum_kernels:             " << QUAD_cfg_arr[q]->m_num_kernels             << endl;
-                        fd << "\t\t\t\tmaster_QUAD:             " << QUAD_cfg_arr[q]->m_master_QUAD             << endl;
-                        fd << "\t\t\t\tcascade:                 " << QUAD_cfg_arr[q]->m_cascade                 << endl;
-                        fd << "\t\t\t\tactivation:              " << QUAD_cfg_arr[q]->m_activation              << endl;
-                        fd << "\t\t\t\tpadding:                 " << QUAD_cfg_arr[q]->m_padding                 << endl;
-                        fd << "\t\t\t\tupsample:                " << QUAD_cfg_arr[q]->m_upsample                << endl;
-                    }
-                    else
-                    {
-                        fd << "\t\t\t\tUnused" << endl;
-                    }
-                }
+                cout << "[ESPRESSO]: \t FAS_id:                  " << QUAD_cfg_arr[q]->m_FAS_id                  << endl;
+                cout << "[ESPRESSO]: \t AWP_id:                  " << QUAD_cfg_arr[q]->m_AWP_id                  << endl;
+                cout << "[ESPRESSO]: \t stride:                  " << QUAD_cfg_arr[q]->m_stride                  << endl;
+                cout << "[ESPRESSO]: \t num_expd_input_rows:     " << QUAD_cfg_arr[q]->m_num_expd_input_rows     << endl;
+                cout << "[ESPRESSO]: \t num_expd_input_cols:     " << QUAD_cfg_arr[q]->m_num_expd_input_cols     << endl;
+                cout << "[ESPRESSO]: \t crpd_input_row_start:    " << QUAD_cfg_arr[q]->m_crpd_input_row_start    << endl;
+                cout << "[ESPRESSO]: \t crpd_input_col_start:    " << QUAD_cfg_arr[q]->m_crpd_input_col_start    << endl;
+                cout << "[ESPRESSO]: \t crpd_input_row_end:      " << QUAD_cfg_arr[q]->m_crpd_input_row_end      << endl;
+                cout << "[ESPRESSO]: \t crpd_input_col_end:      " << QUAD_cfg_arr[q]->m_crpd_input_col_end      << endl;
+                cout << "[ESPRESSO]: \t num_output_rows:         " << QUAD_cfg_arr[q]->m_num_output_rows         << endl;
+                cout << "[ESPRESSO]: \t num_output_col:          " << QUAD_cfg_arr[q]->m_num_output_cols         << endl;
+                cout << "[ESPRESSO]: \t num_kernels:             " << QUAD_cfg_arr[q]->m_num_kernels             << endl;
+                cout << "[ESPRESSO]: \t master_QUAD:             " << QUAD_cfg_arr[q]->m_master_QUAD             << endl;
+                cout << "[ESPRESSO]: \t cascade:                 " << QUAD_cfg_arr[q]->m_cascade                 << endl;
+                cout << "[ESPRESSO]: \t activation:              " << QUAD_cfg_arr[q]->m_activation              << endl;
+                cout << "[ESPRESSO]: \t padding:                 " << QUAD_cfg_arr[q]->m_padding                 << endl;
+                cout << "[ESPRESSO]: \t upsample:                " << QUAD_cfg_arr[q]->m_upsample                << endl;
             }
         }
     }
-    fd.close();
 }

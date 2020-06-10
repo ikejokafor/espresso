@@ -329,7 +329,16 @@ void espresso::CNN_Network::Forward(string start, string end)
     // Forward Propagation
     for(int i = 0; i < endIdx; i++)
     {
-        if(m_cnn[i]->m_layerType == espresso::YOLO) continue;
+        if(m_cnn[i]->m_layerType == espresso::YOLO
+            || m_cnn[i]->m_layerType == espresso::PERMUTE     
+            || m_cnn[i]->m_layerType == espresso::DETECTION_OUTPUT
+            || m_cnn[i]->m_layerType == espresso::PRIOR_BOX       
+            || m_cnn[i]->m_layerType == espresso::RESHAPE
+            || m_cnn[i]->m_layerType == espresso::INNERPRODUCT    
+            || m_cnn[i]->m_layerType == espresso::SOFTMAX                         
+            || m_cnn[i]->m_layerType == espresso::UPSAMPLE        
+            || m_cnn[i]->m_layerType == espresso::PSROIPoolingLayer
+        ) continue;
         printLayerStats(i);
         cout << "[ESPRESSO]: Processing Layer" << " " << m_cnn[i]->m_layerName << endl;
         m_cnn[i]->ComputeLayer();
@@ -351,37 +360,48 @@ int espresso::CNN_Network::ReturnLayerIdx(string name)
 }
 
 
+string espresso::CNN_Network::to_string(espresso::layerType_t layerType)
+{   
+    switch(layerType)
+    {
+        case INPUT: return "INPUT";      
+        case CONVOLUTION: return "CONVOLUTION"; 
+        case POOLING_MAX: return "POOLING_MAX";        
+        case POOLING_AVG: return "POOLING_AVG";        
+        case PERMUTE: return "PERMUTE";          
+        case FLATTEN: return "FLATTEN";       
+        case RESIDUAL: return "RESIDUAL";          
+        case DETECTION_OUTPUT: return "DETECTION_OUTPUT";    
+        case PRIOR_BOX: return "PRIOR_BOX";         
+        case RESHAPE: return "RESHAPE";            
+        case INNERPRODUCT: return "INNERPRODUCT";      
+        case SOFTMAX:  return "SOFTMAX";           
+        case CONCAT: return "CONCAT";             
+        case YOLO: return "YOLO";               
+        case UPSAMPLE: return "UPSAMPLE";          
+        case PSROIPoolingLayer: return "PSROIPoolingLayer"; 
+    }
+}
+
+
 void espresso::CNN_Network::printLayerStats(int i)
 {
-    // cout << "Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
-    // cout << "\t inputDepth:     \t\t"   << m_cnn[i]->m_inputDepth       << endl;
-    // cout << "\t numInputRows:   \t\t"   << m_cnn[i]->m_numInputRows     << endl;
-    // cout << "\t numInputCols:   \t\t"   << m_cnn[i]->m_numInputCols     << endl;
-    // cout << "\t outputDepth:    \t\t"   << m_cnn[i]->m_outputDepth      << endl;
-    // cout << "\t numOutputRows:  \t\t"   << m_cnn[i]->m_numOutputRows    << endl;
-    // cout << "\t numOutputCols:  \t\t"   << m_cnn[i]->m_numOutputCols    << endl;
-    // if(m_cnn[i]->m_precision == espresso::FLOAT)
-    // {
-    // 	cout << "\t precision:  \t\t\t"   << "FLOAT"                      << endl;
-    // }
-    // else
-    // {
-    // 	cout << "\t precision:  \t\t\t"   << "FIXED"                      << endl;
-    // }
-    // if(m_cnn[i]->m_layerType == "Convolution" || m_cnn[i]->m_layerType == "InnerProduct")
-    // {
-    // 	cout << "\t Stride:             \t\t" << m_cnn[i]->m_stride << endl;
-    // 	cout << "\t Padding:            \t\t" << m_cnn[i]->m_padding << endl;
-    // 	cout << "\t Number of Kernels:  \t\t" << m_cnn[i]->m_numKernels << endl;
-    // 	cout << "\t Kernel Depth:       \t\t" << m_cnn[i]->m_kernelDepth << endl;
-    // 	cout << "\t Kernel Size:        \t\t" << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
-    // }
-    // cout << "\t dinFxPtLength:   \t\t"   << m_cnn[i]->m_dinFxPtLength     << endl;
-    // cout << "\t dinNumFracBits:  \t\t"   << m_cnn[i]->m_dinNumFracBits    << endl;
-    // cout << "\t whtFxPtLength:   \t\t"   << m_cnn[i]->m_whtFxPtLength     << endl;
-    // cout << "\t whtNumFracBits:  \t\t"   << m_cnn[i]->m_whtNumFracBits    << endl;
-    // cout << "\t doutFxPtLength:  \t\t"   << m_cnn[i]->m_doutFxPtLength    << endl;
-    // cout << "\t doutNumFracBits: \t\t"   << m_cnn[i]->m_doutNumFracBits   << endl;
+    cout << "[ESPRESSO]: " << m_cnn[i]->m_layerName << endl;
+    cout << "[ESPRESSO]:\t Type:                 "   << to_string(m_cnn[i]->m_layerType)  << endl;
+    cout << "[ESPRESSO]:\t Input Depth:          "   << m_cnn[i]->m_inputDepth            << endl;
+    cout << "[ESPRESSO]:\t Num Input Rows:       "   << m_cnn[i]->m_numInputRows          << endl;
+    cout << "[ESPRESSO]:\t Num Input Cols:       "   << m_cnn[i]->m_numInputCols          << endl;
+    cout << "[ESPRESSO]:\t Output Depth:         "   << m_cnn[i]->m_outputDepth           << endl;
+    cout << "[ESPRESSO]:\t Num Output Rows:      "   << m_cnn[i]->m_numOutputRows         << endl;
+    cout << "[ESPRESSO]:\t Num Output Cols:      "   << m_cnn[i]->m_numOutputCols         << endl;
+    if(m_cnn[i]->m_layerType == espresso::CONVOLUTION)
+    {
+        cout << "[ESPRESSO]:\t Stride:               " << m_cnn[i]->m_stride << endl;
+        cout << "[ESPRESSO]:\t Padding:              " << m_cnn[i]->m_padding << endl;
+        cout << "[ESPRESSO]:\t Number of Kernels:    " << m_cnn[i]->m_numKernels << endl;
+        cout << "[ESPRESSO]:\t Kernel Depth:         " << m_cnn[i]->m_kernelDepth << endl;
+        cout << "[ESPRESSO]:\t Kernel Size:          " << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
+    }
 }
 
 
@@ -480,6 +500,6 @@ void espresso::CNN_Network::printMemBWStats()
                         ) * PIXEL_SIZE;
             }
         }
-        cout << "Sequence" + to_string(m_cnn[sbi]->m_sequence_id) << "," << baseBW << "," << optBW << endl;
+        cout << "Sequence" + std::to_string(m_cnn[sbi]->m_sequence_id) << "," << baseBW << "," << optBW << endl;
     }
 }

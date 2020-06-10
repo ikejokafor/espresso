@@ -22,9 +22,7 @@ class Layer_Iteration
 {
 	public:
 		Layer_Iteration(
-			bool first_depth_iter,
-            bool last_depth_iter,
-            bool first_krnl_iter,
+			opcode_t opcode,
 			InputMaps* inputMaps,
 			Kernels* kernels3x3,
 			Kernels* kernels1x1,
@@ -37,15 +35,10 @@ class Layer_Iteration
 			int stride,
 			bool upsample,
 			int padding,
-			bool do_kernels1x1,
-			bool do_res_layer,
 			bool activation,
 			bool krnl1x1_pding,
 			int krnl1x1_pad_bgn,
-			int krnl1x1_pad_end,
-			bool krnl_1x1_layer,
-            bool do_1x1_res,
-            bool do_res_1x1
+			int krnl1x1_pad_end
 		);
 		~Layer_Iteration();
 
@@ -60,4 +53,5 @@ class Layer_Iteration
 		ResidualMaps* m_residualMaps	;
 		OutputMaps* m_outputMaps		;
 		Prev1x1Maps* m_prev1x1Maps		;
+		opcode_t m_opcode				;
 };
