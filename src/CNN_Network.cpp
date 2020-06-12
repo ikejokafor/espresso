@@ -327,7 +327,7 @@ void espresso::CNN_Network::Forward(string start, string end)
     int endIdx = -1;
     getBgnEndLayer(startIdx, start, endIdx, end);
     // Forward Propagation
-    for(int i = 0; i < endIdx; i++)
+    for(int i = startIdx; i < endIdx; i++)
     {
         if(m_cnn[i]->m_layerType == espresso::YOLO
             || m_cnn[i]->m_layerType == espresso::PERMUTE     

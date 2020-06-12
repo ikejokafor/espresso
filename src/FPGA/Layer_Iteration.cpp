@@ -55,6 +55,7 @@ Layer_Iteration::Layer_Iteration(
 	(m_residualMaps) ? m_residualMaps->serialize() : void();
 	(m_prev1x1Maps) ? m_prev1x1Maps->serialize() : void();
 
+    int inputMapDepth = inputMaps->m_inputMapDepth;
 	int remDepth = inputMaps->m_inputMapDepth;
 	for(int i = 0; i < NUM_FAS; i++)
 	{
@@ -98,7 +99,9 @@ Layer_Iteration::Layer_Iteration(
 		auto& imAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_inMapAddrArr;
 		auto& krnl3x3AddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3AddrArr;
 		auto& krnl3x3BiasAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3BiasAddrArr;
-		for(int j = 0; j < MAX_AWP_PER_FAS; j++)
+		
+        
+        for(int j = 0; j < MAX_AWP_PER_FAS; j++)
 		{
 			m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr.push_back(new AWP_cfg(i ,j));
 			for(int k = 0; k < MAX_QUAD_PER_AWP; k++)
@@ -107,8 +110,8 @@ Layer_Iteration::Layer_Iteration(
 				auto& QUAD_en_arr = m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr[j]->m_QUAD_en_arr;
 				if(remDepth > 0)
 				{
-					bool cascade = (remDepth > QUAD_MAX_DEPTH) ? true : false;
-					bool master_QUAD = (k == (MAX_QUAD_PER_AWP - 1) || !cascade) ? true : false;
+					bool cascade = (remDepth > 0 && inputMapDepth > QUAD_MAX_DEPTH) ? true : false;
+					bool master_QUAD = ((remDepth - QUAD_MAX_DEPTH) <= 0) ? true : false;
 					QUAD_cfg* quad_cfg = new QUAD_cfg(
 						i,
 						j,
@@ -152,22 +155,23 @@ Layer_Iteration::Layer_Iteration(
 
 Layer_Iteration::~Layer_Iteration()
 {
-	delete m_pxSeqCfg;
-	delete m_accelCfg;
-	delete m_inputMaps;
-	delete m_kernels3x3;
-	if(m_residualMaps)
-	{
-		delete m_residualMaps;
-	}
-	delete m_outputMaps;
-	delete m_kernels3x3Bias;
-	if(m_kernels1x1)
-	{
-		delete m_kernels1x1;
-	}
-	if(m_kernels1x1Bias)
-	{
-		delete m_kernels1x1Bias;
-	}
+	(m_pxSeqCfg) ? delete m_pxSeqCfg : void();
+	(m_accelCfg) ? delete m_accelCfg : void();
+	(m_inputMaps) ? delete m_inputMaps : void();
+	(m_kernels3x3) ? delete m_kernels3x3 : void();
+	(m_residualMaps) ? delete m_residualMaps : void();
+	(m_outputMaps) ? delete m_outputMaps : void();
+	(m_kernels3x3Bias) ? delete m_kernels3x3Bias : void();
+    (m_kernels1x1) ? delete m_kernels1x1 : void();
+    (m_kernels1x1Bias) ? delete m_kernels1x1Bias : void();
+	
+    m_pxSeqCfg = nullptr;
+	m_accelCfg = nullptr;
+	m_inputMaps = nullptr;
+	m_kernels3x3 = nullptr;
+	m_residualMaps = nullptr;
+	m_outputMaps = nullptr;
+	m_kernels3x3Bias = nullptr;
+    m_kernels1x1 = nullptr;
+    m_kernels1x1Bias = nullptr;
 }

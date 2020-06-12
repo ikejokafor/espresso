@@ -112,6 +112,22 @@ Layer_Job::Layer_Job(
 
 Layer_Job::~Layer_Job()
 {
+    (m_inputMaps) ? delete m_inputMaps : void();
+	(m_kernels3x3) ? delete m_kernels3x3 : void();
+	(m_residualMaps) ? delete m_residualMaps : void();
+	(m_outputMaps) ? delete m_outputMaps : void();
+	(m_kernels3x3Bias) ? delete m_kernels3x3Bias : void();
+    (m_kernels1x1) ? delete m_kernels1x1 : void();
+    (m_kernels1x1Bias) ? delete m_kernels1x1Bias : void();
+
+    m_inputMaps = nullptr;
+	m_kernels3x3 = nullptr;
+	m_residualMaps = nullptr;
+	m_outputMaps = nullptr;
+	m_kernels3x3Bias = nullptr;
+    m_kernels1x1 = nullptr;
+    m_kernels1x1Bias = nullptr;
+
     int i_end = m_lay_it_arr.size();
     for(int i = 0; i < i_end; i++)
     {
@@ -121,19 +137,8 @@ Layer_Job::~Layer_Job()
             delete m_lay_it_arr[i][j];
         }
     }
-    delete m_inputMaps;
-    delete m_kernels3x3;
-    if(m_do_resLayer)
-    {
-        delete m_residualMaps;
-    }
-    delete m_outputMaps;
-    delete m_kernels3x3Bias;
-    if(m_do_kernels1x1)
-    {
-        delete m_kernels1x1;
-        delete m_kernels1x1Bias;
-    }
+
+
 }
 
 
@@ -155,9 +160,7 @@ void Layer_Job::createLayerIters()
             depth = min(QUAD_DPTH_SIMD, remDepth);
             layAclPrm = createAccelParams(
                 i,
-                m_num_krnl_iter,
                 j,
-                m_num_depth_iter,
                 depthBgn,
                 depth,
                 krnlBgn,
@@ -191,9 +194,7 @@ void Layer_Job::createLayerIters()
 
 layAclPrm_t* Layer_Job::createAccelParams(
     int krnl_iter,
-    int num_krnl_iter,
     int dpth_iter,
-    int num_depth_iter,
     int depthBgn,
     int depth,
     int krnl3x3Bgn,
@@ -204,6 +205,10 @@ layAclPrm_t* Layer_Job::createAccelParams(
     layAclPrm->inputMaps = m_inputMaps->GetVolume(depthBgn, depth);
     layAclPrm->kernels3x3 = (m_krnl_1x1_layer) ? nullptr : m_kernels3x3->GetVolume(krnl3x3Bgn, numKrnl3x3, depthBgn, depth);
     layAclPrm->kernels3x3Bias = (m_krnl_1x1_layer) ? nullptr : m_kernels3x3Bias->GetVolume(krnl3x3Bgn, numKrnl3x3);
+    layAclPrm->opcode = (opcode_t)-1;
+    bool first_depth_iter = (dpth_iter == 0);
+    bool last_depth_iter = (dpth_iter == (m_num_depth_iter - 1));
+    bool first_krnl_iter = (krnl_iter == (m_num_krnl_iter - 1));
     if(m_do_kernels1x1)
     {
         layAclPrm->kernels1x1 = (m_krnl_1x1_layer) ? m_kernels1x1 : m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
@@ -226,7 +231,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
     {
         layAclPrm->partialMaps = new PartialMaps(m_inputMaps);
     }
-    else if(dpth_iter == 0)
+    else if(first_depth_iter)
     {
         layAclPrm->partialMaps = nullptr;
     }
@@ -235,73 +240,73 @@ layAclPrm_t* Layer_Job::createAccelParams(
         layAclPrm->partialMaps = new PartialMaps(m_lay_it_arr[krnl_iter][dpth_iter - 1]->m_outputMaps);
     }
     //////
-    if(dpth_iter == num_depth_iter && m_do_resLayer && !m_do_1x1_res)
+    if(last_depth_iter && m_do_resLayer && !m_do_1x1_res)
     {
         layAclPrm->residualMaps = m_residualMaps->GetVolume(krnl3x3Bgn, numKrnl3x3);
     }
-    else if(dpth_iter == num_depth_iter && m_do_resLayer && !m_do_1x1_res && krnl_iter == 0)
+    else if(last_depth_iter && m_do_resLayer && !m_do_1x1_res && first_krnl_iter)
     {
         layAclPrm->residualMaps = m_residualMaps;
     }
     //////
-    if((m_do_1x1_res || m_do_res_1x1 || m_krnl_1x1_layer || m_do_kernels1x1) && dpth_iter == num_depth_iter && krnl_iter > 0)
+    if((m_do_1x1_res || m_do_res_1x1 || m_krnl_1x1_layer || m_do_kernels1x1) && last_depth_iter && krnl_iter > 0)
     {
         layAclPrm->prev1x1maps = new Prev1x1Maps(m_lay_it_arr[krnl_iter][dpth_iter]->m_outputMaps);
     }
     //////
-    if(m_do_1x1_res && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter == 0)
+    if(m_do_1x1_res && last_depth_iter && m_num_depth_iter > 1 && first_krnl_iter)
     {
         layAclPrm->opcode = OPCODE_0;
     }
-    else if(m_do_1x1_res && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter != 0)
+    else if(m_do_1x1_res && last_depth_iter && m_num_depth_iter > 1 && !first_krnl_iter)
     {
         layAclPrm->opcode = OPCODE_1;
     }
-    else if(m_do_1x1_res && dpth_iter == num_depth_iter && krnl_iter == 0)
+    else if(m_do_1x1_res && last_depth_iter && first_krnl_iter)
     {
         layAclPrm->opcode = OPCODE_2;
     }
-    else if(m_do_1x1_res && dpth_iter == num_depth_iter && krnl_iter != 0)
+    else if(m_do_1x1_res && last_depth_iter && !first_krnl_iter)
     {
         layAclPrm->opcode = OPCODE_3;
     }
-    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter == 0)
+    else if(m_do_res_1x1 && last_depth_iter && m_num_depth_iter > 1 && first_krnl_iter)
     {
         layAclPrm->opcode = OPCODE_4;
     }
-    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter != 0)
+    else if(m_do_res_1x1 && last_depth_iter && m_num_depth_iter > 1 && !first_krnl_iter)
     {
         layAclPrm->opcode = OPCODE_5;
     }
-    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && krnl_iter == 0)
+    else if(m_do_res_1x1 && last_depth_iter && first_krnl_iter)
     {
         layAclPrm->opcode = OPCODE_6;
     }
-    else if(m_do_res_1x1 && dpth_iter == num_depth_iter && krnl_iter != 0)
+    else if(m_do_res_1x1 && last_depth_iter && !first_krnl_iter)
     {
         layAclPrm->opcode = OPCODE_7;
     }
-    else if(m_do_resLayer && dpth_iter == num_depth_iter && num_depth_iter > 1)
+    else if(m_do_resLayer && last_depth_iter && m_num_depth_iter > 1)
     {
         layAclPrm->opcode = OPCODE_8;
     }
-    else if(m_do_resLayer && dpth_iter == num_depth_iter && num_depth_iter == 0)
+    else if(m_do_resLayer && last_depth_iter && m_num_depth_iter == 1)
     {
         layAclPrm->opcode = OPCODE_9;
     }
-    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter == 0)
+    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && last_depth_iter && m_num_depth_iter > 1 && first_krnl_iter)
     {
         layAclPrm->opcode = OPCODE_10;
     }
-    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && num_depth_iter > 1 && krnl_iter != 0)
+    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && last_depth_iter && m_num_depth_iter > 1 && !first_krnl_iter)
     {
         layAclPrm->opcode = OPCODE_11;
     }
-    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && krnl_iter == 0)
+    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && last_depth_iter && first_krnl_iter)
     {
         layAclPrm->opcode = OPCODE_12;
     }
-    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && dpth_iter == num_depth_iter && krnl_iter != 0)
+    else if(m_do_kernels1x1 && !m_krnl_1x1_layer && last_depth_iter && !first_krnl_iter)
     {
         layAclPrm->opcode = OPCODE_13;
     }
@@ -309,7 +314,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
     {
         layAclPrm->opcode = OPCODE_14;
     }
-    else if(dpth_iter > 0)
+    else if(!first_depth_iter)
     {
         layAclPrm->opcode = OPCODE_15;
     }
@@ -321,13 +326,10 @@ layAclPrm_t* Layer_Job::createAccelParams(
 }
 
 
-
-
-
 void Layer_Job::process()
 {
-    cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iterations" << endl;
-    cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations" << endl;
+    cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
+    cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
     // Get configuration
     double elapsed_time = 0.0f;
     double memPower = 0.0f;
@@ -337,7 +339,7 @@ void Layer_Job::process()
         {
             cout << "[ESPRESSO]: Kernel Iteration - " << k << endl;
             cout << "[ESPRESSO]: Depth Iteration - " << d << endl;
-			// printConfig(k, d);
+			printConfig(k, d);
             m_sysc_fpga_hndl->setConfig(m_lay_it_arr[k][d]->m_accelCfg);
             // m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_inputMaps);
             // m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_kernels3x3);
@@ -354,38 +356,68 @@ void Layer_Job::process()
         }
     }
     cout << "[ESPRESSO]: Total Layer Processing Time - " <<  elapsed_time << " ns " << endl;
+    cout << "[ESPRESSO]: Total Power Consumed - " <<  memPower << " mW " << endl;
 }
 
 
 void Layer_Job::printConfig(int k, int d)
 {
-    cout << "[ESPRESSO]: " << m_layerName << endl;
-    for(int a = 0; a < 1; a++)
+    FAS_cfg* fas_cfg = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0];
+    cout << "[ESPRESSO]: FAS_0 - Configuation......."                    << endl;
+    cout << "[ESPRESSO]:\tOpcode:                                      " << fas_cfg->m_opcode                   << endl;
+    cout << "[ESPRESSO]:\tNum 1x1 Kernels:                             " << fas_cfg->m_num_1x1_kernels          << endl;
+    cout << "[ESPRESSO]:\tKernel 1x1 Depth:                            " << fas_cfg->m_krnl1x1Depth             << endl;
+    cout << "[ESPRESSO]:\tPixel Sequence Configuration Fetch Total:    " << fas_cfg->m_pixSeqCfgFetchTotal      << endl;
+    cout << "[ESPRESSO]:\tInput Map Fetch Total:                       " << fas_cfg->m_inMapFetchTotal          << endl;
+    cout << "[ESPRESSO]:\tInput Map Fetch Factor:                      " << fas_cfg->m_inMapFetchFactor         << endl;
+    cout << "[ESPRESSO]:\tKernel 3x3 Fetch Total:                      " << fas_cfg->m_krnl3x3FetchTotal        << endl;
+    cout << "[ESPRESSO]:\tKernel 3x3 Bias Fetch Total:                 " << fas_cfg->m_krnl3x3BiasFetchTotal    << endl;
+    cout << "[ESPRESSO]:\tPartial Map Fetch Total:                     " << fas_cfg->m_partMapFetchTotal        << endl;
+    cout << "[ESPRESSO]:\tKernel 1x1 Fetch Total:                      " << fas_cfg->m_krnl1x1FetchTotal        << endl;
+    cout << "[ESPRESSO]:\tKernel 1x1 Bias Fetch Total:                 " << fas_cfg->m_krnl1x1BiasFetchTotal    << endl;
+    cout << "[ESPRESSO]:\tResidual Map Fetch Total:                    " << fas_cfg->m_resMapFetchTotal         << endl;
+    cout << "[ESPRESSO]:\tOutput Map Store Total:                      " << fas_cfg->m_outMapStoreTotal         << endl;
+    cout << "[ESPRESSO]:\tPrev1x1 Map Fetch Total                      " << fas_cfg->m_prevMapFetchTotal        << endl;
+    cout << "[ESPRESSO]:\tOutput Map Store Factor:                     " << fas_cfg->m_outMapStoreFactor        << endl;
+    cout << "[ESPRESSO]:\tConvOut High Watermark:                      " << fas_cfg->m_co_high_watermark        << endl;
+    cout << "[ESPRESSO]:\tResdMap Low Watermark:                       " << fas_cfg->m_rm_low_watermark         << endl;
+    cout << "[ESPRESSO]:\tPartMap Low Watermark:                       " << fas_cfg->m_pm_low_watermark         << endl;
+    cout << "[ESPRESSO]:\tPrev1x1 Low Watermark:                       " << fas_cfg->m_pv_low_watermark         << endl;
+    cout << "[ESPRESSO]:\tResdMap Fetch Amount:                        " << fas_cfg->m_rm_fetch_amount          << endl;   
+    cout << "[ESPRESSO]:\tPartMap Fetch Amount:                        " << fas_cfg->m_pm_fetch_amount          << endl;
+    cout << "[ESPRESSO]:\tPrev1x1 Fetch Amount:                        " << fas_cfg->m_pv_fetch_amount          << endl;
+    cout << "[ESPRESSO]:\tKernel 1x1 padding:                          " << fas_cfg->m_krnl1x1_pding            << endl;
+    cout << "[ESPRESSO]:\tKernel 1x1 Padding begin:                    " << fas_cfg->m_krnl1x1_pad_bgn          << endl;
+    cout << "[ESPRESSO]:\tKernel 1x1 Padding end:                      " << fas_cfg->m_krnl1x1_pad_end          << endl;
+
+    for(int a = 0; a < MAX_AWP_PER_FAS; a++)
     {
-        auto& QUAD_en_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_en_arr;
-        auto& QUAD_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr;
-        for(int q = 0; q < 1; q++)
+        AWP_cfg* awp_cfg =  m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a];
+        cout << "[ESPRESSO]:\t\tAWP_id:  " << awp_cfg->m_AWP_id << endl;
+        for(int q = 0; q < MAX_QUAD_PER_AWP; q++)
         {
-            cout << "[ESPRESSO]: \t QUAD_id: "                 << QUAD_cfg_arr[q]->m_QUAD_id                 << endl;
+            auto& QUAD_en_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_en_arr;
+            auto& QUAD_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr;
+            cout << "[ESPRESSO]:\t\t\tQUAD_id: "  << QUAD_cfg_arr[q]->m_QUAD_id << endl;
             if(QUAD_en_arr[q])
             {
-                cout << "[ESPRESSO]: \t FAS_id:                  " << QUAD_cfg_arr[q]->m_FAS_id                  << endl;
-                cout << "[ESPRESSO]: \t AWP_id:                  " << QUAD_cfg_arr[q]->m_AWP_id                  << endl;
-                cout << "[ESPRESSO]: \t stride:                  " << QUAD_cfg_arr[q]->m_stride                  << endl;
-                cout << "[ESPRESSO]: \t num_expd_input_rows:     " << QUAD_cfg_arr[q]->m_num_expd_input_rows     << endl;
-                cout << "[ESPRESSO]: \t num_expd_input_cols:     " << QUAD_cfg_arr[q]->m_num_expd_input_cols     << endl;
-                cout << "[ESPRESSO]: \t crpd_input_row_start:    " << QUAD_cfg_arr[q]->m_crpd_input_row_start    << endl;
-                cout << "[ESPRESSO]: \t crpd_input_col_start:    " << QUAD_cfg_arr[q]->m_crpd_input_col_start    << endl;
-                cout << "[ESPRESSO]: \t crpd_input_row_end:      " << QUAD_cfg_arr[q]->m_crpd_input_row_end      << endl;
-                cout << "[ESPRESSO]: \t crpd_input_col_end:      " << QUAD_cfg_arr[q]->m_crpd_input_col_end      << endl;
-                cout << "[ESPRESSO]: \t num_output_rows:         " << QUAD_cfg_arr[q]->m_num_output_rows         << endl;
-                cout << "[ESPRESSO]: \t num_output_col:          " << QUAD_cfg_arr[q]->m_num_output_cols         << endl;
-                cout << "[ESPRESSO]: \t num_kernels:             " << QUAD_cfg_arr[q]->m_num_kernels             << endl;
-                cout << "[ESPRESSO]: \t master_QUAD:             " << QUAD_cfg_arr[q]->m_master_QUAD             << endl;
-                cout << "[ESPRESSO]: \t cascade:                 " << QUAD_cfg_arr[q]->m_cascade                 << endl;
-                cout << "[ESPRESSO]: \t activation:              " << QUAD_cfg_arr[q]->m_activation              << endl;
-                cout << "[ESPRESSO]: \t padding:                 " << QUAD_cfg_arr[q]->m_padding                 << endl;
-                cout << "[ESPRESSO]: \t upsample:                " << QUAD_cfg_arr[q]->m_upsample                << endl;
+                cout << "[ESPRESSO]:\t\t\t\tStride:                             " << QUAD_cfg_arr[q]->m_stride                  << endl;
+                cout << "[ESPRESSO]:\t\t\t\tNumber of Expanded Input Rows:      " << QUAD_cfg_arr[q]->m_num_expd_input_rows     << endl;
+                cout << "[ESPRESSO]:\t\t\t\tNumber of Expanded Input Coloumns:  " << QUAD_cfg_arr[q]->m_num_expd_input_cols     << endl;
+                cout << "[ESPRESSO]:\t\t\t\tCropped Input Row Start:            " << QUAD_cfg_arr[q]->m_crpd_input_row_start    << endl;
+                cout << "[ESPRESSO]:\t\t\t\tCropped Input Row End:              " << QUAD_cfg_arr[q]->m_crpd_input_row_end      << endl;
+                cout << "[ESPRESSO]:\t\t\t\tNumber of Output Rows               " << QUAD_cfg_arr[q]->m_num_output_rows         << endl;
+                cout << "[ESPRESSO]:\t\t\t\tNumber of Output Columns::          " << QUAD_cfg_arr[q]->m_num_output_cols         << endl;
+                cout << "[ESPRESSO]:\t\t\t\tNumber of Kernels:                  " << QUAD_cfg_arr[q]->m_num_kernels             << endl;
+                cout << "[ESPRESSO]:\t\t\t\tMaster QUAD:                        " << QUAD_cfg_arr[q]->m_master_QUAD             << endl;
+                cout << "[ESPRESSO]:\t\t\t\tCascade:                            " << QUAD_cfg_arr[q]->m_cascade                 << endl;
+                cout << "[ESPRESSO]:\t\t\t\tActivation:                         " << QUAD_cfg_arr[q]->m_activation              << endl;
+                cout << "[ESPRESSO]:\t\t\t\tPadding:                            " << QUAD_cfg_arr[q]->m_padding                 << endl;
+                cout << "[ESPRESSO]:\t\t\t\tUpsample:                           " << QUAD_cfg_arr[q]->m_upsample                << endl;
+            }
+            else
+            {
+                cout << "[ESPRESSO]:\t\t\t\tUnused" << endl;
             }
         }
     }

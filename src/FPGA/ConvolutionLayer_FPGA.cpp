@@ -25,11 +25,11 @@ void ConvolutionLayer_FPGA::ComputeLayer()
 
 void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
 {
-	// if(m_numKernelRows == 1 && m_fpga_merged_1x1)
-	// {
-	// 	cout << m_layerName << " Merged" << endl;
-	// 	return;
-	// }
+	if(m_numKernelRows == 1 && m_fpga_merged)
+	{
+		cout << m_layerName << " Merged" << endl;
+		return;
+	}
 
 	Layer_Job* m_layer_job = new Layer_Job(
 		m_layerName,
@@ -67,7 +67,7 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
 	);
 	m_layer_job->createLayerIters();
 	m_layer_job->process();
-	delete m_layer_job;
+	// delete m_layer_job;
 }
 
 
@@ -85,8 +85,13 @@ void ConvolutionLayer_FPGA::ComputeLayerParam()
 	m_numOutputRows = (int)((m_numInputRows - m_numKernelRows + 2 * m_padding) / m_stride) + 1;
 	m_numOutputCols = (int)((m_numInputCols - m_numKernelCols + 2 * m_padding) / m_stride) + 1;
 	m_outputDepth = m_numKernels;
-    //FIXME
+    // FIXME: create FPGA support for this
 	m_kernelDepth = m_inputDepth / m_group;
+    if(m_group > 1)
+    {
+        cout << "FIXME - " << __FILE__ << ":" << __LINE__ << endl;
+        exit(0);
+    }
 	m_blob.depth = m_outputDepth;
 	m_blob.numRows = m_numOutputRows;
 	m_blob.numCols = m_numOutputCols;

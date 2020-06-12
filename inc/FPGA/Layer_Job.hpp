@@ -88,9 +88,7 @@ class Layer_Job
         void createLayerIters();
 		layAclPrm_t* createAccelParams(
             int krnl_iter,
-            int num_krnl_iter,
             int dpth_iter,
-            int num_depth_iter,
             int depthBgn,
             int depth,
             int krnl3x3Bgn,

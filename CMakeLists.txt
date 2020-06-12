@@ -142,11 +142,23 @@ ADD_DEPENDENCIES(${TARGET_NAME} myNetProto)
 
 
 # BEGIN Debug / Release Settings --------------------------------------------------------------------------------------------------------------------
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
-endif()
-set(CMAKLE_CXX_FLAGS_DEBUG "-g")
-set(CMAKLE_CXX_FLAGS_RELEASE "-O3")
+IF(EXISTS "${PROJECT_SOURCE_DIR}/DEBUG_BUILD")
+    SET(CMAKE_BUILD_TYPE Debug)
+	SET(BUILD_DIR_SUFFIX "debug")
+ELSEIF(EXISTS "${PROJECT_SOURCE_DIR}/RELEASE_BUILD")
+    SET(CMAKE_BUILD_TYPE Release)
+	SET(BUILD_DIR_SUFFIX "release")
+ELSEIF(NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE Debug)
+	SET(BUILD_DIR_SUFFIX "debug")
+ENDIF()
+IF(WIN32)
+	SET(CMAKE_CXX_FLAGS_DEBUG "/ZI /Od")
+ELSE()
+	SET(CMAKE_CXX_FLAGS_DEBUG "-g")
+ENDIF()
+SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
+MESSAGE("[" ${TARGET_NAME} "] Build Type: " ${CMAKE_BUILD_TYPE})
 # END Debug / Release Settings ----------------------------------------------------------------------------------------------------------------------
 
 
