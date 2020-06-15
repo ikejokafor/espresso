@@ -387,20 +387,20 @@ string espresso::CNN_Network::to_string(espresso::layerType_t layerType)
 void espresso::CNN_Network::printLayerStats(int i)
 {
     cout << "[ESPRESSO]: " << m_cnn[i]->m_layerName << endl;
-    cout << "[ESPRESSO]:\t Type:                 "   << to_string(m_cnn[i]->m_layerType)  << endl;
-    cout << "[ESPRESSO]:\t Input Depth:          "   << m_cnn[i]->m_inputDepth            << endl;
-    cout << "[ESPRESSO]:\t Num Input Rows:       "   << m_cnn[i]->m_numInputRows          << endl;
-    cout << "[ESPRESSO]:\t Num Input Cols:       "   << m_cnn[i]->m_numInputCols          << endl;
-    cout << "[ESPRESSO]:\t Output Depth:         "   << m_cnn[i]->m_outputDepth           << endl;
-    cout << "[ESPRESSO]:\t Num Output Rows:      "   << m_cnn[i]->m_numOutputRows         << endl;
-    cout << "[ESPRESSO]:\t Num Output Cols:      "   << m_cnn[i]->m_numOutputCols         << endl;
+    cout << "[ESPRESSO]:\tType:                 "   << to_string(m_cnn[i]->m_layerType)  << endl;
+    cout << "[ESPRESSO]:\tInput Depth:          "   << m_cnn[i]->m_inputDepth            << endl;
+    cout << "[ESPRESSO]:\tNum Input Rows:       "   << m_cnn[i]->m_numInputRows          << endl;
+    cout << "[ESPRESSO]:\tNum Input Cols:       "   << m_cnn[i]->m_numInputCols          << endl;
+    cout << "[ESPRESSO]:\tOutput Depth:         "   << m_cnn[i]->m_outputDepth           << endl;
+    cout << "[ESPRESSO]:\tNum Output Rows:      "   << m_cnn[i]->m_numOutputRows         << endl;
+    cout << "[ESPRESSO]:\tNum Output Cols:      "   << m_cnn[i]->m_numOutputCols         << endl;
     if(m_cnn[i]->m_layerType == espresso::CONVOLUTION)
     {
-        cout << "[ESPRESSO]:\t Stride:               " << m_cnn[i]->m_stride << endl;
-        cout << "[ESPRESSO]:\t Padding:              " << m_cnn[i]->m_padding << endl;
-        cout << "[ESPRESSO]:\t Number of Kernels:    " << m_cnn[i]->m_numKernels << endl;
-        cout << "[ESPRESSO]:\t Kernel Depth:         " << m_cnn[i]->m_kernelDepth << endl;
-        cout << "[ESPRESSO]:\t Kernel Size:          " << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
+        cout << "[ESPRESSO]:\tStride:               " << m_cnn[i]->m_stride << endl;
+        cout << "[ESPRESSO]:\tPadding:              " << m_cnn[i]->m_padding << endl;
+        cout << "[ESPRESSO]:\tNumber of Kernels:    " << m_cnn[i]->m_numKernels << endl;
+        cout << "[ESPRESSO]:\tKernel Depth:         " << m_cnn[i]->m_kernelDepth << endl;
+        cout << "[ESPRESSO]:\tKernel Size:          " << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
     }
 }
 

@@ -288,7 +288,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
         layAclPrm->residualMaps = m_residualMaps;
     }
     //////
-    if(m_do_kernels1x1)
+    if(m_do_kernels1x1 && last_depth_iter)
     {
         layAclPrm->kernels1x1 = (m_krnl_1x1_layer) ? m_kernels1x1 : m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
         layAclPrm->kernels1x1Bias = m_kernels1x1Bias;
@@ -338,8 +338,9 @@ void Layer_Job::process()
     {
         for(int d = 0; d < m_lay_it_arr[k].size(); d++)
         {
-            cout << "[ESPRESSO]: Kernel Iteration - " << k << endl;
-            cout << "[ESPRESSO]: Depth Iteration - " << d << endl;
+            cout << "[ESPRESSO]: " << m_layerName                                << endl;
+            cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << k << endl;
+            cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << d << endl;
 			printConfig(k, d);
             m_sysc_fpga_hndl->setConfig(m_lay_it_arr[k][d]->m_accelCfg);
             // m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_inputMaps);
@@ -354,6 +355,9 @@ void Layer_Job::process()
             double* ptr = (double*)m_pyld->m_address;
             elapsed_time += (ptr[0]);
             memPower += (ptr[1]);
+            cout << "[ESPRESSO]: " << m_layerName                                << endl;
+            cout << "[ESPRESSO]:\tFinished Kernel Iteration - " << k << endl;
+            cout << "[ESPRESSO]:\tFinished Depth Iteration - " << d << endl;
         }
     }
     cout << "[ESPRESSO]: Total Layer Processing Time - " <<  elapsed_time << " ns " << endl;
@@ -364,61 +368,61 @@ void Layer_Job::process()
 void Layer_Job::printConfig(int k, int d)
 {
     FAS_cfg* fas_cfg = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0];
-    cout << "[ESPRESSO]: FAS_0 - Configuation......."                    << endl;
-    cout << "[ESPRESSO]:\tOpcode:                                      " << fas_cfg->m_opcode                   << endl;
-    cout << "[ESPRESSO]:\tNum 1x1 Kernels:                             " << fas_cfg->m_num_1x1_kernels          << endl;
-    cout << "[ESPRESSO]:\tKernel 1x1 Depth:                            " << fas_cfg->m_krnl1x1Depth             << endl;
-    cout << "[ESPRESSO]:\tPixel Sequence Configuration Fetch Total:    " << fas_cfg->m_pixSeqCfgFetchTotal      << endl;
-    cout << "[ESPRESSO]:\tInput Map Fetch Total:                       " << fas_cfg->m_inMapFetchTotal          << endl;
-    cout << "[ESPRESSO]:\tInput Map Fetch Factor:                      " << fas_cfg->m_inMapFetchFactor         << endl;
-    cout << "[ESPRESSO]:\tKernel 3x3 Fetch Total:                      " << fas_cfg->m_krnl3x3FetchTotal        << endl;
-    cout << "[ESPRESSO]:\tKernel 3x3 Bias Fetch Total:                 " << fas_cfg->m_krnl3x3BiasFetchTotal    << endl;
-    cout << "[ESPRESSO]:\tPartial Map Fetch Total:                     " << fas_cfg->m_partMapFetchTotal        << endl;
-    cout << "[ESPRESSO]:\tKernel 1x1 Fetch Total:                      " << fas_cfg->m_krnl1x1FetchTotal        << endl;
-    cout << "[ESPRESSO]:\tKernel 1x1 Bias Fetch Total:                 " << fas_cfg->m_krnl1x1BiasFetchTotal    << endl;
-    cout << "[ESPRESSO]:\tResidual Map Fetch Total:                    " << fas_cfg->m_resMapFetchTotal         << endl;
-    cout << "[ESPRESSO]:\tOutput Map Store Total:                      " << fas_cfg->m_outMapStoreTotal         << endl;
-    cout << "[ESPRESSO]:\tPrev1x1 Map Fetch Total                      " << fas_cfg->m_prevMapFetchTotal        << endl;
-    cout << "[ESPRESSO]:\tOutput Map Store Factor:                     " << fas_cfg->m_outMapStoreFactor        << endl;
-    cout << "[ESPRESSO]:\tConvOut High Watermark:                      " << fas_cfg->m_co_high_watermark        << endl;
-    cout << "[ESPRESSO]:\tResdMap Low Watermark:                       " << fas_cfg->m_rm_low_watermark         << endl;
-    cout << "[ESPRESSO]:\tPartMap Low Watermark:                       " << fas_cfg->m_pm_low_watermark         << endl;
-    cout << "[ESPRESSO]:\tPrev1x1 Low Watermark:                       " << fas_cfg->m_pv_low_watermark         << endl;
-    cout << "[ESPRESSO]:\tResdMap Fetch Amount:                        " << fas_cfg->m_rm_fetch_amount          << endl;   
-    cout << "[ESPRESSO]:\tPartMap Fetch Amount:                        " << fas_cfg->m_pm_fetch_amount          << endl;
-    cout << "[ESPRESSO]:\tPrev1x1 Fetch Amount:                        " << fas_cfg->m_pv_fetch_amount          << endl;
-    cout << "[ESPRESSO]:\tKernel 1x1 padding:                          " << fas_cfg->m_krnl1x1_pding            << endl;
-    cout << "[ESPRESSO]:\tKernel 1x1 Padding begin:                    " << fas_cfg->m_krnl1x1_pad_bgn          << endl;
-    cout << "[ESPRESSO]:\tKernel 1x1 Padding end:                      " << fas_cfg->m_krnl1x1_pad_end          << endl;
+    cout << "[ESPRESSO]:\t\tFAS_0 - Configuation......."                    << endl;
+    cout << "[ESPRESSO]:\t\tOpcode:                                      " << fas_cfg->m_opcode                   << endl;
+    cout << "[ESPRESSO]:\t\tNum 1x1 Kernels:                             " << fas_cfg->m_num_1x1_kernels          << endl;
+    cout << "[ESPRESSO]:\t\tKernel 1x1 Depth:                            " << fas_cfg->m_krnl1x1Depth             << endl;
+    cout << "[ESPRESSO]:\t\tPixel Sequence Configuration Fetch Total:    " << fas_cfg->m_pixSeqCfgFetchTotal      << endl;
+    cout << "[ESPRESSO]:\t\tInput Map Fetch Total:                       " << fas_cfg->m_inMapFetchTotal          << endl;
+    cout << "[ESPRESSO]:\t\tInput Map Fetch Factor:                      " << fas_cfg->m_inMapFetchFactor         << endl;
+    cout << "[ESPRESSO]:\t\tKernel 3x3 Fetch Total:                      " << fas_cfg->m_krnl3x3FetchTotal        << endl;
+    cout << "[ESPRESSO]:\t\tKernel 3x3 Bias Fetch Total:                 " << fas_cfg->m_krnl3x3BiasFetchTotal    << endl;
+    cout << "[ESPRESSO]:\t\tPartial Map Fetch Total:                     " << fas_cfg->m_partMapFetchTotal        << endl;
+    cout << "[ESPRESSO]:\t\tKernel 1x1 Fetch Total:                      " << fas_cfg->m_krnl1x1FetchTotal        << endl;
+    cout << "[ESPRESSO]:\t\tKernel 1x1 Bias Fetch Total:                 " << fas_cfg->m_krnl1x1BiasFetchTotal    << endl;
+    cout << "[ESPRESSO]:\t\tResidual Map Fetch Total:                    " << fas_cfg->m_resMapFetchTotal         << endl;
+    cout << "[ESPRESSO]:\t\tOutput Map Store Total:                      " << fas_cfg->m_outMapStoreTotal         << endl;
+    cout << "[ESPRESSO]:\t\tPrev1x1 Map Fetch Total                      " << fas_cfg->m_prevMapFetchTotal        << endl;
+    cout << "[ESPRESSO]:\t\tOutput Map Store Factor:                     " << fas_cfg->m_outMapStoreFactor        << endl;
+    cout << "[ESPRESSO]:\t\tConvOut High Watermark:                      " << fas_cfg->m_co_high_watermark        << endl;
+    cout << "[ESPRESSO]:\t\tResdMap Low Watermark:                       " << fas_cfg->m_rm_low_watermark         << endl;
+    cout << "[ESPRESSO]:\t\tPartMap Low Watermark:                       " << fas_cfg->m_pm_low_watermark         << endl;
+    cout << "[ESPRESSO]:\t\tPrev1x1 Low Watermark:                       " << fas_cfg->m_pv_low_watermark         << endl;
+    cout << "[ESPRESSO]:\t\tResdMap Fetch Amount:                        " << fas_cfg->m_rm_fetch_amount          << endl;   
+    cout << "[ESPRESSO]:\t\tPartMap Fetch Amount:                        " << fas_cfg->m_pm_fetch_amount          << endl;
+    cout << "[ESPRESSO]:\t\tPrev1x1 Fetch Amount:                        " << fas_cfg->m_pv_fetch_amount          << endl;
+    cout << "[ESPRESSO]:\t\tKernel 1x1 padding:                          " << fas_cfg->m_krnl1x1_pding            << endl;
+    cout << "[ESPRESSO]:\t\tKernel 1x1 Padding begin:                    " << fas_cfg->m_krnl1x1_pad_bgn          << endl;
+    cout << "[ESPRESSO]:\t\tKernel 1x1 Padding end:                      " << fas_cfg->m_krnl1x1_pad_end          << endl;
 
     for(int a = 0; a < MAX_AWP_PER_FAS; a++)
     {
         AWP_cfg* awp_cfg =  m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a];
-        cout << "[ESPRESSO]:\t\tAWP_id:  " << awp_cfg->m_AWP_id << endl;
+        cout << "[ESPRESSO]:\t\t\tAWP_id:  " << awp_cfg->m_AWP_id << endl;
         for(int q = 0; q < MAX_QUAD_PER_AWP; q++)
         {
             auto& QUAD_en_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_en_arr;
             auto& QUAD_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr;
-            cout << "[ESPRESSO]:\t\t\tQUAD_id: "  << QUAD_cfg_arr[q]->m_QUAD_id << endl;
+            cout << "[ESPRESSO]:\t\t\t\tQUAD_id: "  << QUAD_cfg_arr[q]->m_QUAD_id << endl;
             if(QUAD_en_arr[q])
             {
-                cout << "[ESPRESSO]:\t\t\t\tStride:                             " << QUAD_cfg_arr[q]->m_stride                  << endl;
-                cout << "[ESPRESSO]:\t\t\t\tNumber of Expanded Input Rows:      " << QUAD_cfg_arr[q]->m_num_expd_input_rows     << endl;
-                cout << "[ESPRESSO]:\t\t\t\tNumber of Expanded Input Coloumns:  " << QUAD_cfg_arr[q]->m_num_expd_input_cols     << endl;
-                cout << "[ESPRESSO]:\t\t\t\tCropped Input Row Start:            " << QUAD_cfg_arr[q]->m_crpd_input_row_start    << endl;
-                cout << "[ESPRESSO]:\t\t\t\tCropped Input Row End:              " << QUAD_cfg_arr[q]->m_crpd_input_row_end      << endl;
-                cout << "[ESPRESSO]:\t\t\t\tNumber of Output Rows               " << QUAD_cfg_arr[q]->m_num_output_rows         << endl;
-                cout << "[ESPRESSO]:\t\t\t\tNumber of Output Columns::          " << QUAD_cfg_arr[q]->m_num_output_cols         << endl;
-                cout << "[ESPRESSO]:\t\t\t\tNumber of Kernels:                  " << QUAD_cfg_arr[q]->m_num_kernels             << endl;
-                cout << "[ESPRESSO]:\t\t\t\tMaster QUAD:                        " << QUAD_cfg_arr[q]->m_master_QUAD             << endl;
-                cout << "[ESPRESSO]:\t\t\t\tCascade:                            " << QUAD_cfg_arr[q]->m_cascade                 << endl;
-                cout << "[ESPRESSO]:\t\t\t\tActivation:                         " << QUAD_cfg_arr[q]->m_activation              << endl;
-                cout << "[ESPRESSO]:\t\t\t\tPadding:                            " << QUAD_cfg_arr[q]->m_padding                 << endl;
-                cout << "[ESPRESSO]:\t\t\t\tUpsample:                           " << QUAD_cfg_arr[q]->m_upsample                << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tStride:                             " << QUAD_cfg_arr[q]->m_stride                  << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tNumber of Expanded Input Rows:      " << QUAD_cfg_arr[q]->m_num_expd_input_rows     << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tNumber of Expanded Input Coloumns:  " << QUAD_cfg_arr[q]->m_num_expd_input_cols     << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tCropped Input Row Start:            " << QUAD_cfg_arr[q]->m_crpd_input_row_start    << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tCropped Input Row End:              " << QUAD_cfg_arr[q]->m_crpd_input_row_end      << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tNumber of Output Rows               " << QUAD_cfg_arr[q]->m_num_output_rows         << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tNumber of Output Columns::          " << QUAD_cfg_arr[q]->m_num_output_cols         << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tNumber of Kernels:                  " << QUAD_cfg_arr[q]->m_num_kernels             << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tMaster QUAD:                        " << QUAD_cfg_arr[q]->m_master_QUAD             << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tCascade:                            " << QUAD_cfg_arr[q]->m_cascade                 << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tActivation:                         " << QUAD_cfg_arr[q]->m_activation              << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tPadding:                            " << QUAD_cfg_arr[q]->m_padding                 << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tUpsample:                           " << QUAD_cfg_arr[q]->m_upsample                << endl;
             }
             else
             {
-                cout << "[ESPRESSO]:\t\t\t\tUnused" << endl;
+                cout << "[ESPRESSO]:\t\t\t\t\tUnused" << endl;
             }
         }
     }
