@@ -401,6 +401,26 @@ void espresso::CNN_Network::printLayerStats(int i)
         cout << "[ESPRESSO]:\tNumber of Kernels:    " << m_cnn[i]->m_numKernels << endl;
         cout << "[ESPRESSO]:\tKernel Depth:         " << m_cnn[i]->m_kernelDepth << endl;
         cout << "[ESPRESSO]:\tKernel Size:          " << m_cnn[i]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
+        for(int j = 0; j < m_cnn[i]->m_merged_layers.size(); j++)
+        {
+            int mli = m_cnn[i]->m_merged_layers[j];
+            cout << "[ESPRESSO]: " << m_cnn[mli]->m_layerName << endl;
+            cout << "[ESPRESSO]:\tType:                 "   << to_string(m_cnn[mli]->m_layerType)  << endl;
+            cout << "[ESPRESSO]:\tInput Depth:          "   << m_cnn[mli]->m_inputDepth            << endl;
+            cout << "[ESPRESSO]:\tNum Input Rows:       "   << m_cnn[mli]->m_numInputRows          << endl;
+            cout << "[ESPRESSO]:\tNum Input Cols:       "   << m_cnn[mli]->m_numInputCols          << endl;
+            cout << "[ESPRESSO]:\tOutput Depth:         "   << m_cnn[mli]->m_outputDepth           << endl;
+            cout << "[ESPRESSO]:\tNum Output Rows:      "   << m_cnn[mli]->m_numOutputRows         << endl;
+            cout << "[ESPRESSO]:\tNum Output Cols:      "   << m_cnn[mli]->m_numOutputCols         << endl;
+            if(m_cnn[mli]->m_layerType == CONVOLUTION)
+            {
+                cout << "[ESPRESSO]:\tStride:               " << m_cnn[mli]->m_stride << endl;
+                cout << "[ESPRESSO]:\tPadding:              " << m_cnn[mli]->m_padding << endl;
+                cout << "[ESPRESSO]:\tNumber of Kernels:    " << m_cnn[mli]->m_numKernels << endl;
+                cout << "[ESPRESSO]:\tKernel Depth:         " << m_cnn[mli]->m_kernelDepth << endl;
+                cout << "[ESPRESSO]:\tKernel Size:          " << m_cnn[mli]->m_numKernelRows << "x" << m_cnn[i]->m_numKernelCols << endl;
+            }
+        }
     }
 }
 
