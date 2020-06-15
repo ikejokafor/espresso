@@ -198,8 +198,8 @@ layAclPrm_t* Layer_Job::createAccelParams(
     int depthBgn,
     int depth,
     int krnl3x3Bgn,
-    int numKrnl3x3
-) {
+    int numKrnl3x3)
+{
     layAclPrm_t* layAclPrm = new layAclPrm_t;
     memset(layAclPrm, 0x0, sizeof(layAclPrm_t));
     layAclPrm->inputMaps = m_inputMaps->GetVolume(depthBgn, depth);
@@ -208,51 +208,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
     layAclPrm->opcode = (opcode_t)-1;
     bool first_depth_iter = (dpth_iter == 0);
     bool last_depth_iter = (dpth_iter == (m_num_depth_iter - 1));
-    bool first_krnl_iter = (krnl_iter == (m_num_krnl_iter - 1));
-    if(m_do_kernels1x1)
-    {
-        layAclPrm->kernels1x1 = (m_krnl_1x1_layer) ? m_kernels1x1 : m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
-        layAclPrm->kernels1x1Bias = m_kernels1x1Bias;
-        if(!m_krnl1x1_pding)
-        {
-            layAclPrm->outputMaps = new OutputMaps(m_kernels1x1->m_numKernels, m_numOutputMapRows, m_numOutputMapCols);
-        }
-        else
-        {
-            layAclPrm->outputMaps = new OutputMaps(m_kernels1x1->m_numKernels + (m_krnl1x1_pad_end - m_krnl1x1_pad_bgn), m_numOutputMapRows, m_numOutputMapCols);
-        }
-    }
-    else
-    {
-        layAclPrm->outputMaps = new OutputMaps(numKrnl3x3, m_numOutputMapRows, m_numOutputMapCols);
-    }
-    //////
-    if(m_krnl_1x1_layer)
-    {
-        layAclPrm->partialMaps = new PartialMaps(m_inputMaps);
-    }
-    else if(first_depth_iter)
-    {
-        layAclPrm->partialMaps = nullptr;
-    }
-    else
-    {
-        layAclPrm->partialMaps = new PartialMaps(m_lay_it_arr[krnl_iter][dpth_iter - 1]->m_outputMaps);
-    }
-    //////
-    if(last_depth_iter && m_do_resLayer && !m_do_1x1_res)
-    {
-        layAclPrm->residualMaps = m_residualMaps->GetVolume(krnl3x3Bgn, numKrnl3x3);
-    }
-    else if(last_depth_iter && m_do_resLayer && !m_do_1x1_res && first_krnl_iter)
-    {
-        layAclPrm->residualMaps = m_residualMaps;
-    }
-    //////
-    if((m_do_1x1_res || m_do_res_1x1 || m_krnl_1x1_layer || m_do_kernels1x1) && last_depth_iter && krnl_iter > 0)
-    {
-        layAclPrm->prev1x1maps = new Prev1x1Maps(m_lay_it_arr[krnl_iter][dpth_iter]->m_outputMaps);
-    }
+    bool first_krnl_iter = (krnl_iter == 0);
     //////
     if(m_do_1x1_res && last_depth_iter && m_num_depth_iter > 1 && first_krnl_iter)
     {
@@ -318,9 +274,54 @@ layAclPrm_t* Layer_Job::createAccelParams(
     {
         layAclPrm->opcode = OPCODE_15;
     }
-    else if(m_num_depth_iter == 1)
+    else
     {
         layAclPrm->opcode = OPCODE_16;
+    }
+    //////
+    if(last_depth_iter && m_do_resLayer && !m_do_1x1_res)
+    {
+        layAclPrm->residualMaps = m_residualMaps->GetVolume(krnl3x3Bgn, numKrnl3x3);
+    }
+    else if(last_depth_iter && m_do_resLayer && m_do_1x1_res && first_krnl_iter)
+    {
+        layAclPrm->residualMaps = m_residualMaps;
+    }
+    //////
+    if(m_do_kernels1x1)
+    {
+        layAclPrm->kernels1x1 = (m_krnl_1x1_layer) ? m_kernels1x1 : m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
+        layAclPrm->kernels1x1Bias = m_kernels1x1Bias;
+        if(!m_krnl1x1_pding)
+        {
+            layAclPrm->outputMaps = new OutputMaps(m_kernels1x1->m_numKernels, m_numOutputMapRows, m_numOutputMapCols);
+        }
+        else
+        {
+            layAclPrm->outputMaps = new OutputMaps(m_kernels1x1->m_numKernels + (m_krnl1x1_pad_end - m_krnl1x1_pad_bgn), m_numOutputMapRows, m_numOutputMapCols);
+        }
+    }
+    else
+    {
+        layAclPrm->outputMaps = new OutputMaps(numKrnl3x3, m_numOutputMapRows, m_numOutputMapCols);
+    }
+    //////
+    if((m_do_1x1_res || m_do_res_1x1 || m_do_kernels1x1) && !m_krnl_1x1_layer && last_depth_iter && !first_krnl_iter)
+    {
+        layAclPrm->prev1x1maps = new Prev1x1Maps(m_lay_it_arr[krnl_iter - 1][m_num_depth_iter - 1]->m_outputMaps);
+    }
+    //////
+    if(m_krnl_1x1_layer)
+    {
+        layAclPrm->partialMaps = new PartialMaps(m_inputMaps);
+    }
+    else if(first_depth_iter)
+    {
+        layAclPrm->partialMaps = nullptr;
+    }
+    else
+    {
+        layAclPrm->partialMaps = new PartialMaps(m_lay_it_arr[krnl_iter][dpth_iter - 1]->m_outputMaps);
     }
     return layAclPrm;
 }
