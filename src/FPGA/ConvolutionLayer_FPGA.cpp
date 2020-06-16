@@ -27,7 +27,7 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
 {
 	if(m_numKernelRows == 1 && m_fpga_merged)
 	{
-		cout << m_layerName << " Merged" << endl;
+		cout << "[ESPRESSO]: " << m_layerName << " Merged" << endl;
 		return;
 	}
 
@@ -66,7 +66,9 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
         m_fpga_do_res_1x1
 	);
 	m_layer_job->createLayerIters();
-	m_layer_job->process();
+    m_fpga_elapsed_time = 0.0f;
+    m_fpga_memPower = 0.0f;
+	m_layer_job->process(m_fpga_elapsed_time, m_fpga_memPower);
 	// delete m_layer_job;
 }
 

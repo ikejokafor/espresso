@@ -323,5 +323,7 @@ namespace espresso
 			int m_sequence_id;
 			int m_base_bandwidth;
 			int m_opt_bandwidth;
+            double m_fpga_elapsed_time;
+            double m_fpga_memPower;
 	};
 }

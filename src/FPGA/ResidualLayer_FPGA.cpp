@@ -20,7 +20,7 @@ void ResidualLayer_FPGA::ComputeLayer()
 			fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
 		}
 	}
-	std::cout << m_layerName << " Merged" << endl;
+	std::cout << "[ESPRESSO]: " << m_layerName << " Merged" << endl;
 }
 
 

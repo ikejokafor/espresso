@@ -202,7 +202,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
 {
     layAclPrm_t* layAclPrm = new layAclPrm_t;
     memset(layAclPrm, 0x0, sizeof(layAclPrm_t));
-    layAclPrm->inputMaps = m_inputMaps->GetVolume(depthBgn, depth);
+    layAclPrm->inputMaps = (m_krnl_1x1_layer) ? nullptr : m_inputMaps->GetVolume(depthBgn, depth);
     layAclPrm->kernels3x3 = (m_krnl_1x1_layer) ? nullptr : m_kernels3x3->GetVolume(krnl3x3Bgn, numKrnl3x3, depthBgn, depth);
     layAclPrm->kernels3x3Bias = (m_krnl_1x1_layer) ? nullptr : m_kernels3x3Bias->GetVolume(krnl3x3Bgn, numKrnl3x3);
     layAclPrm->opcode = (opcode_t)-1;
@@ -327,21 +327,18 @@ layAclPrm_t* Layer_Job::createAccelParams(
 }
 
 
-void Layer_Job::process()
+void Layer_Job::process(double& elapsed_time, double& memPower)
 {
     cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
     cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
-    // Get configuration
-    double elapsed_time = 0.0f;
-    double memPower = 0.0f;
     for(int k = 0; k < m_lay_it_arr.size(); k++)
     {
         for(int d = 0; d < m_lay_it_arr[k].size(); d++)
         {
             printConfig(k, d);
             cout << "[ESPRESSO]: " << m_layerName                      << endl;
-            cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << k << endl;
-            cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << d  << endl;
+            cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
+            cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;
             m_sysc_fpga_hndl->setConfig(m_lay_it_arr[k][d]->m_accelCfg);
             // m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_inputMaps);
             // m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_kernels3x3);
@@ -356,8 +353,8 @@ void Layer_Job::process()
             elapsed_time += (ptr[0]);
             memPower += (ptr[1]);
             cout << "[ESPRESSO]: " << m_layerName                    << endl;
-            cout << "[ESPRESSO]:\tFinished Kernel Iteration - " << k << endl;
-            cout << "[ESPRESSO]:\tFinished Depth Iteration - "  << d << endl;
+            cout << "[ESPRESSO]:\tFinished Kernel Iteration - " << (k + 1) << endl;
+            cout << "[ESPRESSO]:\tFinished Depth Iteration - "  << (d + 1) << endl;
         }
     }
     cout << "[ESPRESSO]: Total Layer Processing Time - " << elapsed_time << " ns " << endl;

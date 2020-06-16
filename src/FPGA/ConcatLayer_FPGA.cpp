@@ -20,7 +20,7 @@ void ConcatLayer_FPGA::ComputeLayer()
 			fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
 		}
 	}
-	cout << m_layerName << "Merged" <<  endl;
+	cout << m_layerName << " Merged" <<  endl;
 }
 
 

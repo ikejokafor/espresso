@@ -111,6 +111,7 @@ espresso::CNN_Network::CNN_Network(vector<espresso::layerInfo_obj*>& layerInfoAr
     {
         cout << "[ESPRESSO]: Loaded Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
     }
+    cout << endl;
     GetTopAndBottomLayers();
     for (int i = 0; i < m_cnn.size(); i++)
     {
@@ -330,6 +331,7 @@ void espresso::CNN_Network::Forward(string start, string end)
     for(int i = startIdx; i < endIdx; i++)
     {
         if(m_cnn[i]->m_layerType == espresso::YOLO
+            || m_cnn[i]->m_layerType == espresso::CONCAT
             || m_cnn[i]->m_layerType == espresso::PERMUTE     
             || m_cnn[i]->m_layerType == espresso::DETECTION_OUTPUT
             || m_cnn[i]->m_layerType == espresso::PRIOR_BOX       
@@ -340,9 +342,24 @@ void espresso::CNN_Network::Forward(string start, string end)
             || m_cnn[i]->m_layerType == espresso::PSROIPoolingLayer
         ) continue;
         printLayerStats(i);
-        cout << "[ESPRESSO]: Processing Layer" << " " << m_cnn[i]->m_layerName << endl;
+        //////
+        cout << "[ESPRESSO]: Processing Layer(s)" << " " << m_cnn[i]->m_layerName;
+        for(int j = 0; j < m_cnn[i]->m_merged_layers.size(); j++)
+        {
+            int mli = m_cnn[i]->m_merged_layers[j];
+            cout << ", " << m_cnn[mli]->m_layerName;
+        }
+        cout << endl;
+        //////
         m_cnn[i]->ComputeLayer();
-        cout << "[ESPRESSO]: Finished Layer" << " " << m_cnn[i]->m_layerName << endl;
+        //////
+        cout << "[ESPRESSO]: Finished Layer(s)" << " " << m_cnn[i]->m_layerName;
+        for(int j = 0; j < m_cnn[i]->m_merged_layers.size(); j++)
+        {
+            int mli = m_cnn[i]->m_merged_layers[j];
+            cout << ", " << m_cnn[mli]->m_layerName;
+        }
+        cout << endl;
     }
 }
 
@@ -520,6 +537,16 @@ void espresso::CNN_Network::printMemBWStats()
                         ) * PIXEL_SIZE;
             }
         }
-        cout << "Sequence" + std::to_string(m_cnn[sbi]->m_sequence_id) << "," << baseBW << "," << optBW << endl;
+        cout << "Sequence" << m_cnn[sbi]->m_sequence_id << "," << baseBW << "," << optBW << endl;
+    }
+}
+
+
+void espresso::CNN_Network::printExecutionStats()
+{
+    for(int i = 0; i < seqBgnIdxArr.size(); i++)
+    {
+        int sbi = seqBgnIdxArr[i];
+        cout << "Sequence" << m_cnn[sbi]->m_sequence_id << "," << m_cnn[sbi]->m_fpga_elapsed_time << "," << m_cnn[sbi]->m_fpga_memPower << endl;        
     }
 }

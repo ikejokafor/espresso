@@ -45,7 +45,7 @@ Layer_Iteration::Layer_Iteration(
 	m_prev1x1Maps = prev1x1Maps;
 
 
-	m_inputMaps->serialize();
+	(m_inputMaps) ? m_inputMaps->serialize() : void();
 	(m_kernels3x3) ? m_kernels3x3->serialize() : void();
 	(m_kernels3x3Bias) ? m_kernels3x3Bias->serialize() : void();
 	m_outputMaps->serialize();
@@ -55,45 +55,45 @@ Layer_Iteration::Layer_Iteration(
 	(m_residualMaps) ? m_residualMaps->serialize() : void();
 	(m_prev1x1Maps) ? m_prev1x1Maps->serialize() : void();
 
-    int inputMapDepth = inputMaps->m_inputMapDepth;
-	int remDepth = inputMaps->m_inputMapDepth;
+    int inputMapDepth = (m_inputMaps) ? m_inputMaps->m_inputMapDepth : 0;
+	int remDepth = (m_inputMaps) ? m_inputMaps->m_inputMapDepth : 0;
 	for(int i = 0; i < NUM_FAS; i++)
 	{
 		m_accelCfg->m_FAS_cfg_arr.push_back(new FAS_cfg(
 			i,
 			opcode,
 			m_pxSeqCfg->m_address,
-			(kernels1x1) ? kernels1x1->m_address : 0,
-			(kernels1x1Bias) ? kernels1x1Bias->m_address : 0,
-			(partialMaps) ? partialMaps->m_address : 0,
-			(residualMaps) ? residualMaps->m_address : 0,
+			(m_kernels1x1) ? m_kernels1x1->m_address : 0,
+			(m_kernels1x1Bias) ? m_kernels1x1Bias->m_address : 0,
+			(m_partialMaps) ? m_partialMaps->m_address : 0,
+			(m_residualMaps) ? m_residualMaps->m_address : 0,
 			outputMaps->m_address,
 			m_pxSeqCfg->m_size,
-			(inputMaps) ? inputMaps->m_size : 0,
-			(kernels3x3) ? kernels3x3->m_size : 0,
-			(kernels1x1) ? kernels1x1->m_size : 0,
-			(kernels3x3Bias) ? kernels3x3Bias->m_size : 0,
-			(kernels1x1Bias) ? kernels1x1Bias->m_size : 0,
-			(kernels1x1) ? kernels1x1->m_numKernels : 0,
-			(kernels1x1) ? kernels1x1->m_kernelDepth : 0,
-			(partialMaps) ? partialMaps->m_size : 0,
-			(residualMaps) ? residualMaps->m_size : 0,
-			outputMaps->m_size,
-            (prev1x1Maps) ? prev1x1Maps->m_size : 0,
-			(kernels1x1) ? (kernels1x1->m_kernelDepth * CO_HIGH_WATERMARK_FACTOR) : (outputMaps->m_outputMapDepth * CO_HIGH_WATERMARK_FACTOR),
-			(residualMaps) ? residualMaps->m_residualMapDepth * RM_LOW_WATERMARK_FACTOR : 0,
-			(partialMaps) ? partialMaps->m_partialMapDepth * PM_LOW_WATERMARK_FACTOR : 0,
-            (prev1x1Maps) ? prev1x1Maps->m_prev1x1MapDepth * PV_LOW_WATERMARK_FACTOR : 0,
-			(residualMaps) ? residualMaps->m_residualMapDepth * RM_FETCH_FACTOR : 0,
-			(partialMaps) ? partialMaps->m_partialMapDepth * PM_FETCH_FACTOR : 0,
-            (prev1x1Maps) ? prev1x1Maps->m_prev1x1MapDepth * PV_FETCH_FACTOR : 0,
+			(m_inputMaps) ? m_inputMaps->m_size : 0,
+			(m_kernels3x3) ? m_kernels3x3->m_size : 0,
+			(m_kernels1x1) ? m_kernels1x1->m_size : 0,
+			(m_kernels3x3Bias) ? m_kernels3x3Bias->m_size : 0,
+			(m_kernels1x1Bias) ? m_kernels1x1Bias->m_size : 0,
+			(m_kernels1x1) ? m_kernels1x1->m_numKernels : 0,
+			(m_kernels1x1) ? m_kernels1x1->m_kernelDepth : 0,
+			(m_partialMaps) ? m_partialMaps->m_size : 0,
+			(m_residualMaps) ? m_residualMaps->m_size : 0,
+			m_outputMaps->m_size,
+            (m_prev1x1Maps) ? m_prev1x1Maps->m_size : 0,
+			(m_kernels1x1) ? (m_kernels1x1->m_kernelDepth * CO_HIGH_WATERMARK_FACTOR) : (m_outputMaps->m_outputMapDepth * CO_HIGH_WATERMARK_FACTOR),
+			(m_residualMaps) ? m_residualMaps->m_residualMapDepth * RM_LOW_WATERMARK_FACTOR : 0,
+			(m_partialMaps) ? m_partialMaps->m_partialMapDepth * PM_LOW_WATERMARK_FACTOR : 0,
+            (m_prev1x1Maps) ? m_prev1x1Maps->m_prev1x1MapDepth * PV_LOW_WATERMARK_FACTOR : 0,
+			(m_residualMaps) ? m_residualMaps->m_residualMapDepth * RM_FETCH_FACTOR : 0,
+			(m_partialMaps) ? m_partialMaps->m_partialMapDepth * PM_FETCH_FACTOR : 0,
+            (m_prev1x1Maps) ? m_prev1x1Maps->m_prev1x1MapDepth * PV_FETCH_FACTOR : 0,
 			krnl1x1_pding,
 			krnl1x1_pad_bgn,
 			krnl1x1_pad_end
 		));
-		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (partialMaps != nullptr) ? partialMaps->m_address : -1;
-		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (residualMaps != nullptr) ? residualMaps->m_address : -1;
-		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapAddr = outputMaps->m_address;
+		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (m_partialMaps) ? m_partialMaps->m_address : -1;
+		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (m_residualMaps) ? m_residualMaps->m_address : -1;
+		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapAddr = m_outputMaps->m_address;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapFetchFactor = (m_inputMaps) ? m_inputMaps->m_numInputMapCols : 0;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapStoreFactor = m_outputMaps->m_outputMapDepth;
 		auto& imAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_inMapAddrArr;
@@ -117,12 +117,12 @@ Layer_Iteration::Layer_Iteration(
 						j,
 						k,
 						true,
-						inputMaps->m_numInputMapRows,
-						inputMaps->m_numInputMapCols,
-						(kernels3x3) ? kernels3x3->m_numKernels : 0,
-						(kernels3x3) ? kernels3x3->m_kernelDepth : 0,
-						(kernels3x3) ? kernels3x3->m_numKernelRows : 0,
-						(kernels3x3) ? kernels3x3->m_numKernelCols : 0,
+						m_inputMaps->m_numInputMapRows,
+						m_inputMaps->m_numInputMapCols,
+						(m_kernels3x3) ? m_kernels3x3->m_numKernels : 0,
+						(m_kernels3x3) ? m_kernels3x3->m_kernelDepth : 0,
+						(m_kernels3x3) ? m_kernels3x3->m_numKernelRows : 0,
+						(m_kernels3x3) ? m_kernels3x3->m_numKernelCols : 0,
 						stride,
 						upsample,
 						padding,
@@ -133,11 +133,11 @@ Layer_Iteration::Layer_Iteration(
 					);
 					QUAD_cfg_arr.push_back(quad_cfg);
 					QUAD_en_arr.push_back(true);
-					int imDepthStep = QUAD_MAX_DEPTH * inputMaps->m_numInputMapRows * inputMaps->m_numInputMapCols;
+					int imDepthStep = QUAD_MAX_DEPTH * m_inputMaps->m_numInputMapRows * m_inputMaps->m_numInputMapCols;
 					int krn3x3DepthStep = QUAD_MAX_DEPTH * 3 * 3;
-					imAddrArr[j][k] = inputMaps->m_address + (k * imDepthStep);
-					krnl3x3AddrArr[j][k] = (kernels3x3) ? kernels3x3->m_address + (k * krn3x3DepthStep) : 0;
-					krnl3x3BiasAddrArr[j][k] = (kernels3x3Bias) ? kernels3x3Bias->m_address : 0;
+					imAddrArr[j][k] = m_inputMaps->m_address + (k * imDepthStep);
+					krnl3x3AddrArr[j][k] = (kernels3x3) ? m_kernels3x3->m_address + (k * krn3x3DepthStep) : 0;
+					krnl3x3BiasAddrArr[j][k] = (kernels3x3Bias) ? m_kernels3x3Bias->m_address : 0;
 				}
 				else
 				{
