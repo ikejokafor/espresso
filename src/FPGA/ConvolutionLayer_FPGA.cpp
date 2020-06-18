@@ -68,8 +68,9 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
 	m_layer_job->createLayerIters();
     m_fpga_elapsed_time = 0.0f;
     m_fpga_memPower = 0.0f;
-	m_layer_job->process(m_fpga_elapsed_time, m_fpga_memPower);
-	// delete m_layer_job;
+	m_fpga_avgIterTime = 0.0f;
+	m_layer_job->process(m_fpga_elapsed_time, m_fpga_avgIterTime, m_fpga_memPower);
+	delete m_layer_job;
 }
 
 

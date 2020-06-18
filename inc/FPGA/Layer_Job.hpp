@@ -95,7 +95,7 @@ class Layer_Job
             int numKrnl3x3
 		);
 		void printConfig(int k, int d);
-        void process(double& elapsed_time, double& memPower);
+        void process(double& elapsed_time, double& avgIterTime, double& memPower);
 
 		std::string m_layerName;
         int m_inputMapDepth;

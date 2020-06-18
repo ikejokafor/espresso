@@ -44,13 +44,14 @@ Layer_Job::Layer_Job(
     int fxPtLength,
     int numFracBits
 ) {
-    m_inputMaps             = nullptr;
-    m_kernels3x3            = nullptr;
-    m_residualMaps          = nullptr;
-    m_outputMaps            = nullptr;
-    m_kernels3x3Bias        = nullptr;
-    m_kernels1x1            = nullptr;
-    m_kernels1x1Bias        = nullptr;
+    m_inputMaps             = NULL;
+    m_kernels3x3            = NULL;
+    m_residualMaps          = NULL;
+    m_outputMaps            = NULL;
+    m_kernels3x3Bias        = NULL;
+    m_kernels1x1            = NULL;
+    m_kernels1x1Bias        = NULL;
+	m_pyld					= NULL;
     m_layerName             = layerName         ;
     m_inputMapDepth         = inputMapDepth     ;
     m_numInputMapRows       = numInputMapRows   ;
@@ -119,14 +120,16 @@ Layer_Job::~Layer_Job()
 	(m_kernels3x3Bias) ? delete m_kernels3x3Bias : void();
     (m_kernels1x1) ? delete m_kernels1x1 : void();
     (m_kernels1x1Bias) ? delete m_kernels1x1Bias : void();
+	(m_pyld) ? delete m_pyld : void();
 
-    m_inputMaps = nullptr;
-	m_kernels3x3 = nullptr;
-	m_residualMaps = nullptr;
-	m_outputMaps = nullptr;
-	m_kernels3x3Bias = nullptr;
-    m_kernels1x1 = nullptr;
-    m_kernels1x1Bias = nullptr;
+    m_inputMaps = NULL;
+	m_kernels3x3 = NULL;
+	m_residualMaps = NULL;
+	m_outputMaps = NULL;
+	m_kernels3x3Bias = NULL;
+    m_kernels1x1 = NULL;
+    m_kernels1x1Bias = NULL;
+	m_pyld = NULL;
 
     int i_end = m_lay_it_arr.size();
     for(int i = 0; i < i_end; i++)
@@ -137,8 +140,6 @@ Layer_Job::~Layer_Job()
             delete m_lay_it_arr[i][j];
         }
     }
-
-
 }
 
 
@@ -202,9 +203,9 @@ layAclPrm_t* Layer_Job::createAccelParams(
 {
     layAclPrm_t* layAclPrm = new layAclPrm_t;
     memset(layAclPrm, 0x0, sizeof(layAclPrm_t));
-    layAclPrm->inputMaps = (m_krnl_1x1_layer) ? nullptr : m_inputMaps->GetVolume(depthBgn, depth);
-    layAclPrm->kernels3x3 = (m_krnl_1x1_layer) ? nullptr : m_kernels3x3->GetVolume(krnl3x3Bgn, numKrnl3x3, depthBgn, depth);
-    layAclPrm->kernels3x3Bias = (m_krnl_1x1_layer) ? nullptr : m_kernels3x3Bias->GetVolume(krnl3x3Bgn, numKrnl3x3);
+    layAclPrm->inputMaps = (m_krnl_1x1_layer) ? NULL : m_inputMaps->GetVolume(depthBgn, depth);
+    layAclPrm->kernels3x3 = (m_krnl_1x1_layer) ? NULL : m_kernels3x3->GetVolume(krnl3x3Bgn, numKrnl3x3, depthBgn, depth);
+    layAclPrm->kernels3x3Bias = (m_krnl_1x1_layer) ? NULL : m_kernels3x3Bias->GetVolume(krnl3x3Bgn, numKrnl3x3);
     layAclPrm->opcode = (opcode_t)-1;
     bool first_depth_iter = (dpth_iter == 0);
     bool last_depth_iter = (dpth_iter == (m_num_depth_iter - 1));
@@ -317,7 +318,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
     }
     else if(first_depth_iter)
     {
-        layAclPrm->partialMaps = nullptr;
+        layAclPrm->partialMaps = NULL;
     }
     else
     {
@@ -327,7 +328,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
 }
 
 
-void Layer_Job::process(double& elapsed_time, double& memPower)
+void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPower)
 {
     cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
     cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
@@ -357,7 +358,10 @@ void Layer_Job::process(double& elapsed_time, double& memPower)
             cout << "[ESPRESSO]:\tFinished Depth Iteration - "  << (d + 1) << endl;
         }
     }
-    cout << "[ESPRESSO]: Total Layer Processing Time - " << elapsed_time << " ns " << endl;
+	double numTotalIter = m_num_krnl_iter * m_num_depth_iter;
+	avgIterTime = elapsed_time / numTotalIter;
+	cout << "[ESPRESSO]: Total Layer Processing Time - " << elapsed_time << " ns " << endl;
+    cout << "[ESPRESSO]: Avgerage Layer Iteration Time - " << avgIterTime << " ns " << endl;
     cout << "[ESPRESSO]: Total Power Consumed - " << memPower << " mW " << endl;
 }
 

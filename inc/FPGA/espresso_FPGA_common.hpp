@@ -11,11 +11,10 @@
 #define QUAD_MAX_DEPTH		        8
 #define QUAD_DPTH_SIMD		        (QUAD_MAX_DEPTH * NUM_TOTAL_QUADS)
 #define PIXEL_SIZE                  2
-#define CO_HIGH_WATERMARK_FACTOR    1
+#define CO_HIGH_WATERMARK_FACTOR    3
 #define RM_LOW_WATERMARK_FACTOR     1
 #define PM_LOW_WATERMARK_FACTOR     1
 #define PV_LOW_WATERMARK_FACTOR     1
-#define CO_FETCH_FACTOR             1
 #define RM_FETCH_FACTOR             1
 #define PM_FETCH_FACTOR             1
 #define PV_FETCH_FACTOR             1

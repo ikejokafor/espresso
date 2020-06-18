@@ -22,16 +22,16 @@ Layer_Iteration::Layer_Iteration(
 	int krnl1x1_pad_end) 
 {
 	m_opcode			= opcode;
-	m_pxSeqCfg			= nullptr;
-	m_inputMaps 		= nullptr;
-	m_kernels3x3		= nullptr;
-	m_residualMaps		= nullptr;
-	m_outputMaps		= nullptr;
-	m_kernels3x3Bias	= nullptr;
-	m_kernels1x1		= nullptr;
-	m_kernels1x1Bias	= nullptr;
-	m_partialMaps       = nullptr;
-	m_prev1x1Maps		= nullptr;
+	m_pxSeqCfg			= NULL;
+	m_inputMaps 		= NULL;
+	m_kernels3x3		= NULL;
+	m_residualMaps		= NULL;
+	m_outputMaps		= NULL;
+	m_kernels3x3Bias	= NULL;
+	m_kernels1x1		= NULL;
+	m_kernels1x1Bias	= NULL;
+	m_partialMaps       = NULL;
+	m_prev1x1Maps		= NULL;
 	m_pxSeqCfg = new PixelSeqCfg(stride);
 	m_accelCfg = new AccelConfig();
 	m_inputMaps	= inputMaps;
@@ -155,6 +155,7 @@ Layer_Iteration::Layer_Iteration(
 
 Layer_Iteration::~Layer_Iteration()
 {
+	(m_prev1x1Maps) ? delete m_prev1x1Maps : void();
 	(m_pxSeqCfg) ? delete m_pxSeqCfg : void();
 	(m_accelCfg) ? delete m_accelCfg : void();
 	(m_inputMaps) ? delete m_inputMaps : void();
@@ -163,15 +164,18 @@ Layer_Iteration::~Layer_Iteration()
 	(m_outputMaps) ? delete m_outputMaps : void();
 	(m_kernels3x3Bias) ? delete m_kernels3x3Bias : void();
     (m_kernels1x1) ? delete m_kernels1x1 : void();
-    (m_kernels1x1Bias) ? delete m_kernels1x1Bias : void();
+    // (m_kernels1x1Bias) ? delete m_kernels1x1Bias : void();
+	(m_partialMaps) ? delete m_partialMaps : void();
 	
-    m_pxSeqCfg = nullptr;
-	m_accelCfg = nullptr;
-	m_inputMaps = nullptr;
-	m_kernels3x3 = nullptr;
-	m_residualMaps = nullptr;
-	m_outputMaps = nullptr;
-	m_kernels3x3Bias = nullptr;
-    m_kernels1x1 = nullptr;
-    m_kernels1x1Bias = nullptr;
+	m_prev1x1Maps = NULL;
+    m_pxSeqCfg = NULL;
+	m_accelCfg = NULL;
+	m_inputMaps = NULL;
+	m_kernels3x3 = NULL;
+	m_residualMaps = NULL;
+	m_outputMaps = NULL;
+	m_kernels3x3Bias = NULL;
+    m_kernels1x1 = NULL;
+    m_kernels1x1Bias = NULL;
+	m_partialMaps = NULL;
 }

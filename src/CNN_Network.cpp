@@ -547,6 +547,10 @@ void espresso::CNN_Network::printExecutionStats()
     for(int i = 0; i < seqBgnIdxArr.size(); i++)
     {
         int sbi = seqBgnIdxArr[i];
-        cout << "Sequence" << m_cnn[sbi]->m_sequence_id << "," << m_cnn[sbi]->m_fpga_elapsed_time << "," << m_cnn[sbi]->m_fpga_memPower << endl;        
+        cout 	<< "Sequence" 
+				<< m_cnn[sbi]->m_sequence_id		<< "," 
+				<< m_cnn[sbi]->m_fpga_elapsed_time	<< "," 
+				<< m_cnn[sbi]->m_fpga_avgIterTime	<< "," 
+				<< m_cnn[sbi]->m_fpga_memPower      << endl;        
     }
 }
