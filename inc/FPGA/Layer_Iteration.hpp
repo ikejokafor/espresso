@@ -38,7 +38,9 @@ class Layer_Iteration
 			bool activation,
 			bool krnl1x1_pding,
 			int krnl1x1_pad_bgn,
-			int krnl1x1_pad_end
+			int krnl1x1_pad_end,
+			bool del_res,
+			bool del_1x1
 		);
 		~Layer_Iteration();
 
@@ -54,4 +56,6 @@ class Layer_Iteration
 		OutputMaps* m_outputMaps		;
 		Prev1x1Maps* m_prev1x1Maps		;
 		opcode_t m_opcode				;
+		bool m_del_res					;
+		bool m_del_1x1					;
 };

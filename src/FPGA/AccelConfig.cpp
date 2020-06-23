@@ -106,6 +106,7 @@ void AccelConfig::serialize()
                 cfg[idx].outMapAddr					= m_FAS_cfg_arr[f]->m_outMapAddr;
                 cfg[idx].pixelSeqAddr 				= m_FAS_cfg_arr[f]->m_pixelSeqAddr;
                 cfg[idx].QUAD_id 					= QUAD_cfg_arr[q]->m_QUAD_id;
+                cfg[idx].res_high_watermark         = QUAD_cfg_arr[q]->m_res_high_watermark;
                 cfg[idx].QUAD_en					= QUAD_en_arr[q];
                 cfg[idx].inMapDepth                 = QUAD_cfg_arr[q]->m_inMapDepth;
                 cfg[idx].stride 					= QUAD_cfg_arr[q]->m_stride;
@@ -189,6 +190,7 @@ void AccelConfig::deserialize()
                 m_FAS_cfg_arr[f]->m_outMapAddr				= cfg[idx].outMapAddr;
                 m_FAS_cfg_arr[f]->m_pixelSeqAddr			= cfg[idx].pixelSeqAddr;
                 QUAD_cfg_arr[q]->m_QUAD_id				    = cfg[idx].QUAD_id;
+                QUAD_cfg_arr[q]->m_res_high_watermark       = cfg[idx].res_high_watermark;
                 QUAD_en_arr[q]				                = cfg[idx].QUAD_en;
                 QUAD_cfg_arr[q]->m_inMapDepth               = cfg[idx].inMapDepth;
                 QUAD_cfg_arr[q]->m_stride				    = cfg[idx].stride;

@@ -158,6 +158,8 @@ void Layer_Job::createLayerIters()
         int depth;
         for(int j = 0, depthBgn = 0; j < m_num_depth_iter; j++, depthBgn += depth)
         {
+			bool del_res;					
+			bool del_1x1;
             depth = min(QUAD_DPTH_SIMD, remDepth);
             layAclPrm = createAccelParams(
                 i,
@@ -165,7 +167,9 @@ void Layer_Job::createLayerIters()
                 depthBgn,
                 depth,
                 krnlBgn,
-                numKrnl
+                numKrnl,
+				del_res,
+				del_1x1	
             );
             m_lay_it_arr[i].push_back(new Layer_Iteration(
                 layAclPrm->opcode,
@@ -184,7 +188,9 @@ void Layer_Job::createLayerIters()
                 m_activation,
                 m_krnl1x1_pding,
                 m_krnl1x1_pad_bgn,
-                m_krnl1x1_pad_end
+                m_krnl1x1_pad_end,
+				del_res,
+				del_1x1	
             ));
             remDepth -= depth;
         }
@@ -199,7 +205,9 @@ layAclPrm_t* Layer_Job::createAccelParams(
     int depthBgn,
     int depth,
     int krnl3x3Bgn,
-    int numKrnl3x3)
+    int numKrnl3x3,
+	bool& del_res,
+	bool& del_1x1)
 {
     layAclPrm_t* layAclPrm = new layAclPrm_t;
     memset(layAclPrm, 0x0, sizeof(layAclPrm_t));
@@ -283,15 +291,18 @@ layAclPrm_t* Layer_Job::createAccelParams(
     if(last_depth_iter && m_do_resLayer && !m_do_1x1_res)
     {
         layAclPrm->residualMaps = m_residualMaps->GetVolume(krnl3x3Bgn, numKrnl3x3);
+		del_res = true;
     }
     else if(last_depth_iter && m_do_resLayer && m_do_1x1_res && first_krnl_iter)
     {
         layAclPrm->residualMaps = m_residualMaps;
+		del_res = false;
     }
     //////
     if(m_do_kernels1x1 && last_depth_iter)
     {
         layAclPrm->kernels1x1 = (m_krnl_1x1_layer) ? m_kernels1x1 : m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
+		del_1x1 = (m_krnl_1x1_layer) ? false : true;
         layAclPrm->kernels1x1Bias = m_kernels1x1Bias;
         if(!m_krnl1x1_pding)
         {
@@ -408,6 +419,7 @@ void Layer_Job::printConfig(int k, int d)
             cout << "[ESPRESSO]:\t\t\tQUAD_id: "  << QUAD_cfg_arr[q]->m_QUAD_id << endl;
             if(QUAD_en_arr[q])
             {
+                cout << "[ESPRESSO]:\t\t\t\tResult High WaterMark:              " << QUAD_cfg_arr[q]->m_res_high_watermark      << endl;
                 cout << "[ESPRESSO]:\t\t\t\tStride:                             " << QUAD_cfg_arr[q]->m_stride                  << endl;
                 cout << "[ESPRESSO]:\t\t\t\tNumber of Expanded Input Rows:      " << QUAD_cfg_arr[q]->m_num_expd_input_rows     << endl;
                 cout << "[ESPRESSO]:\t\t\t\tNumber of Expanded Input Coloumns:  " << QUAD_cfg_arr[q]->m_num_expd_input_cols     << endl;

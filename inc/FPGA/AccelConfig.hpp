@@ -49,6 +49,7 @@ class AccelConfig : public Accel_Payload
 			uint64_t rm_fetch_amount			;
 			uint64_t pm_fetch_amount			;
 			uint64_t pv_fetch_amount			;
+            uint64_t res_high_watermark         ;
 			uint64_t krnl1x1_pding				;
 			uint64_t krnl1x1_pad_bgn			;
 			uint64_t krnl1x1_pad_end			;

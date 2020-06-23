@@ -328,6 +328,7 @@ void espresso::CNN_Network::Forward(string start, string end)
     int endIdx = -1;
     getBgnEndLayer(startIdx, start, endIdx, end);
     // Forward Propagation
+    if(startIdx == endIdx) endIdx++;
     for(int i = startIdx; i < endIdx; i++)
     {
         if(m_cnn[i]->m_layerType == espresso::YOLO
@@ -544,13 +545,17 @@ void espresso::CNN_Network::printMemBWStats()
 
 void espresso::CNN_Network::printExecutionStats()
 {
+	ofstream fd;
+	string WSpath = string(getenv("WORKSPACE_PATH"));
+	fd.open(WSpath + "/espressoTester/build/debug/output.txt");
     for(int i = 0; i < seqBgnIdxArr.size(); i++)
     {
         int sbi = seqBgnIdxArr[i];
-        cout 	<< "Sequence" 
+        fd 		<< "Sequence" 
 				<< m_cnn[sbi]->m_sequence_id		<< "," 
 				<< m_cnn[sbi]->m_fpga_elapsed_time	<< "," 
 				<< m_cnn[sbi]->m_fpga_avgIterTime	<< "," 
-				<< m_cnn[sbi]->m_fpga_memPower      << endl;        
+				<< m_cnn[sbi]->m_fpga_memPower 		<< endl;        
     }
+	fd.close();
 }

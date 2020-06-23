@@ -19,7 +19,9 @@ Layer_Iteration::Layer_Iteration(
 	bool activation,
 	bool krnl1x1_pding,
 	int krnl1x1_pad_bgn,
-	int krnl1x1_pad_end) 
+	int krnl1x1_pad_end,	
+	bool del_res,
+	bool del_1x1)
 {
 	m_opcode			= opcode;
 	m_pxSeqCfg			= NULL;
@@ -43,6 +45,8 @@ Layer_Iteration::Layer_Iteration(
 	m_residualMaps = residualMaps;
 	m_outputMaps = outputMaps;
 	m_prev1x1Maps = prev1x1Maps;
+	m_del_res = del_res;
+	m_del_1x1 = del_1x1;
 
 
 	(m_inputMaps) ? m_inputMaps->serialize() : void();
@@ -129,7 +133,8 @@ Layer_Iteration::Layer_Iteration(
 						activation,
 						master_QUAD,
 						cascade,
-						(remDepth > QUAD_MAX_DEPTH) ? QUAD_MAX_DEPTH : remDepth
+						(remDepth > QUAD_MAX_DEPTH) ? QUAD_MAX_DEPTH : remDepth,
+                        RE_HIGH_WATERMARK
 					);
 					QUAD_cfg_arr.push_back(quad_cfg);
 					QUAD_en_arr.push_back(true);
@@ -160,13 +165,12 @@ Layer_Iteration::~Layer_Iteration()
 	(m_accelCfg) ? delete m_accelCfg : void();
 	(m_inputMaps) ? delete m_inputMaps : void();
 	(m_kernels3x3) ? delete m_kernels3x3 : void();
-	(m_residualMaps) ? delete m_residualMaps : void();
+	(m_residualMaps && m_del_res) ? delete m_residualMaps : void();
 	(m_outputMaps) ? delete m_outputMaps : void();
 	(m_kernels3x3Bias) ? delete m_kernels3x3Bias : void();
-    (m_kernels1x1) ? delete m_kernels1x1 : void();
+    (m_kernels1x1 && m_del_1x1) ? delete m_kernels1x1 : void();
     // (m_kernels1x1Bias) ? delete m_kernels1x1Bias : void();
-	(m_partialMaps) ? delete m_partialMaps : void();
-	
+	(m_partialMaps) ? delete m_partialMaps : void();	
 	m_prev1x1Maps = NULL;
     m_pxSeqCfg = NULL;
 	m_accelCfg = NULL;

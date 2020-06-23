@@ -1,3 +1,19 @@
+#pragma once
+
+
+static int RE_HIGH_WATERMARK           = 8;
+// int CM_HIGH_WATERMARK_FACTOR    = 3;
+// int RM_LOW_WATERMARK_FACTOR     = 1;
+// int PM_LOW_WATERMARK_FACTOR     = 1;
+// int PV_LOW_WATERMARK_FACTOR     = 1;
+// int RM_FETCH_FACTOR             = 1;
+// int PM_FETCH_FACTOR             = 1;
+// int PV_FETCH_FACTOR             = 1;
+// int RE_FIFO_DEPTH               = 128;
+// int CM_FIFO_DEPTH               = 512;   
+// int PM_FIFO_DEPTH               = 256;
+// int PV_FIFO_DEPTH               = 256;
+
 #define SYSTEMC
 #define PIX_SEQ_CONFIG_SIZE         2
 #define WINDOW_3x3_NUM_CYCLES	    5

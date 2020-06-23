@@ -99,7 +99,6 @@ class FAS_cfg
         int m_rm_fetch_amount;
         int m_pm_fetch_amount;
         int m_pv_fetch_amount;
-        int m_numOutputTotal;
         bool m_krnl1x1_pding;
         int m_krnl1x1_pad_bgn;
         int m_krnl1x1_pad_end;
