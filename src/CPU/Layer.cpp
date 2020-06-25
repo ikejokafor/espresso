@@ -33,6 +33,7 @@ espresso::Layer::Layer(espresso::layerInfo_obj* layerInfo) {
 	m_darknet_classes_param		= layerInfo->darknet_classes_param;
 	m_darknet_outputs_param		= layerInfo->darknet_outputs_param;
 	m_backend					= layerInfo->backend;
+    m_fpga_merged               = false;
 	m_fpga_upsample				= false;
 	m_fpga_activation			= false;
 	if(layerInfo->flFilterData)

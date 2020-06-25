@@ -46,6 +46,7 @@ namespace espresso
 			void GetTopAndBottomLayers();
 			void GetOutputLayers(std::vector<int> &outputLayers);
 			void getBgnEndLayer(int& startIdx, std::string start, int& endIdx, std::string end);
+            void cfgFPGALayers();
 			void cfgFPGALayers(std::string mrgFmt_fn);
 			void Forward(std::string start = "", std::string end = "");
 			int ReturnLayerIdx(std::string name);

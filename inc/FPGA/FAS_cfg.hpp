@@ -25,7 +25,8 @@ typedef enum
     OPCODE_13   = 13,
     OPCODE_14   = 14,
     OPCODE_15   = 15,
-    OPCODE_16   = 16
+    OPCODE_16   = 16,
+    OPCODE_17   = 17
 } opcode_t;
 
 

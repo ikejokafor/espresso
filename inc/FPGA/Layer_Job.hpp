@@ -75,6 +75,7 @@ class Layer_Job
 			bool upsample,
 			int padding,
 			bool do_resLayer,
+            bool do_resLayer_only,
 			bool activation,
 			bool do_kernels1x1,
 			FPGA_hndl* fpga_hndl,
@@ -118,6 +119,7 @@ class Layer_Job
 		bool m_upsample;
 		int m_padding;
 		bool m_do_resLayer;
+        bool m_do_resLayer_only;
 		bool m_do_kernels1x1;
 		bool m_activation;
 		bool m_krnl1x1_pding;

@@ -10,17 +10,17 @@ ResidualLayer_FPGA::~ResidualLayer_FPGA() { }
 
 void ResidualLayer_FPGA::ComputeLayer()
 {
-	if (m_bottomLayers[0]->m_precision == espresso::FLOAT)
-	{
-		int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
-		fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
-		float        *flData = m_bottomLayers[0]->m_blob.flData;
-		for (int i = 0; i < blobSize; i++)
-		{
-			fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
-		}
-	}
-	std::cout << "[ESPRESSO]: " << m_layerName << " Merged" << endl;
+	// if (m_bottomLayers[0]->m_precision == espresso::FLOAT)
+	// {
+	// 	int blobSize         = m_bottomLayers[0]->m_blob.blobSize;
+	// 	fixedPoint_t *fxData = m_bottomLayers[0]->m_blob.fxData;
+	// 	float        *flData = m_bottomLayers[0]->m_blob.flData;
+	// 	for (int i = 0; i < blobSize; i++)
+	// 	{
+	// 		fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
+	// 	}
+	// }
+	ComputeLayer_FxPt();
 }
 
 
@@ -29,7 +29,53 @@ void ResidualLayer_FPGA::ComputeLayer_FlPt() { }
 
 void ResidualLayer_FPGA::ComputeLayer_FxPt()
 {
+    if(m_fpga_merged)
+	{
+		cout << "[ESPRESSO]: " << m_layerName << " Merged" << endl;
+		return;
+	}
 
+    Layer_Job* m_layer_job = new Layer_Job(
+		m_layerName,
+		m_inputDepth,
+		m_numInputRows,
+		m_numInputCols,
+		m_bottomLayers[0]->m_blob.flData,
+		m_numKernels,
+		m_kernelDepth,
+		m_numKernelRows,
+		m_numKernelCols,
+		m_flFilterData,
+		m_outputDepth,
+		m_numOutputRows,
+		m_numOutputCols,
+		m_residualMapDepth,
+		m_numResidualMapRows,
+		m_numResidualMapsCols,
+		m_residualMapData,
+		m_num1x1Kernels,
+		m_kernel1x1Depth,
+		m_kernel1x1Data,
+		m_flBiasData,
+		m_bias1x1Data,
+		m_stride,
+		m_fpga_upsample,
+		m_padding,
+		m_fpga_do_res_layer,
+        m_fpga_do_res_layer_only,
+		m_activation,
+		m_fpga_do_kernels1x1,
+		m_fpga_hndl,
+		m_fpga_krnl_1x1_layer,
+        m_fpga_do_1x1_res,
+        m_fpga_do_res_1x1
+	);
+	m_layer_job->createLayerIters();
+    m_fpga_elapsed_time = 0.0f;
+    m_fpga_memPower = 0.0f;
+	m_fpga_avgIterTime = 0.0f;
+	m_layer_job->process(m_fpga_elapsed_time, m_fpga_avgIterTime, m_fpga_memPower);
+	delete m_layer_job;
 }
 
 

@@ -270,6 +270,31 @@ void espresso::CNN_Network::mergeLayers(int idx, int seqID, vector<string>& sequ
 }
 
 
+void espresso::CNN_Network::cfgFPGALayers()
+{
+    for(int i = 0; i < m_cnn.size(); i++)
+    {
+        if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1)
+        {
+            m_cnn[i]->m_kernel1x1Data           = m_cnn[i]->m_flFilterData;
+            m_cnn[i]->m_bias1x1Data             = m_cnn[i]->m_flBiasData;
+            m_cnn[i]->m_num1x1Kernels           = m_cnn[i]->m_numKernels;
+            m_cnn[i]->m_kernel1x1Depth          = m_cnn[i]->m_kernelDepth;
+            m_cnn[i]->m_fpga_do_kernels1x1      = true;
+            m_cnn[i]->m_fpga_krnl_1x1_layer     = true;
+        }
+        else if(m_cnn[i]->m_layerType == RESIDUAL)
+        {
+            m_cnn[i]->m_fpga_do_res_layer_only   = true;
+            m_cnn[i]->m_residualMapDepth    = m_cnn[i]->m_bottomLayers[0]->m_blob.depth;
+            m_cnn[i]->m_numResidualMapRows  = m_cnn[i]->m_bottomLayers[0]->m_blob.numRows;
+            m_cnn[i]->m_numResidualMapsCols = m_cnn[i]->m_bottomLayers[0]->m_blob.numCols;
+            m_cnn[i]->m_residualMapData     = m_cnn[i]->m_bottomLayers[0]->m_blob.flData;
+        }
+    }
+}
+
+
 void espresso::CNN_Network::cfgFPGALayers(string mrgFmt_fn)
 {
     ifstream infile(mrgFmt_fn);

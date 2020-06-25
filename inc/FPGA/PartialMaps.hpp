@@ -12,6 +12,7 @@
 class PartialMaps : public Accel_Payload
 {
 	public:
+        PartialMaps(int partialMapDepth, int numPartialMapRows, int numPartialMapCols, float* data);
         PartialMaps(InputMaps* inputMaps);
         PartialMaps(OutputMaps* outputMaps);
 		~PartialMaps();

@@ -58,6 +58,7 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
 		m_fpga_upsample,
 		m_padding,
 		m_fpga_do_res_layer,
+        m_fpga_do_res_layer_only,
 		m_activation,
 		m_fpga_do_kernels1x1,
 		m_fpga_hndl,

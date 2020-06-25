@@ -169,7 +169,6 @@ Layer_Iteration::~Layer_Iteration()
 	(m_outputMaps) ? delete m_outputMaps : void();
 	(m_kernels3x3Bias) ? delete m_kernels3x3Bias : void();
     (m_kernels1x1 && m_del_1x1) ? delete m_kernels1x1 : void();
-    // (m_kernels1x1Bias) ? delete m_kernels1x1Bias : void();
 	(m_partialMaps) ? delete m_partialMaps : void();	
 	m_prev1x1Maps = NULL;
     m_pxSeqCfg = NULL;

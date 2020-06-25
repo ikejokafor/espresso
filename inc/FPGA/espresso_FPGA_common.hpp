@@ -2,6 +2,7 @@
 
 
 static int RE_HIGH_WATERMARK           = 8;
+static int RE_TRAN_AMT                 = 8;
 // int CM_HIGH_WATERMARK_FACTOR    = 3;
 // int RM_LOW_WATERMARK_FACTOR     = 1;
 // int PM_LOW_WATERMARK_FACTOR     = 1;

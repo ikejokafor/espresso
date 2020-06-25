@@ -277,6 +277,7 @@ namespace espresso
 			bool m_fpga_upsample;
 			bool m_fpga_activation;
 			bool m_fpga_do_res_layer;
+            bool m_fpga_do_res_layer_only;
 			bool m_fpga_do_kernels1x1;
 			bool m_fpga_krnl_1x1_layer;
 			bool m_fpga_merged;

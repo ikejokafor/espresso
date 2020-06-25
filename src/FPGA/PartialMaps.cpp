@@ -2,6 +2,14 @@
 using namespace std;
 
 
+PartialMaps::PartialMaps(int partialMapDepth, int numPartialMapRows, int numPartialMapCols, float* data)
+{
+	m_partialMapDepth = partialMapDepth;
+	m_numPartialMapRows = numPartialMapRows;
+	m_numPartialMapCols = numPartialMapCols;
+}
+
+
 PartialMaps::PartialMaps(InputMaps* inputMaps)
 {
 	m_partialMapDepth = inputMaps->m_inputMapDepth;
