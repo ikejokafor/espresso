@@ -186,6 +186,7 @@ ELSE()
         ${PROJECT_SOURCE_DIR}/../fixedPoint/inc/
         ${PROJECT_SOURCE_DIR}/../../util/inc/
         ${PROJECT_SOURCE_DIR}/../util/inc/
+        ${PROJECT_SOURCE_DIR}/../cnn_layer_accel/model/inc/
         ${PROJECT_SOURCE_DIR}/../darknet/include/
         ${PROJECT_SOURCE_DIR}/../darknet/src/
         ${PROJECT_SOURCE_DIR}/../FPGA_shim/inc/
