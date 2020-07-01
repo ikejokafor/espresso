@@ -179,6 +179,9 @@ IF(WIN32)
     )
 ELSE()
     TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} PUBLIC
+        /usr/include/
+        /usr/local/include/
+        $ENV{IZO5011_X86_DEV_TOOLS}/include/
         ${PROJECT_SOURCE_DIR}/inc/
         ${PROJECT_SOURCE_DIR}/inc/CPU/
         ${PROJECT_SOURCE_DIR}/inc/FPGA/
@@ -211,6 +214,7 @@ else()
     TARGET_LINK_LIBRARIES(${TARGET_NAME} PUBLIC
         -L/usr/local/lib/
         -L/usr/lib/
+        -L$ENV{IZO5011_X86_DEV_TOOLS}/lib/
     )
 endif()
 # END Library Settings ------------------------------------------------------------------------------------------------------------------------------
