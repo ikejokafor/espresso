@@ -1,6 +1,9 @@
 #pragma once
 
 
+#include "cnn_layer_accel_common.hpp"
+
+
 static int RE_HIGH_WATERMARK           = 8;
 static int RE_TRAN_AMT                 = 8;
 // int CM_HIGH_WATERMARK_FACTOR    = 3;
@@ -15,9 +18,10 @@ static int RE_TRAN_AMT                 = 8;
 // int PM_FIFO_DEPTH               = 256;
 // int PV_FIFO_DEPTH               = 256;
 
+#define ACCL_NUM_OUTPUT             3
+#define ACCL_OUTPUT_SIZE            (ACCL_NUM_OUTPUT * sizeof(double))
 #define SYSTEMC
 #define PIX_SEQ_CONFIG_SIZE         2
-#define WINDOW_3x3_NUM_CYCLES	    5
 #define MAX_NUM_INPUT_COLS          512
 #define NUM_CE_PER_QUAD             8
 #define NUM_FAS				        1

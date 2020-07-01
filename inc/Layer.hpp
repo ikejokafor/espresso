@@ -327,5 +327,6 @@ namespace espresso
             double m_fpga_elapsed_time;
             double m_fpga_memPower;
 			double m_fpga_avgIterTime;
+            double m_peakBW;
 	};
 }

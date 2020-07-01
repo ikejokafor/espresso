@@ -40,7 +40,8 @@ class Layer_Iteration
 			int krnl1x1_pad_bgn,
 			int krnl1x1_pad_end,
 			bool del_res,
-			bool del_1x1
+			bool del_1x1,
+            int& pseudo_addr
 		);
 		~Layer_Iteration();
 

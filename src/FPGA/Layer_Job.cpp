@@ -4,7 +4,7 @@ using namespace std;
 
 bool isPowerOfTwo(ulong x)
 {
-    return (x & (x - 1)) == 0;
+    return ((x & (x - 1)) == 0);
 }
 
 
@@ -104,9 +104,11 @@ Layer_Job::Layer_Job(
     }
     m_krnl_1x1_layer = krnl_1x1_layer;
     m_pyld = new DummyPayload();
-    m_pyld->m_address = (uint64_t)malloc(sizeof(double) * 2);
+    m_pyld->m_address = (uint64_t)malloc(sizeof(ACCL_OUTPUT_SIZE));
+    m_pyld->m_size = ACCL_OUTPUT_SIZE;
 #ifdef SYSTEMC
-    m_sysc_fpga_hndl        = reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
+    int m_pseudo_addr   = 0;
+    m_sysc_fpga_hndl    = reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
 #else
 
 #endif
@@ -123,7 +125,6 @@ Layer_Job::~Layer_Job()
     (m_kernels1x1) ? delete m_kernels1x1 : void();
     (m_kernels1x1Bias) ? delete m_kernels1x1Bias : void();
 	(m_pyld) ? delete m_pyld : void();
-
     m_inputMaps = NULL;
 	m_kernels3x3 = NULL;
 	m_residualMaps = NULL;
@@ -354,7 +355,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
 }
 
 
-void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPower)
+void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPower, double& peakBW)
 {
     cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
     cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
