@@ -42,6 +42,7 @@ class FAS_cfg
             uint64_t krnl1x1BiasAddr,
             uint64_t partMapAddr,
             uint64_t resMapAddr,
+			uint64_t prevMapAddr,
             uint64_t outMapAddr,
             int pixSeqCfgFetchTotal,
             int inMapFetchTotal,
@@ -76,6 +77,7 @@ class FAS_cfg
         uint64_t m_partMapAddr;
         uint64_t m_resMapAddr;
         uint64_t m_outMapAddr;
+		uint64_t m_prevMapAddr;
         int m_pixSeqCfgFetchTotal;
         std::vector<std::vector<uint64_t>> m_inMapAddrArr;
         std::vector<std::vector<uint64_t>> m_krnl3x3AddrArr;

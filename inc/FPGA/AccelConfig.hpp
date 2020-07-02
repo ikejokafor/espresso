@@ -64,6 +64,7 @@ class AccelConfig : public Accel_Payload
 			uint64_t resMapAddr					;
 			uint64_t outMapAddr					;
 			uint64_t pixelSeqAddr               ;
+			uint64_t prevMapAddr				;
 			uint64_t inMapDepth					;
 			uint64_t QUAD_id                    ;
 			uint64_t QUAD_en                    ;

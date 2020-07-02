@@ -17,6 +17,7 @@ FAS_cfg::FAS_cfg(
 	uint64_t krnl1x1BiasAddr,
 	uint64_t partMapAddr,
 	uint64_t resMapAddr,
+	uint64_t prevMapAddr,
 	uint64_t outMapAddr,
 	int pixSeqCfgFetchTotal,
 	int inMapFetchTotal,
@@ -52,6 +53,7 @@ FAS_cfg::FAS_cfg(
 	m_pixelSeqAddr = pixelSeqAddr;
 	m_partMapAddr = partMapAddr;
 	m_resMapAddr = resMapAddr;
+	m_prevMapAddr = prevMapAddr;
 	m_outMapAddr = outMapAddr;
 	m_pixSeqCfgFetchTotal = pixSeqCfgFetchTotal;
 	m_inMapFetchTotal = inMapFetchTotal;

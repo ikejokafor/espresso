@@ -26,8 +26,11 @@ class QUAD_cfg
             bool activation = false,
             bool master_QUAD = false,
             bool cascade = false,
-            int inMapDepth = 0,
+            int inMapDepth = 0
+#ifdef SYSTEMC
+			,			
             int res_high_watermark = 0
+#endif
         );
         ~QUAD_cfg();
 
@@ -50,5 +53,7 @@ class QUAD_cfg
         int 	m_crpd_input_col_start	;
         int 	m_crpd_input_row_end	;
         int 	m_crpd_input_col_end	;
+#ifdef SYSTEMC
         int     m_res_high_watermark    ;
+#endif
 };
