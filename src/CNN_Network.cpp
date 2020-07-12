@@ -584,3 +584,50 @@ void espresso::CNN_Network::printExecutionStats()
     }
 	fd.close();
 }
+
+
+void espresso::CNN_Network::printAccelPerfAnalyStats()
+{
+    ofstream fd;
+	string WSpath = string(getenv("WORKSPACE_PATH"));
+	fd.open(WSpath + "/espressoTester/build/debug/output2.csv");
+    fd << ",QUAD_TIME,FAS_TIME" << endl;
+    for(int i = 0; i < seqBgnIdxArr.size(); i++)
+    {
+        fd << "Sequence" << i << ",";
+        int sbi = seqBgnIdxArr[i];
+        if(m_cnn[sbi]->m_stride == 1) 
+        {
+            fd  << (3 * m_cnn[sbi]->m_numInputCols)
+                    + ((m_cnn[sbi]->m_numInputRows - 3) * m_cnn[sbi]->m_numInputCols)
+                    + (m_cnn[sbi]->m_numKernels * m_cnn[sbi]->m_numOutputRows * m_cnn[sbi]->m_numOutputCols)
+                << ",";
+        }
+        else
+        {
+            fd  << (3 * m_cnn[sbi]->m_numInputCols)
+                    + ((m_cnn[sbi]->m_numInputRows - 3) * m_cnn[sbi]->m_numInputCols)
+                    + (m_cnn[sbi]->m_numKernels * m_cnn[sbi]->m_numOutputRows * m_cnn[sbi]->m_numOutputCols + (m_cnn[sbi]->m_numInputRows / 2))
+                << ",";
+        }
+        int j_loop_end = m_cnn[sbi]->m_merged_layers.size();
+        for(int j = 0; j < j_loop_end; j++)
+        {
+            int mli = m_cnn[sbi]->m_merged_layers[j];
+            if(m_cnn[mli]->m_layerType == CONVOLUTION)
+            {
+                int K_1_D_S = 32;
+                int K_1_S = 1;
+                fd  << (m_cnn[mli]->m_numOutputRows * m_cnn[mli]->m_numOutputCols) 
+                        * (m_cnn[mli]->m_inputDepth / K_1_D_S) 
+                        * (m_cnn[mli]->m_numKernels / K_1_S)  
+                    << endl;        
+                break;
+            }
+            if(j == j_loop_end - 1)
+            {
+                fd << 0 << endl;
+            }
+        }
+    }
+}
