@@ -493,6 +493,10 @@ int espresso::CNN_Network::findLayer(string layerName)
 
 void espresso::CNN_Network::printMemBWStats()
 {
+    ofstream fd;
+	string WSpath = string(getenv("WORKSPACE_PATH"));
+	fd.open(WSpath + "/espressoTester/build/debug/memBWStats.csv");
+    fd << ",BaseBW (B),OptBW (B)" << endl;
     for(int i = 0; i < seqBgnIdxArr.size(); i++)
     {
         int sbi = seqBgnIdxArr[i];
@@ -563,8 +567,9 @@ void espresso::CNN_Network::printMemBWStats()
                         ) * PIXEL_SIZE;
             }
         }
-        cout << "Sequence" << m_cnn[sbi]->m_sequence_id << "," << baseBW << "," << optBW << endl;
+        fd << "Sequence" << m_cnn[sbi]->m_sequence_id << "," << baseBW << "," << optBW << endl;
     }
+    fd.close();
 }
 
 
@@ -572,7 +577,8 @@ void espresso::CNN_Network::printExecutionStats()
 {
 	ofstream fd;
 	string WSpath = string(getenv("WORKSPACE_PATH"));
-	fd.open(WSpath + "/espressoTester/build/debug/output.txt");
+	fd.open(WSpath + "/espressoTester/build/debug/executionStats.csv");
+    fd 	<< ",Total Elapsed Time (ns),Avg Iter Time (ns),Power (mW)" << endl;
     for(int i = 0; i < seqBgnIdxArr.size(); i++)
     {
         int sbi = seqBgnIdxArr[i];
@@ -590,7 +596,7 @@ void espresso::CNN_Network::printAccelPerfAnalyStats()
 {
     ofstream fd;
 	string WSpath = string(getenv("WORKSPACE_PATH"));
-	fd.open(WSpath + "/espressoTester/build/debug/output2.csv");
+	fd.open(WSpath + "/espressoTester/build/debug/accelPerfAnalyStats.csv");
     fd << ",QUAD_TIME,FAS_TIME" << endl;
     for(int i = 0; i < seqBgnIdxArr.size(); i++)
     {

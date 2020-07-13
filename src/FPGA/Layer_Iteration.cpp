@@ -2,12 +2,6 @@
 using namespace std;
 
 
-int ceilAXIBusSize(float x)
-{
-    return (ceil(x / (float)AXI_BUS_SIZE) * AXI_BUS_SIZE);
-}
-
-
 Layer_Iteration::Layer_Iteration(
 	opcode_t opcode,
 	InputMaps* inputMaps,
@@ -66,7 +60,7 @@ Layer_Iteration::Layer_Iteration(
 	(m_prev1x1Maps) ? m_prev1x1Maps->serialize() : void();
 
     int inputMapDepth = (m_inputMaps) ? m_inputMaps->m_inputMapDepth : 0;
-	int remDepth = (m_inputMaps) ? m_inputMaps->m_inputMapDepth : 0;    
+	int remDepth = (m_inputMaps) ? m_inputMaps->m_inputMapDepth : 0;
 	for(int i = 0; i < NUM_FAS; i++)
 	{
 		m_accelCfg->m_FAS_cfg_arr.push_back(new FAS_cfg(
@@ -77,8 +71,8 @@ Layer_Iteration::Layer_Iteration(
 			(m_kernels1x1Bias) ? m_kernels1x1Bias->m_address : -1,
 			(m_partialMaps) ? m_partialMaps->m_address : -1,
 			(m_residualMaps) ? m_residualMaps->m_address : -1,
-            (m_prev1x1Maps) ? m_prev1x1Maps->m_address: -1,
-            outputMaps->m_address,
+            (m_prev1x1Maps) ? m_prev1x1Maps->m_address : -1,
+			outputMaps->m_address,
 			m_pxSeqCfg->m_size,
 			(m_inputMaps) ? m_inputMaps->m_size : 0,
 			(m_kernels3x3) ? m_kernels3x3->m_size : 0,
@@ -95,24 +89,23 @@ Layer_Iteration::Layer_Iteration(
 			(m_residualMaps) ? m_residualMaps->m_residualMapDepth * RM_LOW_WATERMARK_FACTOR : 0,
 			(m_partialMaps) ? m_partialMaps->m_partialMapDepth * PM_LOW_WATERMARK_FACTOR : 0,
             (m_prev1x1Maps) ? m_prev1x1Maps->m_prev1x1MapDepth * PV_LOW_WATERMARK_FACTOR : 0,
-			(m_residualMaps) ? ceilAXIBusSize(m_residualMaps->m_residualMapDepth * RM_FETCH_FACTOR) : 0,
-			(m_partialMaps) ? ceilAXIBusSize(m_partialMaps->m_partialMapDepth * PM_FETCH_FACTOR) : 0,
-            (m_prev1x1Maps) ? ceilAXIBusSize(m_prev1x1Maps->m_prev1x1MapDepth * PV_FETCH_FACTOR) : 0,
+			(m_residualMaps) ? m_residualMaps->m_residualMapDepth * RM_FETCH_FACTOR : 0,
+			(m_partialMaps) ? m_partialMaps->m_partialMapDepth * PM_FETCH_FACTOR : 0,
+            (m_prev1x1Maps) ? m_prev1x1Maps->m_prev1x1MapDepth * PV_FETCH_FACTOR : 0,
 			krnl1x1_pding,
 			krnl1x1_pad_bgn,
 			krnl1x1_pad_end
 		));
-#ifdef SYSTEMC
-		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (m_partialMaps) ? ceilAXIBusSize(m_partialMaps->m_address) : -1;
-		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (m_residualMaps) ? ceilAXIBusSize(m_residualMaps->m_address) : -1;
-		m_accelCfg->m_FAS_cfg_arr[i]->m_prevMapAddr = (m_prev1x1Maps) ? ceilAXIBusSize(m_prev1x1Maps->m_address) : -1,
-		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapAddr = ceilAXIBusSize(m_outputMaps->m_address);
-		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapFetchFactor = (m_inputMaps) ? ceilAXIBusSize(m_inputMaps->m_numInputMapCols) : 0;
-		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapStoreFactor = ceilAXIBusSize(m_outputMaps->m_outputMapDepth);
-#endif
+		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (m_partialMaps) ? m_partialMaps->m_address : -1;
+		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (m_residualMaps) ? m_residualMaps->m_address : -1;
+		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapAddr = m_outputMaps->m_address;
+		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapFetchFactor = (m_inputMaps) ? m_inputMaps->m_numInputMapCols : 0;
+		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapStoreFactor = m_outputMaps->m_outputMapDepth;
 		auto& imAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_inMapAddrArr;
 		auto& krnl3x3AddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3AddrArr;
 		auto& krnl3x3BiasAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3BiasAddrArr;
+		
+        
         for(int j = 0; j < MAX_AWP_PER_FAS; j++)
 		{
 			m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr.push_back(new AWP_cfg(i ,j));
@@ -141,17 +134,14 @@ Layer_Iteration::Layer_Iteration(
 						activation,
 						master_QUAD,
 						cascade,
-						(remDepth > QUAD_MAX_DEPTH) ? QUAD_MAX_DEPTH : remDepth
-#ifdef SYSTEMC
-						,
+						(remDepth > QUAD_MAX_DEPTH) ? QUAD_MAX_DEPTH : remDepth,
                         RE_HIGH_WATERMARK
-#endif
 					);
 					QUAD_cfg_arr.push_back(quad_cfg);
 					QUAD_en_arr.push_back(true);
 					int imDepthStep = QUAD_MAX_DEPTH * m_inputMaps->m_numInputMapRows * m_inputMaps->m_numInputMapCols;
 					int krn3x3DepthStep = QUAD_MAX_DEPTH * 3 * 3;
-					imAddrArr[j][k] = ceilAXIBusSize(m_inputMaps->m_address + (k * imDepthStep));
+					imAddrArr[j][k] = m_inputMaps->m_address + (k * imDepthStep);
 					krnl3x3AddrArr[j][k] = (kernels3x3) ? m_kernels3x3->m_address + (k * krn3x3DepthStep) : 0;
 					krnl3x3BiasAddrArr[j][k] = (kernels3x3Bias) ? m_kernels3x3Bias->m_address : 0;
 				}
