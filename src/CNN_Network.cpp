@@ -588,7 +588,6 @@ void espresso::CNN_Network::printExecutionStats()
 				<< m_cnn[sbi]->m_fpga_avgIterTime	<< "," 
 				<< m_cnn[sbi]->m_fpga_memPower 		<< endl;        
     }
-	fd.close();
 }
 
 
@@ -600,22 +599,25 @@ void espresso::CNN_Network::printAccelPerfAnalyStats()
     fd << ",calc_QUAD_TIME,sim_QUAD_time,calc_FAS_TIME,sim_FAS_TIME" << endl;
     for(int i = 0; i < m_cnn.size(); i++)
     {
-        fd << "Layer" << i << ",";
         if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows > 1) 
         {
-            fd << m_cnn[i]->m_avg_QUAD_time0 << "," << endl;
+			fd << "Layer" << i << ",";
+            fd << m_cnn[i]->m_avg_QUAD_time0 << ",,," << endl;
         }
         else if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows > 1) 
         {
-            fd << m_cnn[i]->m_avg_QUAD_time1 << "," << endl;
+			fd << "Layer" << i << ",";
+            fd << "," << m_cnn[i]->m_avg_QUAD_time1 << ",," << endl;
         }
         else if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1)
         {
-            fd << "," << m_cnn[i]->m_avg_FAS_time0 << endl;
+			fd << "Layer" << i << ",";
+            fd << ",," << m_cnn[i]->m_avg_FAS_time0 << "," << endl;
         }
         else if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1)
         {
-            fd << "," << m_cnn[i]->m_avg_FAS_time1 << endl;
+			fd << "Layer" << i << ",";
+            fd << ",,," << m_cnn[i]->m_avg_FAS_time1 << endl;
         }
     }
     fd.close();
