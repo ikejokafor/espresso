@@ -355,7 +355,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
 }
 
 
-void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPower, double& peakBW)
+void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPower, double& avg_QUAD_time0, double& avg_FAS_time0, double& avg_QUAD_time1, double& avg_FAS_time1)
 {
     cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
     cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
@@ -363,7 +363,8 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
     {
         for(int d = 0; d < m_lay_it_arr[k].size(); d++)
         {
-            printConfig(k, d);
+            printConfig(m_lay_it_arr[k][d]);
+            calcAccelPerfAnalyStats(m_lay_it_arr[k][d], avg_QUAD_time0, avg_FAS_time0);
             cout << "[ESPRESSO]: " << m_layerName                      << endl;
             cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
             cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;
@@ -380,6 +381,8 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             double* ptr = (double*)m_pyld->m_address;
             elapsed_time += (ptr[0]);
             memPower += (ptr[1]);
+            avg_QUAD_time1 += (ptr[2]);
+            avg_FAS_time1 += (ptr[3]);
             cout << "[ESPRESSO]: " << m_layerName                    << endl;
             cout << "[ESPRESSO]:\tFinished Kernel Iteration - " << (k + 1) << endl;
             cout << "[ESPRESSO]:\tFinished Depth Iteration - "  << (d + 1) << endl;
@@ -387,17 +390,19 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
     }
 	double numTotalIter = m_num_krnl_iter * m_num_depth_iter;
 	avgIterTime = elapsed_time / numTotalIter;
+    avg_QUAD_time1 /= numTotalIter;
+    avg_FAS_time1 /= numTotalIter;
 	cout << "[ESPRESSO]: Total Layer Processing Time - " << elapsed_time << " ns " << endl;
     cout << "[ESPRESSO]: Avgerage Layer Iteration Time - " << avgIterTime << " ns " << endl;
     cout << "[ESPRESSO]: Total Power Consumed - " << memPower << " mW " << endl;
 }
 
 
-void Layer_Job::printConfig(int k, int d)
+void Layer_Job::printConfig(Layer_Iteration* lay_it)
 {
-    FAS_cfg* fas_cfg = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0];
+    FAS_cfg* fas_cfg = lay_it->m_accelCfg->m_FAS_cfg_arr[0];
     cout << "[ESPRESSO]: " << m_layerName                                << endl;
-    cout << "[ESPRESSO]:\tFAS_0 - Configuation......."                    << endl;
+    cout << "[ESPRESSO]:\tFAS_0 - Configuation......."                   << endl;
     cout << "[ESPRESSO]:\tOpcode:                                      " << fas_cfg->m_opcode                   << endl;
     cout << "[ESPRESSO]:\tNum 1x1 Kernels:                             " << fas_cfg->m_num_1x1_kernels          << endl;
     cout << "[ESPRESSO]:\tKernel 1x1 Depth:                            " << fas_cfg->m_krnl1x1Depth             << endl;
@@ -426,12 +431,12 @@ void Layer_Job::printConfig(int k, int d)
 
     for(int a = 0; a < MAX_AWP_PER_FAS; a++)
     {
-        AWP_cfg* awp_cfg =  m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a];
+        AWP_cfg* awp_cfg =  lay_it->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a];
         cout << "[ESPRESSO]:\t\tAWP_id:  " << awp_cfg->m_AWP_id << endl;
         for(int q = 0; q < MAX_QUAD_PER_AWP; q++)
         {
-            auto& QUAD_en_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_en_arr;
-            auto& QUAD_cfg_arr = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr;
+            auto& QUAD_en_arr = lay_it->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_en_arr;
+            auto& QUAD_cfg_arr = lay_it->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[a]->m_QUAD_cfg_arr;
             cout << "[ESPRESSO]:\t\t\tQUAD_id: "  << QUAD_cfg_arr[q]->m_QUAD_id << endl;
             if(QUAD_en_arr[q])
             {
@@ -455,5 +460,30 @@ void Layer_Job::printConfig(int k, int d)
                 cout << "[ESPRESSO]:\t\t\t\tUnused" << endl;
             }
         }
+    }
+}
+
+
+void Layer_Job::calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& QUAD_time, double& FAS_time)
+{
+    // only works properly for unmerged layers
+    if(lay_it->m_kernels3x3)
+    {
+        QUAD_time = (3 * lay_it->m_inputMaps-> m_numInputMapCols)
+                    + ((lay_it->m_inputMaps->m_numInputMapRows - 3) * lay_it->m_inputMaps->m_numInputMapCols)
+                    + (lay_it->m_kernels3x3->m_numKernels * lay_it->m_outputMaps->m_numOutputMapRows * lay_it->m_outputMaps->m_numOutputMapCols);
+    }
+    else if(lay_it->m_kernels1x1)
+    {
+        int K_1_D_S = 32;
+        int K_1_S = 1;
+        FAS_time  = (lay_it->m_outputMaps->m_numOutputMapRows * lay_it->m_outputMaps->m_numOutputMapCols) 
+                    * (lay_it->m_kernels1x1->m_kernelDepth / K_1_D_S) 
+                    * (lay_it->m_kernels1x1->m_numKernels / K_1_S); 
+    }
+    else
+    {
+        int A_S = 32;
+        FAS_time = (lay_it->m_outputMaps->m_numOutputMapRows * lay_it->m_outputMaps->m_numOutputMapCols * lay_it->m_outputMaps->m_outputMapDepth) / A_S;
     }
 }

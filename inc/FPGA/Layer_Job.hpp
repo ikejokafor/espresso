@@ -97,8 +97,9 @@ class Layer_Job
 			bool& del_res,
 			bool& del_1x1			
 		);
-		void printConfig(int k, int d);
-        void process(double& elapsed_time, double& avgIterTime, double& memPower, double& peakBW);
+		void printConfig(Layer_Iteration* lay_it);
+        void process(double& elapsed_time, double& avgIterTime, double& memPower, double& avg_QUAD_time0, double& avg_FAS_time0, double& avg_QUAD_time1, double& avg_FAS_time1);
+        void calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& avg_QUAD_time, double& avg_FAS_time);
 
 		std::string m_layerName;
         int m_inputMapDepth;

@@ -597,43 +597,26 @@ void espresso::CNN_Network::printAccelPerfAnalyStats()
     ofstream fd;
 	string WSpath = string(getenv("WORKSPACE_PATH"));
 	fd.open(WSpath + "/espressoTester/build/debug/accelPerfAnalyStats.csv");
-    fd << ",QUAD_TIME,FAS_TIME" << endl;
-    for(int i = 0; i < seqBgnIdxArr.size(); i++)
+    fd << ",calc_QUAD_TIME,sim_QUAD_time,calc_FAS_TIME,sim_FAS_TIME" << endl;
+    for(int i = 0; i < m_cnn.size(); i++)
     {
-        fd << "Sequence" << i << ",";
-        int sbi = seqBgnIdxArr[i];
-        if(m_cnn[sbi]->m_stride == 1) 
+        fd << "Layer" << i << ",";
+        if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows > 1) 
         {
-            fd  << (3 * m_cnn[sbi]->m_numInputCols)
-                    + ((m_cnn[sbi]->m_numInputRows - 3) * m_cnn[sbi]->m_numInputCols)
-                    + (m_cnn[sbi]->m_numKernels * m_cnn[sbi]->m_numOutputRows * m_cnn[sbi]->m_numOutputCols)
-                << ",";
+            fd << m_cnn[i]->m_avg_QUAD_time0 << "," << endl;
         }
-        else
+        else if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows > 1) 
         {
-            fd  << (3 * m_cnn[sbi]->m_numInputCols)
-                    + ((m_cnn[sbi]->m_numInputRows - 3) * m_cnn[sbi]->m_numInputCols)
-                    + (m_cnn[sbi]->m_numKernels * m_cnn[sbi]->m_numOutputRows * m_cnn[sbi]->m_numOutputCols + (m_cnn[sbi]->m_numInputRows / 2))
-                << ",";
+            fd << m_cnn[i]->m_avg_QUAD_time1 << "," << endl;
         }
-        int j_loop_end = m_cnn[sbi]->m_merged_layers.size();
-        for(int j = 0; j < j_loop_end; j++)
+        else if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1)
         {
-            int mli = m_cnn[sbi]->m_merged_layers[j];
-            if(m_cnn[mli]->m_layerType == CONVOLUTION)
-            {
-                int K_1_D_S = 32;
-                int K_1_S = 1;
-                fd  << (m_cnn[mli]->m_numOutputRows * m_cnn[mli]->m_numOutputCols) 
-                        * (m_cnn[mli]->m_inputDepth / K_1_D_S) 
-                        * (m_cnn[mli]->m_numKernels / K_1_S)  
-                    << endl;        
-                break;
-            }
-            if(j == j_loop_end - 1)
-            {
-                fd << 0 << endl;
-            }
+            fd << "," << m_cnn[i]->m_avg_FAS_time0 << endl;
+        }
+        else if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1)
+        {
+            fd << "," << m_cnn[i]->m_avg_FAS_time1 << endl;
         }
     }
+    fd.close();
 }
