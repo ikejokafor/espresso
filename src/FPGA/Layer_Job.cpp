@@ -104,7 +104,7 @@ Layer_Job::Layer_Job(
     }
     m_krnl_1x1_layer = krnl_1x1_layer;
     m_pyld = new DummyPayload();
-    m_pyld->m_address = (uint64_t)malloc(sizeof(ACCL_OUTPUT_SIZE));
+    m_pyld->m_address = (uint64_t)malloc(ACCL_OUTPUT_SIZE);
     m_pyld->m_size = ACCL_OUTPUT_SIZE;
 #ifdef SYSTEMC
     int m_pseudo_addr   = 0;
@@ -364,7 +364,10 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
         for(int d = 0; d < m_lay_it_arr[k].size(); d++)
         {
             printConfig(m_lay_it_arr[k][d]);
-            calcAccelPerfAnalyStats(m_lay_it_arr[k][d], avg_QUAD_time0, avg_FAS_time0);
+            if(k == 0 && d == 0)
+            {
+                calcAccelPerfAnalyStats(m_lay_it_arr[k][d], avg_QUAD_time1, avg_FAS_time1);
+            }
             cout << "[ESPRESSO]: " << m_layerName                      << endl;
             cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
             cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;
@@ -381,8 +384,8 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             double* ptr = (double*)m_pyld->m_address;
             elapsed_time += (ptr[0]);
             memPower += (ptr[1]);
-            avg_QUAD_time1 += (ptr[2]);
-            avg_FAS_time1 += (ptr[3]);
+            avg_QUAD_time0 += (ptr[2]);
+            avg_FAS_time0 += (ptr[3]);
             cout << "[ESPRESSO]: " << m_layerName                    << endl;
             cout << "[ESPRESSO]:\tFinished Kernel Iteration - " << (k + 1) << endl;
             cout << "[ESPRESSO]:\tFinished Depth Iteration - "  << (d + 1) << endl;
@@ -390,8 +393,8 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
     }
 	double numTotalIter = m_num_krnl_iter * m_num_depth_iter;
 	avgIterTime = elapsed_time / numTotalIter;
-    avg_QUAD_time1 /= numTotalIter;
-    avg_FAS_time1 /= numTotalIter;
+    avg_QUAD_time0 /= numTotalIter;
+    avg_FAS_time0 /= numTotalIter;
 	cout << "[ESPRESSO]: Total Layer Processing Time - " << elapsed_time << " ns " << endl;
     cout << "[ESPRESSO]: Avgerage Layer Iteration Time - " << avgIterTime << " ns " << endl;
     cout << "[ESPRESSO]: Total Power Consumed - " << memPower << " mW " << endl;

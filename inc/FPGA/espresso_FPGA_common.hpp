@@ -15,11 +15,11 @@ static int RE_TRAN_AMT                 = 8;
 // int PM_FIFO_DEPTH               = 256;
 // int PV_FIFO_DEPTH               = 256;
 
+#define SYSTEMC
 #define WINDOW_3x3_NUM_CYCLES		5
 #define AXI_BUS_SIZE				64
 #define ACCL_NUM_OUTPUT             4
 #define ACCL_OUTPUT_SIZE            (ACCL_NUM_OUTPUT * sizeof(double))
-#define SYSTEMC
 #define PIX_SEQ_CONFIG_SIZE         2
 #define MAX_NUM_INPUT_COLS          512
 #define NUM_CE_PER_QUAD             8

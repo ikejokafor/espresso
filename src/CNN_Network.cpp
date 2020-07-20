@@ -602,14 +602,13 @@ void espresso::CNN_Network::printAccelPerfAnalyStats()
         if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows > 1) 
         {
 			fd << "Layer" << i << ",";
-            fd << m_cnn[i]->m_avg_QUAD_time0 << ",,,";
-            fd << "," << m_cnn[i]->m_avg_QUAD_time1 << ",," << endl;
+            fd << m_cnn[i]->m_avg_QUAD_time0 << "," << m_cnn[i]->m_avg_QUAD_time1 << ",," << endl;
         }
         if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1)
         {
 			fd << "Layer" << i << ",";
-            fd << ",," << m_cnn[i]->m_avg_FAS_time0 << ",";
-            fd << ",,," << m_cnn[i]->m_avg_FAS_time1 << endl;
+            fd << ",," << m_cnn[i]->m_avg_FAS_time0 << "," << m_cnn[i]->m_avg_FAS_time1 << endl;
+            
         }
     }
     fd.close();
