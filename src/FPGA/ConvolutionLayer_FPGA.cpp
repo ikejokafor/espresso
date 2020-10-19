@@ -30,6 +30,11 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
 		cout << "[ESPRESSO]: " << m_layerName << " Merged" << endl;
 		return;
 	}
+	
+	if(m_numKernelRows > 3 || m_stride > 2 || m_padding > 1 || (m_numKernelRows == 1 && m_stride > 1))
+	{
+		return;
+	}
 
 	Layer_Job* m_layer_job = new Layer_Job(
 		m_layerName,

@@ -366,10 +366,12 @@ void espresso::CNN_Network::Forward(string start, string end)
             || m_cnn[i]->m_layerType == espresso::SOFTMAX                         
             || m_cnn[i]->m_layerType == espresso::UPSAMPLE        
             || m_cnn[i]->m_layerType == espresso::PSROIPoolingLayer
+			|| m_cnn[i]->m_layerType == espresso::POOLING_AVG
+			|| m_cnn[i]->m_layerType == espresso::POOLING_MAX
         ) continue;
         printLayerStats(i);
         //////
-        cout << "[ESPRESSO]: Processing Layer(s)" << " " << m_cnn[i]->m_layerName;
+        cout << "[ESPRESSO]: Processing Layer(s) " << i << " " << m_cnn[i]->m_layerName;
         for(int j = 0; j < m_cnn[i]->m_merged_layers.size(); j++)
         {
             int mli = m_cnn[i]->m_merged_layers[j];
