@@ -85,6 +85,7 @@ espresso::Layer::Layer(espresso::layerInfo_obj* layerInfo) {
 	m_sequence_id				= -1;
 	m_base_bandwidth			= 0;
 	m_opt_bandwidth				= 0;
+    m_dilation                  = layerInfo->dilation;
 }
 
 

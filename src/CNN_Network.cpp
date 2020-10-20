@@ -595,7 +595,7 @@ void espresso::CNN_Network::printAccelPerfAnalyStats()
     double totalTime = 0;
     for(int i = 0; i < m_cnn.size(); i++)
     {
-        if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 3) 
+        if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 3 && m_cnn[i]->m_dilation == -1) 
         {
 			fd << "Layer" << i << ",";
             fd << m_cnn[i]->m_avg_QUAD_time0 << "," << m_cnn[i]->m_avg_QUAD_time1 << ",," << endl;

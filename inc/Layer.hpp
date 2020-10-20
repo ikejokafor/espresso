@@ -172,6 +172,7 @@ namespace espresso
 				backend = ESPRESSO_BACKEND;
 				net_idx = -1;
                 yolo_net = nullptr;
+                dilation = -1;
 			}
 			~layerInfo_obj() {};
 
@@ -223,6 +224,7 @@ namespace espresso
 			backend_t backend;
 			int net_idx;
 			network *yolo_net;
+            int dilation;
 	};
 
 
@@ -307,6 +309,7 @@ namespace espresso
 			network* m_yolo_net;
             bool m_fpga_do_1x1_res;
             bool m_fpga_do_res_1x1;
+            int m_dilation;
 
 			espresso::Blob_t m_blob;
 			std::vector<Layer*> m_topLayers;

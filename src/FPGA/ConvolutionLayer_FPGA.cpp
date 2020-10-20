@@ -31,8 +31,9 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
 		return;
 	}
 	
-	if(m_numKernelRows > 3 || m_stride > 2 || m_padding > 1 || (m_numKernelRows == 1 && m_stride > 1))
+	if(m_numKernelRows > 3 || m_stride > 2 || m_padding > 1 || m_dilation != -1 || (m_numKernelRows == 1 && m_stride > 1))
 	{
+        cout << "Convolutions with (m_numKernelRows > 3 || m_stride > 2 || m_padding > 1 || m_dilation != -1 || (m_numKernelRows == 1 && m_stride > 1) not supported" << endl;
 		return;
 	}
 

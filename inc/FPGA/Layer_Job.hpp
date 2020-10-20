@@ -18,9 +18,9 @@
 #include "Prev1x1Maps.hpp"
 
 
-static double K_3_S = 8;
+static double K_3_S = 1;
 static double K_1_D_S = 32;
-static double K_1_S = 8;
+static double K_1_S = 1;
 static double R_S = 1;
 static double A_S = 32;
 static double CLK_PRD_NS = 10.0f;
