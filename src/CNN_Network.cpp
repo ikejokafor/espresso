@@ -356,19 +356,6 @@ void espresso::CNN_Network::Forward(string start, string end)
     if(startIdx == endIdx) endIdx++;
     for(int i = startIdx; i < endIdx; i++)
     {
-        if(m_cnn[i]->m_layerType == espresso::YOLO
-            || m_cnn[i]->m_layerType == espresso::CONCAT
-            || m_cnn[i]->m_layerType == espresso::PERMUTE     
-            || m_cnn[i]->m_layerType == espresso::DETECTION_OUTPUT
-            || m_cnn[i]->m_layerType == espresso::PRIOR_BOX       
-            || m_cnn[i]->m_layerType == espresso::RESHAPE
-            || m_cnn[i]->m_layerType == espresso::INNERPRODUCT    
-            || m_cnn[i]->m_layerType == espresso::SOFTMAX                         
-            || m_cnn[i]->m_layerType == espresso::UPSAMPLE        
-            || m_cnn[i]->m_layerType == espresso::PSROIPoolingLayer
-			|| m_cnn[i]->m_layerType == espresso::POOLING_AVG
-			|| m_cnn[i]->m_layerType == espresso::POOLING_MAX
-        ) continue;
         printLayerStats(i);
         //////
         cout << "[ESPRESSO]: Processing Layer(s) " << i << " " << m_cnn[i]->m_layerName;
@@ -379,9 +366,13 @@ void espresso::CNN_Network::Forward(string start, string end)
         }
         cout << endl;
         //////
-        m_cnn[i]->ComputeLayer();
+		if(m_cnn[i]->m_layerType == espresso::CONVOLUTION
+            || m_cnn[i]->m_layerType == espresso::RESIDUAL)
+		{
+			m_cnn[i]->ComputeLayer();
+		}
         //////
-        cout << "[ESPRESSO]: Finished Layer(s)" << " " << m_cnn[i]->m_layerName;
+        cout << "[ESPRESSO]: Finished Layer(s) " << i <<  " " << m_cnn[i]->m_layerName;
         for(int j = 0; j < m_cnn[i]->m_merged_layers.size(); j++)
         {
             int mli = m_cnn[i]->m_merged_layers[j];
@@ -599,19 +590,32 @@ void espresso::CNN_Network::printAccelPerfAnalyStats()
 	string WSpath = string(getenv("WORKSPACE_PATH"));
 	fd.open(WSpath + "/espressoTester/build/debug/accelPerfAnalyStats.csv");
     fd << ",calc_QUAD_TIME,sim_QUAD_time,calc_FAS_TIME,sim_FAS_TIME" << endl;
+    double totalTime = 0;
     for(int i = 0; i < m_cnn.size(); i++)
     {
-        if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows > 1) 
+        if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 3) 
         {
 			fd << "Layer" << i << ",";
             fd << m_cnn[i]->m_avg_QUAD_time0 << "," << m_cnn[i]->m_avg_QUAD_time1 << ",," << endl;
+            totalTime += m_cnn[i]->m_avg_QUAD_time0;
         }
-        if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1)
+        else if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1 && m_cnn[i]->m_stride == 1)
         {
 			fd << "Layer" << i << ",";
             fd << ",," << m_cnn[i]->m_avg_FAS_time0 << "," << m_cnn[i]->m_avg_FAS_time1 << endl;
-            
+            totalTime += m_cnn[i]->m_avg_FAS_time0;
         }
+		else if(m_cnn[i]->m_layerType == RESIDUAL)
+		{
+			fd << "Layer" << i << ",";
+            fd << ",," << m_cnn[i]->m_avg_FAS_time0 << "," << m_cnn[i]->m_avg_FAS_time1 << endl;
+            totalTime += m_cnn[i]->m_avg_FAS_time0;			
+		}
     }
+    fd << endl;
+    fd << "Total Time: ," << totalTime << endl;
+    fd << "FPS: ," << 1.0 / (totalTime * pow(10.0, -9.0)) << endl;
+    fd << "DSPs: ," << NUM_DSPS_PER_QUAD * K_3_S + NUM_DSPS_PER_FAS * K_1_S << ", 9024" << endl;
+    fd << "BRAMs:, " << NUM_BRAMS_PER_QUAD << ", 340" << endl;
     fd.close();
 }

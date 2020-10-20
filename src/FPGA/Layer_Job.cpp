@@ -148,8 +148,8 @@ Layer_Job::~Layer_Job()
 
 void Layer_Job::createLayerIters()
 {
-    m_num_krnl_iter = (m_krnl_1x1_layer || m_do_resLayer_only) ? 1 : ceil((double)m_num3x3Kernels / (double)QUAD_MAX_KERNELS);
-    m_num_depth_iter = (m_krnl_1x1_layer|| m_do_resLayer_only) ? 1 : ceil((double)m_inputMapDepth / (double)QUAD_DPTH_SIMD);
+    m_num_krnl_iter = (m_krnl_1x1_layer || m_do_resLayer_only) ? 1 : ceil((double)m_num3x3Kernels / (double)(NUM_TOTAL_QUADS * QUAD_MAX_KERNELS));
+    m_num_depth_iter = (m_krnl_1x1_layer|| m_do_resLayer_only) ? 1 : ceil((double)m_inputMapDepth / (double)(NUM_TOTAL_QUADS * QUAD_DPTH_SIMD));
     int remNumKrnl = m_num3x3Kernels;
     int numKrnl;
     layAclPrm_t* layAclPrm;
@@ -366,8 +366,12 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             printConfig(m_lay_it_arr[k][d]);
             if(k == 0 && d == 0)
             {
-                calcAccelPerfAnalyStats(m_lay_it_arr[k][d], avg_QUAD_time1, avg_FAS_time1);
+                calcAccelPerfAnalyStats(m_lay_it_arr[k][d], avg_QUAD_time0, avg_FAS_time0);
             }
+            float iterSIMD = 2;
+            avg_QUAD_time0 *= (ceil((float)(m_num_krnl_iter + m_num_depth_iter) / iterSIMD));
+            avg_FAS_time0 *= (ceil((float)(m_num_krnl_iter + m_num_depth_iter) / iterSIMD));
+            return;
             cout << "[ESPRESSO]: " << m_layerName                      << endl;
             cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
             cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;
@@ -384,17 +388,21 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             double* ptr = (double*)m_pyld->m_address;
             elapsed_time += (ptr[0]);
             memPower += (ptr[1]);
-            avg_QUAD_time0 += (ptr[2]);
-            avg_FAS_time0 += (ptr[3]);
+			if(k == 0 && d == 0)
+			{
+				avg_QUAD_time1 = (ptr[2]);
+				avg_FAS_time1 = (ptr[3]);
+			}
             cout << "[ESPRESSO]: " << m_layerName                    << endl;
             cout << "[ESPRESSO]:\tFinished Kernel Iteration - " << (k + 1) << endl;
             cout << "[ESPRESSO]:\tFinished Depth Iteration - "  << (d + 1) << endl;
+            
+            cout << "[ESPRESSO]: QUAD time - " << ptr[2] << endl;
+            cout << "[ESPRESSO]: FAS time - " << ptr[3] << endl;
         }
     }
 	double numTotalIter = m_num_krnl_iter * m_num_depth_iter;
 	avgIterTime = elapsed_time / numTotalIter;
-    avg_QUAD_time0 /= numTotalIter;
-    avg_FAS_time0 /= numTotalIter;
 	cout << "[ESPRESSO]: Total Layer Processing Time - " << elapsed_time << " ns " << endl;
     cout << "[ESPRESSO]: Avgerage Layer Iteration Time - " << avgIterTime << " ns " << endl;
     cout << "[ESPRESSO]: Total Power Consumed - " << memPower << " mW " << endl;
@@ -472,21 +480,21 @@ void Layer_Job::calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& QUAD_ti
     // only works properly for unmerged layers
     if(lay_it->m_kernels3x3)
     {
-        QUAD_time = (3 * lay_it->m_inputMaps-> m_numInputMapCols)
+        QUAD_time = ((3 * lay_it->m_inputMaps-> m_numInputMapCols)
                     + ((lay_it->m_inputMaps->m_numInputMapRows - 3) * lay_it->m_inputMaps->m_numInputMapCols)
-                    + (lay_it->m_kernels3x3->m_numKernels * lay_it->m_outputMaps->m_numOutputMapRows * lay_it->m_outputMaps->m_numOutputMapCols);
+                    + ((lay_it->m_kernels3x3->m_numKernels / K_3_S) * (lay_it->m_outputMaps->m_numOutputMapRows / R_S) * lay_it->m_outputMaps->m_numOutputMapCols)) * CLK_PRD_NS;
     }
     else if(lay_it->m_kernels1x1)
     {
-        int K_1_D_S = 32;
-        int K_1_S = 1;
-        FAS_time  = (lay_it->m_outputMaps->m_numOutputMapRows * lay_it->m_outputMaps->m_numOutputMapCols) 
+						 
+					  
+        FAS_time  = ((lay_it->m_outputMaps->m_numOutputMapRows * lay_it->m_outputMaps->m_numOutputMapCols) 
                     * (lay_it->m_kernels1x1->m_kernelDepth / K_1_D_S) 
-                    * (lay_it->m_kernels1x1->m_numKernels / K_1_S); 
+                    * (lay_it->m_kernels1x1->m_numKernels / K_1_S)) * CLK_PRD_NS; 
     }
     else
     {
-        int A_S = 32;
-        FAS_time = (lay_it->m_outputMaps->m_numOutputMapRows * lay_it->m_outputMaps->m_numOutputMapCols * lay_it->m_outputMaps->m_outputMapDepth) / A_S;
+					 
+        FAS_time = (lay_it->m_outputMaps->m_numOutputMapRows * lay_it->m_outputMaps->m_numOutputMapCols * (lay_it->m_outputMaps->m_outputMapDepth / A_S)) * CLK_PRD_NS;
     }
 }

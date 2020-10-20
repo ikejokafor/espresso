@@ -31,6 +31,9 @@ static int RE_TRAN_AMT                 = 8;
 #define QUAD_MAX_DEPTH		        8
 #define QUAD_DPTH_SIMD		        (QUAD_MAX_DEPTH * NUM_TOTAL_QUADS)
 #define PIXEL_SIZE                  2
+#define NUM_DSPS_PER_QUAD           16
+#define NUM_DSPS_PER_FAS            7 // based on Kernel Depth SIMD 32, and 5x clock
+#define NUM_BRAMS_PER_QUAD          10 // based on 64 kernels
 #define CO_HIGH_WATERMARK_FACTOR    3
 #define RM_LOW_WATERMARK_FACTOR     1
 #define PM_LOW_WATERMARK_FACTOR     1
