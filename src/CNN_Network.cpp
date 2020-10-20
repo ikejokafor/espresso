@@ -458,6 +458,8 @@ void espresso::CNN_Network::printLayerStats(int i)
             }
         }
     }
+	
+	cout << endl << endl;
 }
 
 

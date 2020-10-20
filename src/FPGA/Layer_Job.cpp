@@ -368,10 +368,6 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             {
                 calcAccelPerfAnalyStats(m_lay_it_arr[k][d], avg_QUAD_time0, avg_FAS_time0);
             }
-            float iterSIMD = 2;
-            avg_QUAD_time0 *= (ceil((float)(m_num_krnl_iter + m_num_depth_iter) / iterSIMD));
-            avg_FAS_time0 *= (ceil((float)(m_num_krnl_iter + m_num_depth_iter) / iterSIMD));
-            return;
             cout << "[ESPRESSO]: " << m_layerName                      << endl;
             cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
             cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;
@@ -472,6 +468,8 @@ void Layer_Job::printConfig(Layer_Iteration* lay_it)
             }
         }
     }
+	
+	cout << endl << endl;
 }
 
 
