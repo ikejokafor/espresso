@@ -11,15 +11,18 @@
 #include "AWP_cfg.hpp"
 #include "util.hpp"
 #include "espresso_FPGA_common.hpp"
+#ifdef SYSTEMC
+#include "SYSC_FPGA_shim.hpp"
+#else
+
+#endif
 
 
 class AccelConfig : public Accel_Payload
 {
 	public:
-		AccelConfig();
+		AccelConfig(FPGA_hndl* fpga_hndl);
 		~AccelConfig();
-		uint64_t allocate(int size);
-		void deallocate();
 		void serialize();
         void deserialize();
 		void createCfg();
@@ -39,7 +42,7 @@ class AccelConfig : public Accel_Payload
 			uint64_t resMapFetchTotal         	;
 			uint64_t partMapFetchTotal        	;
 			uint64_t outMapStoreTotal			;
-            uint64_t prevMapFetchTotal         ;
+            uint64_t prevMapFetchTotal          ;
 			uint64_t inMapFetchFactor			;
 			uint64_t outMapStoreFactor			;
 			uint64_t co_high_watermark			;
@@ -85,5 +88,7 @@ class AccelConfig : public Accel_Payload
 			uint64_t crpd_input_col_end         ;
 		} cfg_t;
 
+
 		std::vector<FAS_cfg*> m_FAS_cfg_arr;
+        FPGA_hndl* m_fpga_hndl;
 };

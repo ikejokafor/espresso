@@ -12,10 +12,8 @@
 class Prev1x1Maps : public Accel_Payload
 {
 	public:
-        Prev1x1Maps(OutputMaps* outputMaps);
+        Prev1x1Maps(FPGA_hndl* fpga_hndl, OutputMaps* outputMaps);
 		~Prev1x1Maps();
-		uint64_t allocate(int size);
-		void deallocate();
 		void serialize();
         void deserialize();
 
@@ -23,5 +21,6 @@ class Prev1x1Maps : public Accel_Payload
 		int m_prev1x1MapDepth;
 		int m_numPrev1x1MapRows;
 		int m_numPrev1x1MapCols;
-		float* m_data;
+        void*  m_rmt_data;
+        FPGA_hndl* m_fpga_hndl;
 };

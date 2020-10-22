@@ -1,38 +1,42 @@
 #include "OutputMaps.hpp"
 
 
-OutputMaps::OutputMaps(int outputMapDepth, int numOutputMapRows, int numOutputMapCols) : Accel_Payload()
+OutputMaps::OutputMaps(FPGA_hndl* fpga_hndl, int outputMapDepth, int numOutputMapRows, int numOutputMapCols) : Accel_Payload()
 {
-	m_outputMapDepth = outputMapDepth;
-	m_numOutputMapRows = numOutputMapRows;
-	m_numOutputMapCols = numOutputMapCols;
+    m_fpga_hndl         = fpga_hndl;
+	m_outputMapDepth    = outputMapDepth;
+	m_numOutputMapRows  = numOutputMapRows;
+	m_numOutputMapCols  = numOutputMapCols; 
 }
 
 
 OutputMaps::~OutputMaps()
 {
-	deallocate();
-}
-
-
-uint64_t OutputMaps::allocate(int size)
-{
-
-}
-
-
-void OutputMaps::deallocate()
-{
-
+#ifdef SYSTEMC
+    SYSC_FPGA_hndl* sysc_fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
+	sysc_fpga_hndl->deallocate(this);
+#else
+    
+#endif
 }
 
 
 void OutputMaps::serialize()
 {
-	m_size = m_outputMapDepth * m_numOutputMapRows * m_numOutputMapCols * PIXEL_SIZE;
+#ifdef SYSTEMC
+    SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
+    m_size                          = m_numOutputMapRows * m_numOutputMapRows * m_numOutputMapCols * PIXEL_SIZE;
+    m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
+#else
+
+#endif
 }
 
 void OutputMaps::deserialize()
 {
+#ifdef SYSTEMC
 
+#else
+
+#endif
 }

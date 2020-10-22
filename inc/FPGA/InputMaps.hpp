@@ -3,17 +3,21 @@
 
 #include <string.h>
 #include "fixedPoint.hpp"
+#include "util.hpp"
 #include "FPGA_shim.hpp"
+#ifdef SYSTEMC
+#include "SYSC_FPGA_shim.hpp"
+#else
+
+#endif
 #include "espresso_FPGA_common.hpp"
 
 
 class InputMaps : public Accel_Payload
 {
 	public:
-		InputMaps(int inputMapDepth, int numInputMapRows, int numInputMapCols, float* data);
+		InputMaps(FPGA_hndl* fpga_hndl, int inputMapDepth, int numInputMapRows, int numInputMapCols, float* data);
 		~InputMaps();
-		uint64_t allocate(int size);
-		void deallocate();
 		void serialize();
         void deserialize();
 		InputMaps* GetVolume(int depthBgn, int depthSize);
@@ -21,5 +25,6 @@ class InputMaps : public Accel_Payload
 		int m_inputMapDepth;
 		int m_numInputMapRows;
 		int m_numInputMapCols;
-		float* m_data;
+		float* m_cpu_data;
+        FPGA_hndl* m_fpga_hndl;
 };

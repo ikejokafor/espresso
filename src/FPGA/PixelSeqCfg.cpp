@@ -1,12 +1,26 @@
 #include "PixelSeqCfg.hpp"
 
 
-PixelSeqCfg::PixelSeqCfg(int stride)
+PixelSeqCfg::PixelSeqCfg(FPGA_hndl* fpga_hndl, int stride)
 {
-	m_stride = stride;
-#ifdef FPGA
-	m_address = allocate(MAX_NUM_INPUT_COLS * NUM_CE_PER_QUAD * PIX_SEQ_CONFIG_SIZE);
-	if(stride == 1)
+	m_fpga_hndl = fpga_hndl;	
+	m_stride 	= stride;
+}
+
+
+PixelSeqCfg::~PixelSeqCfg()
+{
+	
+}
+
+
+void PixelSeqCfg::serialize()
+{
+#ifdef SYSTEMC
+	SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
+    m_size                          = MAX_NUM_INPUT_COLS * NUM_CE_PER_QUAD * PIX_SEQ_CONFIG_SIZE;
+    m_buffer          				= (void*)sysc_fpga_hndl->allocate(this, m_size);
+	if(m_stride == 1)
 	{
 		stride1_config();
 	}
@@ -14,31 +28,9 @@ PixelSeqCfg::PixelSeqCfg(int stride)
 	{
 		stride2_config();
 	}
-#endif
-}
-
-
-PixelSeqCfg::~PixelSeqCfg()
-{
-	deallocate();
-}
-
-
-uint64_t PixelSeqCfg::allocate(int size)
-{
-
-}
-
-
-void PixelSeqCfg::deallocate()
-{
-
-}
-
-
-void PixelSeqCfg::serialize()
-{
-	m_size;
+#else
+	
+#endif	
 }
 
 
@@ -50,7 +42,7 @@ void PixelSeqCfg::deserialize()
 
 void PixelSeqCfg::stride1_config()
 {
-	uint16_t* bytes = (uint16_t*)m_address;
+	uint16_t* bytes = (uint16_t*)m_buffer;
 	bytes[0] = uint16_t(3072);
 	bytes[1] = uint16_t(2);
 	bytes[2] = uint16_t(8704);
@@ -103,7 +95,7 @@ void PixelSeqCfg::stride1_config()
 
 void PixelSeqCfg::stride2_config()
 {
-	uint16_t* bytes = (uint16_t*)m_address;
+	uint16_t* bytes = (uint16_t*)m_buffer;
 	bytes[0] = uint16_t(3072);
 	bytes[1] = uint16_t(2);
 	bytes[2] = uint16_t(8704);

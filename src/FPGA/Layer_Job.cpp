@@ -78,13 +78,13 @@ Layer_Job::Layer_Job(
     m_krnl1x1_pding         = false             ;
     m_do_1x1_res            = do_1x1_res        ;
     m_do_res_1x1            = do_res_1x1        ;
-    m_inputMaps             = new InputMaps(inputMapDepth, numInputMapRows, numInputMapCols, inputMapData);
-    m_kernels3x3            = new Kernels(m_num3x3Kernels, kernelDepth, numKernelRows, numKernelCols, kernel3x3Data);
+    m_inputMaps             = new InputMaps(fpga_hndl, inputMapDepth, numInputMapRows, numInputMapCols, inputMapData);
+    m_kernels3x3            = new Kernels(fpga_hndl, m_num3x3Kernels, kernelDepth, numKernelRows, numKernelCols, kernel3x3Data);
     if(do_resLayer || m_do_resLayer_only)
     {
-        m_residualMaps      = new ResidualMaps(residualMapDepth, numResidualMapRows, numResidualMapCols, residualMapData);
+        m_residualMaps      = new ResidualMaps(fpga_hndl, residualMapDepth, numResidualMapRows, numResidualMapCols, residualMapData);
     }
-    m_kernels3x3Bias        = new KernelBias(num3x3Kernels, kernel3x3Bias);
+    m_kernels3x3Bias        = new KernelBias(fpga_hndl, num3x3Kernels, kernel3x3Bias);
     m_krnl1x1_pad_bgn = -1;
     m_krnl1x1_pad_end = -1;
     if(do_kernels1x1)
@@ -99,16 +99,16 @@ Layer_Job::Layer_Job(
         {
             m_krnl1x1_pad_end = num1x1Kernels;
         }
-        m_kernels1x1        = new Kernels(num1x1Kernels, m_kernel1x1Depth, 1, 1, kernel1x1Data);
-        m_kernels1x1Bias    = new KernelBias(num1x1Kernels, kernel1x1Bias);
+        m_kernels1x1        = new Kernels(fpga_hndl, num1x1Kernels, m_kernel1x1Depth, 1, 1, kernel1x1Data);
+        m_kernels1x1Bias    = new KernelBias(fpga_hndl, num1x1Kernels, kernel1x1Bias);
     }
     m_krnl_1x1_layer = krnl_1x1_layer;
-    m_pyld = new DummyPayload();
-    m_pyld->m_address = (uint64_t)malloc(ACCL_OUTPUT_SIZE);
-    m_pyld->m_size = ACCL_OUTPUT_SIZE;
+	m_fpga_hndl		 = fpga_hndl;
 #ifdef SYSTEMC
-    int m_pseudo_addr   = 0;
     m_sysc_fpga_hndl    = reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
+    m_pyld = new DummyPayload();
+	m_pyld->m_size = ACCL_OUTPUT_SIZE;
+    m_pyld->m_buffer = (void*)malloc(m_pyld->m_size);
 #else
 
 #endif
@@ -175,6 +175,7 @@ void Layer_Job::createLayerIters()
 				del_1x1	
             );
             m_lay_it_arr[i].push_back(new Layer_Iteration(
+				m_fpga_hndl,
                 layAclPrm->opcode,
                 layAclPrm->inputMaps,
                 layAclPrm->kernels3x3,
@@ -313,35 +314,36 @@ layAclPrm_t* Layer_Job::createAccelParams(
         layAclPrm->kernels1x1Bias = m_kernels1x1Bias;
         if(!m_krnl1x1_pding)
         {
-            layAclPrm->outputMaps = new OutputMaps(m_kernels1x1->m_numKernels, m_numOutputMapRows, m_numOutputMapCols);
+            layAclPrm->outputMaps = new OutputMaps(m_fpga_hndl, m_kernels1x1->m_numKernels, m_numOutputMapRows, m_numOutputMapCols);
         }
         else
         {
-            layAclPrm->outputMaps = new OutputMaps(m_kernels1x1->m_numKernels + (m_krnl1x1_pad_end - m_krnl1x1_pad_bgn), m_numOutputMapRows, m_numOutputMapCols);
+            layAclPrm->outputMaps = new OutputMaps(m_fpga_hndl, m_kernels1x1->m_numKernels + (m_krnl1x1_pad_end - m_krnl1x1_pad_bgn), m_numOutputMapRows, m_numOutputMapCols);
         }
     }
     else
     {
-        layAclPrm->outputMaps = new OutputMaps(numKrnl3x3, m_numOutputMapRows, m_numOutputMapCols);
+        layAclPrm->outputMaps = new OutputMaps(m_fpga_hndl, numKrnl3x3, m_numOutputMapRows, m_numOutputMapCols);
     }
     //////
     if(m_do_resLayer_only)
     {
-        layAclPrm->outputMaps = new OutputMaps(m_residualMaps->m_residualMapDepth, m_residualMaps->m_numResidualMapRows, m_residualMaps->m_numResidualMapCols);
+        layAclPrm->outputMaps = new OutputMaps(m_fpga_hndl, m_residualMaps->m_residualMapDepth, m_residualMaps->m_numResidualMapRows, m_residualMaps->m_numResidualMapCols);
     }
     //////
     if((m_do_1x1_res || m_do_res_1x1 || m_do_kernels1x1) && !m_krnl_1x1_layer && last_depth_iter && !first_krnl_iter)
     {
-        layAclPrm->prev1x1maps = new Prev1x1Maps(m_lay_it_arr[krnl_iter - 1][m_num_depth_iter - 1]->m_outputMaps);
+        layAclPrm->prev1x1maps = new Prev1x1Maps(m_fpga_hndl, m_lay_it_arr[krnl_iter - 1][m_num_depth_iter - 1]->m_outputMaps);
     }
     //////
     if(m_krnl_1x1_layer)
     {
-        layAclPrm->partialMaps = new PartialMaps(m_inputMaps);
+        layAclPrm->partialMaps = new PartialMaps(m_fpga_hndl, m_inputMaps);
     }
     else if(m_do_resLayer_only)
     {
-        layAclPrm->partialMaps = new PartialMaps(m_inputMaps->m_inputMapDepth / 2, m_inputMaps->m_numInputMapRows, m_inputMaps->m_numInputMapCols, m_inputMaps->m_data);
+        // See ResidualLayer.cpp:ComputeLayerParam()
+        layAclPrm->partialMaps = new PartialMaps(m_fpga_hndl, m_inputMaps->m_inputMapDepth / 2, m_inputMaps->m_numInputMapRows, m_inputMaps->m_numInputMapCols, m_inputMaps->m_cpu_data);
     }
     else if(first_depth_iter)
     {
@@ -349,7 +351,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
     }
     else
     {
-        layAclPrm->partialMaps = new PartialMaps(m_lay_it_arr[krnl_iter][dpth_iter - 1]->m_outputMaps);
+        layAclPrm->partialMaps = new PartialMaps(m_fpga_hndl, m_lay_it_arr[krnl_iter][dpth_iter - 1]->m_outputMaps);
     }
     return layAclPrm;
 }
@@ -371,17 +373,17 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             cout << "[ESPRESSO]: " << m_layerName                      << endl;
             cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
             cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;
-            m_sysc_fpga_hndl->setConfig(m_lay_it_arr[k][d]->m_accelCfg);
-            // m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_inputMaps);
-            // m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_kernels3x3);
-            // m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_kernels1x1);
-            // m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_partialMaps);
-            // m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_residualMaps);
-            // m_sysc_fpga_hndl->setParam(m_lay_it_arr[k][d]->m_outputMaps);
+            m_sysc_fpga_hndl->wrConfig(m_lay_it_arr[k][d]->m_accelCfg);
+            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_inputMaps);
+            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels3x3);
+            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels1x1);
+            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_partialMaps);
+            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_residualMaps);
+            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_outputMaps);
             m_sysc_fpga_hndl->sendStart();
             m_sysc_fpga_hndl->waitComplete();
             m_sysc_fpga_hndl->getOutput(reinterpret_cast<Accel_Payload*>(m_pyld));
-            double* ptr = (double*)m_pyld->m_address;
+            double* ptr = (double*)m_pyld->m_buffer;
             elapsed_time += (ptr[0]);
             memPower += (ptr[1]);
 			if(k == 0 && d == 0)

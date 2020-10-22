@@ -22,6 +22,7 @@ class Layer_Iteration
 {
 	public:
 		Layer_Iteration(
+			FPGA_hndl* fpga_hndl,
 			opcode_t opcode,
 			InputMaps* inputMaps,
 			Kernels* kernels3x3,

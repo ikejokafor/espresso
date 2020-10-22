@@ -2,15 +2,17 @@
 using namespace std;
 
 
-AccelConfig::AccelConfig() : Accel_Payload()
+AccelConfig::AccelConfig(FPGA_hndl* fpga_hndl) : Accel_Payload()
 {
-    m_address = allocate(MAX_AWP_PER_FAS * NUM_TOTAL_QUADS * sizeof(cfg_t));
+	m_fpga_hndl = fpga_hndl;
 }
 
 
 AccelConfig::~AccelConfig()
 {
-    deallocate();
+#ifdef SYSTEMC
+    SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
+    sysc_fpga_hndl->deallocate(this);
     int i_end = m_FAS_cfg_arr.size();
     for(int i = 0; i < i_end; i++)
     {
@@ -26,26 +28,8 @@ AccelConfig::~AccelConfig()
         }
         delete m_FAS_cfg_arr[i];
     }
-}
-
-
-uint64_t AccelConfig::allocate(int size)
-{
-    m_size = size;
-#ifdef SYSTEMC
-    return (uint64_t)malloc(size);
 #else
-
-#endif
-}
-
-
-void AccelConfig::deallocate()
-{
-#ifdef SYSTEMC
-    free((uint64_t*)m_address);
-#else
-
+    
 #endif
 }
 
@@ -53,7 +37,11 @@ void AccelConfig::deallocate()
 void AccelConfig::serialize()
 {
 #ifdef SYSTEMC
-    cfg_t* cfg = (cfg_t*)m_address;
+    SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
+    m_size                          = MAX_AWP_PER_FAS * NUM_TOTAL_QUADS * sizeof(cfg_t);
+    m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
+    
+    cfg_t* cfg = (cfg_t*)m_buffer;
     for(int f = 0; f < NUM_FAS; f++)
     {
         for (int a = 0; a < MAX_AWP_PER_FAS; a++)
@@ -138,7 +126,7 @@ void AccelConfig::deserialize()
 {
     createCfg();
 #ifdef SYSTEMC
-    cfg_t* cfg = (cfg_t*)m_address;
+    cfg_t* cfg = (cfg_t*)m_remAddress;
     for(int f = 0; f < NUM_FAS; f++)
     {
         for (int a = 0; a < MAX_AWP_PER_FAS; a++)

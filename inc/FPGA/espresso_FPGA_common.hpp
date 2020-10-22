@@ -15,7 +15,6 @@ static int RE_TRAN_AMT                 = 8;
 // int PM_FIFO_DEPTH               = 256;
 // int PV_FIFO_DEPTH               = 256;
 
-#define SYSTEMC
 #define WINDOW_3x3_NUM_CYCLES		5
 #define AXI_BUS_SIZE				64
 #define ACCL_NUM_OUTPUT             4

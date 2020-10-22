@@ -3,6 +3,7 @@ using namespace std;
 
 
 Layer_Iteration::Layer_Iteration(
+	FPGA_hndl* fpga_hndl,
 	opcode_t opcode,
 	InputMaps* inputMaps,
 	Kernels* kernels3x3,
@@ -34,8 +35,8 @@ Layer_Iteration::Layer_Iteration(
 	m_kernels1x1Bias	= NULL;
 	m_partialMaps       = NULL;
 	m_prev1x1Maps		= NULL;
-	m_pxSeqCfg = new PixelSeqCfg(stride);
-	m_accelCfg = new AccelConfig();
+	m_pxSeqCfg = new PixelSeqCfg(fpga_hndl, stride);
+	m_accelCfg = new AccelConfig(fpga_hndl);
 	m_inputMaps	= inputMaps;
 	m_kernels3x3 = kernels3x3;
 	m_kernels1x1 = kernels1x1;
@@ -66,13 +67,13 @@ Layer_Iteration::Layer_Iteration(
 		m_accelCfg->m_FAS_cfg_arr.push_back(new FAS_cfg(
 			i,
 			opcode,
-			m_pxSeqCfg->m_address,
-			(m_kernels1x1) ? m_kernels1x1->m_address : -1,
-			(m_kernels1x1Bias) ? m_kernels1x1Bias->m_address : -1,
-			(m_partialMaps) ? m_partialMaps->m_address : -1,
-			(m_residualMaps) ? m_residualMaps->m_address : -1,
-            (m_prev1x1Maps) ? m_prev1x1Maps->m_address : -1,
-			outputMaps->m_address,
+			m_pxSeqCfg->m_remAddress,
+			(m_kernels1x1) ? m_kernels1x1->m_remAddress : -1,
+			(m_kernels1x1Bias) ? m_kernels1x1Bias->m_remAddress : -1,
+			(m_partialMaps) ? m_partialMaps->m_remAddress : -1,
+			(m_residualMaps) ? m_residualMaps->m_remAddress : -1,
+            (m_prev1x1Maps) ? m_prev1x1Maps->m_remAddress : -1,
+			outputMaps->m_remAddress,
 			m_pxSeqCfg->m_size,
 			(m_inputMaps) ? m_inputMaps->m_size : 0,
 			(m_kernels3x3) ? m_kernels3x3->m_size : 0,
@@ -96,9 +97,9 @@ Layer_Iteration::Layer_Iteration(
 			krnl1x1_pad_bgn,
 			krnl1x1_pad_end
 		));
-		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (m_partialMaps) ? m_partialMaps->m_address : -1;
-		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (m_residualMaps) ? m_residualMaps->m_address : -1;
-		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapAddr = m_outputMaps->m_address;
+		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (m_partialMaps) ? m_partialMaps->m_remAddress : -1;
+		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (m_residualMaps) ? m_residualMaps->m_remAddress : -1;
+		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapAddr = m_outputMaps->m_remAddress;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapFetchFactor = (m_inputMaps) ? m_inputMaps->m_numInputMapCols : 0;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapStoreFactor = m_outputMaps->m_outputMapDepth;
 		auto& imAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_inMapAddrArr;
@@ -141,9 +142,9 @@ Layer_Iteration::Layer_Iteration(
 					QUAD_en_arr.push_back(true);
 					int imDepthStep = QUAD_MAX_DEPTH * m_inputMaps->m_numInputMapRows * m_inputMaps->m_numInputMapCols;
 					int krn3x3DepthStep = QUAD_MAX_DEPTH * 3 * 3;
-					imAddrArr[j][k] = m_inputMaps->m_address + (k * imDepthStep);
-					krnl3x3AddrArr[j][k] = (kernels3x3) ? m_kernels3x3->m_address + (k * krn3x3DepthStep) : 0;
-					krnl3x3BiasAddrArr[j][k] = (kernels3x3Bias) ? m_kernels3x3Bias->m_address : 0;
+					imAddrArr[j][k] = m_inputMaps->m_remAddress + (k * imDepthStep);
+					krnl3x3AddrArr[j][k] = (kernels3x3) ? m_kernels3x3->m_remAddress + (k * krn3x3DepthStep) : 0;
+					krnl3x3BiasAddrArr[j][k] = (kernels3x3Bias) ? m_kernels3x3Bias->m_remAddress : 0;
 				}
 				else
 				{

@@ -8,7 +8,7 @@
 
 typedef enum
 {
-    NULL_OPCODE = -1,
+    NULL_OPCODE,
 	OPCODE_0	= 0,
     OPCODE_1    = 1, 
     OPCODE_2    = 2, 
@@ -63,7 +63,7 @@ class FAS_cfg
             int rm_fetch_amount,
             int pm_fetch_amount,
             int pv_fetch_amount,
-            bool krnl1x1_pding,
+            bool krnl1x1_pding ,
             int krnl1x1_pad_bgn,
             int krnl1x1_pad_end
         );

@@ -40,18 +40,16 @@ typedef struct
     opcode_t opcode;
 } layAclPrm_t;
 
-
+#ifdef SYSTEMC
 class DummyPayload : public Accel_Payload
 {
     public:
         DummyPayload() { }
         ~DummyPayload() { }
-		uint64_t allocate(int size) { }
-		void deallocate() { }
 		void serialize() { }
         void deserialize() { }
 };
-
+#endif
 
 class Layer_Job
 {
@@ -147,8 +145,9 @@ class Layer_Job
 		bool m_krnl_1x1_layer;
         bool m_do_1x1_res;
         bool m_do_res_1x1;
-		DummyPayload* m_pyld;
+		FPGA_hndl* m_fpga_hndl;
 #ifdef SYSTEMC
+		DummyPayload* m_pyld;
 		SYSC_FPGA_hndl* m_sysc_fpga_hndl;
         int m_pseudo_addr;
 #else
