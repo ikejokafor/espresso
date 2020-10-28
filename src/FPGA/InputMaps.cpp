@@ -27,9 +27,10 @@ void InputMaps::serialize()
 {
 #ifdef SYSTEMC
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    m_size                          = m_inputMapDepth * m_numInputMapRows * m_numInputMapCols * PIXEL_SIZE;
-    fixedPoint_t* rmt_data          = (fixedPoint_t*)sysc_fpga_hndl->allocate(this, m_size);
-	
+    m_size                          = m_inputMapDepth * m_numInputMapRows * m_numInputMapCols * sizeof(fixedPoint_t);
+    m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
+    fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
+
     for(int r = 0; r < m_numInputMapRows; r++)
     {
         for(int c = 0; c < m_numInputMapCols; c++)
@@ -42,8 +43,6 @@ void InputMaps::serialize()
             }
         }
     }
-
-	m_buffer = (void*)rmt_data;
 #else
 
 #endif

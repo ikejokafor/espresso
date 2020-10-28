@@ -9,7 +9,6 @@ Kernels::Kernels(FPGA_hndl* fpga_hndl, int numKernels, int kernelDepth, int numK
 	m_kernelDepth = kernelDepth;
 	m_numKernelRows = numKernelRows;
 	m_numKernelCols = numKernelCols;
-#ifdef FPGA
 	m_cpu_data.resize(numKernels);
 	for (int i = 0; i < numKernels; i++)
 	{
@@ -17,7 +16,7 @@ Kernels::Kernels(FPGA_hndl* fpga_hndl, int numKernels, int kernelDepth, int numK
 		for (int j = 0; j < kernelDepth; j++)
 		{
 			int size = numKernelRows * numKernelCols * sizeof(float);
-			m_cpu_data[i][j] = (float*)allocate(size);
+			m_cpu_data[i][j] = (float*)malloc(size);
 			int krnl_step = kernelDepth * numKernelRows * numKernelCols;
 			int dpth_idx = j * (numKernelRows * numKernelCols);
 			int idx = index2D(krnl_step, i, dpth_idx);
@@ -26,7 +25,6 @@ Kernels::Kernels(FPGA_hndl* fpga_hndl, int numKernels, int kernelDepth, int numK
 			memcpy((void*)m_cpu_data[i][j], (void*)krnlWndw, cpySize);
 		}
 	}
-#endif
 }
 
 
@@ -43,7 +41,14 @@ Kernels::Kernels(FPGA_hndl* fpga_hndl, int numKernels, int kernelDepth, int numK
 
 Kernels::~Kernels()
 {
-	// delete pointers in m_cpu_data
+	for (int i = 0; i < m_numKernels; i++)
+	{
+		m_cpu_data[i].resize(m_kernelDepth);
+		for (int j = 0; j < m_kernelDepth; j++)
+		{
+			free(m_cpu_data[i][j]);
+		}
+	}
 }
 
 
@@ -51,9 +56,10 @@ void Kernels::serialize()
 {
 #ifdef SYSTEMC
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-	m_size                          = m_numKernels * m_kernelDepth * m_numKernelRows * m_numKernelCols * PIXEL_SIZE;
-    fixedPoint_t* rmt_data           = (fixedPoint_t*)sysc_fpga_hndl->allocate(this, m_size);
-    
+	m_size                          = m_numKernels * m_kernelDepth * m_numKernelRows * m_numKernelCols * sizeof(fixedPoint_t);
+    m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
+    fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
+
 	for(int n = 0; n < m_numKernels; n++) 
     {
         for(int r = 0; r < m_numKernelRows; r++)
@@ -69,8 +75,6 @@ void Kernels::serialize()
             }
         }
     }
-	
-	m_buffer = (void*)rmt_data;
 #else
 
 #endif
@@ -86,7 +90,6 @@ void Kernels::deserialize()
 Kernels* Kernels::GetVolume(int krnlBgn, int numKrnl, int depthBgn, int depthSize)
 {
 	krnl_data_t krnl_data;
-#ifdef FPGA
 	krnl_data.resize(numKrnl);
 	int krnl_ofst = krnlBgn;
 	for (int i = 0; i < numKrnl; i++, krnl_ofst++)
@@ -98,6 +101,5 @@ Kernels* Kernels::GetVolume(int krnlBgn, int numKrnl, int depthBgn, int depthSiz
 			krnl_data[i][j] = m_cpu_data[krnl_ofst][depth_ofst];
 		}
 	}
-#endif
 	return new Kernels(m_fpga_hndl, numKrnl, depthSize, m_numKernelRows, m_numKernelCols, krnl_data);
 }

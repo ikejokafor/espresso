@@ -33,5 +33,4 @@ class Kernels : public Accel_Payload
 		int m_numKernelCols;
         FPGA_hndl*  m_fpga_hndl;
 		krnl_data_t m_cpu_data;
-        void*  m_rmt_data;
 };

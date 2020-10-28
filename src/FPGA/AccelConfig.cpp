@@ -126,7 +126,7 @@ void AccelConfig::deserialize()
 {
     createCfg();
 #ifdef SYSTEMC
-    cfg_t* cfg = (cfg_t*)m_remAddress;
+    cfg_t* cfg = (cfg_t*)m_buffer;
     for(int f = 0; f < NUM_FAS; f++)
     {
         for (int a = 0; a < MAX_AWP_PER_FAS; a++)

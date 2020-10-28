@@ -135,8 +135,11 @@ Layer_Iteration::Layer_Iteration(
 						activation,
 						master_QUAD,
 						cascade,
-						(remDepth > QUAD_MAX_DEPTH) ? QUAD_MAX_DEPTH : remDepth,
+						(remDepth > QUAD_MAX_DEPTH) ? QUAD_MAX_DEPTH : remDepth
+#ifdef SYSTEMC  
+                        ,
                         RE_HIGH_WATERMARK
+#endif
 					);
 					QUAD_cfg_arr.push_back(quad_cfg);
 					QUAD_en_arr.push_back(true);
