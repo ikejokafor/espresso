@@ -79,6 +79,9 @@ class AccelConfig : public Accel_Payload
 			uint64_t cascade                    ;
 			uint64_t num_expd_input_rows        ;
 			uint64_t num_expd_input_cols        ;
+            uint64_t num_input_rows             ;
+            uint64_t num_input_cols             ;
+            uint64_t kernel3x3Depth             ;
 			uint64_t activation                 ;
 			uint64_t padding                    ;
 			uint64_t upsample                   ;

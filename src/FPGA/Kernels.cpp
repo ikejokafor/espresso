@@ -54,7 +54,28 @@ Kernels::~Kernels()
 
 void Kernels::serialize()
 {
-#ifdef SYSTEMC
+#ifdef ALPHA_DATA
+    _hndl* _hndl                    = reinterpret_cast<_hndl*>(m_fpga_hndl);
+	m_size                          = m_numKernels * m_kernelDepth * m_numKernelRows * m_numKernelCols * sizeof(fixedPoint_t);
+    m_buffer                        = (void*)_hndl->allocate(this, m_size);
+    fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
+
+	for(int n = 0; n < m_numKernels; n++) 
+    {
+        for(int d = 0; d < m_kernelDepth; d++)
+        {
+            for(int r = 0; r < m_numKernelRows; r++)
+            {
+                for(int c = 0; c < m_numKernelCols; c++)
+                {
+                    int rIdx = index4D(m_numKernelRows, m_numKernelCols, m_kernelDepth, n, r, c, d);
+                    int cIdx = index2D(m_numKernelCols, r, c);
+                    rmt_data[rIdx] = fixedPoint::create(16, 14, m_cpu_data[n][d][cIdx]);    // FIXME: remove hardcoding, and pack values
+                }
+            }
+        }
+    }
+#else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
 	m_size                          = m_numKernels * m_kernelDepth * m_numKernelRows * m_numKernelCols * sizeof(fixedPoint_t);
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
@@ -62,21 +83,19 @@ void Kernels::serialize()
 
 	for(int n = 0; n < m_numKernels; n++) 
     {
-        for(int r = 0; r < m_numKernelRows; r++)
+        for(int d = 0; d < m_kernelDepth; d++)
         {
-            for(int c = 0; c < m_numKernelCols; c++)
+            for(int r = 0; r < m_numKernelRows; r++)
             {
-                for(int d = 0; d < m_kernelDepth; d++)
+                for(int c = 0; c < m_numKernelCols; c++)
                 {
-                    int rIdx = index4D(m_numKernelRows, m_numKernelCols, m_kernelDepth, n, r, c, d);
+                    int rIdx = index4D(m_kernelDepth, m_numKernelRows, m_numKernelCols, n, d, r, c);
                     int cIdx = index2D(m_numKernelCols, r, c);
-                    rmt_data[rIdx] = fixedPoint::create(16, 14, m_cpu_data[n][d][cIdx]);
+                    rmt_data[rIdx] = fixedPoint::create(16, 14, m_cpu_data[n][d][cIdx]); // FIXME: remove hardcoding,
                 }
             }
         }
     }
-#else
-
 #endif
 }
 

@@ -12,7 +12,7 @@ QUAD_cfg::QUAD_cfg(
     int numInputMapRows,
     int numInputMapCols,
     int numKernels,
-    int kernelDepth,
+    int kernel3x3Depth,
     int numKernelRows,
     int numKernelCols,
     int stride,
@@ -43,6 +43,11 @@ QUAD_cfg::QUAD_cfg(
     m_upsample = upsample;
     int kernel_size = 3;
 	m_num_kernels = numKernels;
+    
+    m_num_input_rows        = numInputMapRows;
+    m_num_input_cols        = numInputMapCols;
+    m_kernel3x3Depth        = kernel3x3Depth;
+    
     m_num_output_rows = ((numInputMapRows - kernel_size + (2 * padding)) / m_stride) + 1;
     m_num_output_cols = ((numInputMapCols - kernel_size + (2 * padding)) / m_stride) + 1;
     if(m_padding && !m_upsample)

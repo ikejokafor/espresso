@@ -42,10 +42,13 @@ class QUAD_cfg
         int		m_num_output_rows		;
         int		m_num_output_cols	    ;
         int		m_num_kernels			;
+        int     m_kernel3x3Depth        ;
         bool    m_master_QUAD			;
         bool	m_cascade				;
         int     m_num_expd_input_rows	;
         int		m_num_expd_input_cols	;
+        int     m_num_input_rows        ;
+        int     m_num_input_cols        ;
         bool	m_activation			;
         bool	m_padding				;
         bool	m_upsample				;

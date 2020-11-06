@@ -118,37 +118,38 @@ void ConvolutionLayer::ComputeLayer_FxPt()
 	{
 		threads[t] = std::thread(std::bind(
 		[&](const int bi_m, const int ei_m, const int t)
-			{
-				for (int m = bi_m; m < ei_m; m++) {
-					for (int x = 0, a = 0; x < m_numOutputRows; x++, a += m_stride)
-					{
-						for (int y = 0, b = 0; y < m_numOutputCols; y++, b += m_stride)
-						{
-							int do_i = index3D(m_numOutputRows, m_numOutputCols, m, x, y);
-							dataout[do_i] = m_flBiasData[m];
-							for (int k = 0; k < m_kernelDepth; k++)
-							{
-								for (int i = a - m_padding, kr = 0; kr < m_numKernelRows; i++, kr++)
-								{
-									for (int j = b - m_padding, kc = 0; kc < m_numKernelCols; j++, kc++)
-									{
-										if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) // in valid region, assuming zero padding
-											{
-												int do_i = index3D(m_numOutputRows, m_numOutputCols, m, x, y);
-												int di_i = index3D(numInputBlobRows, numInputBlobCols, k, i, j);
-												int f_i = index4D(m_kernelDepth, m_numKernelRows, m_numKernelCols, m, k, kr, kc);
-												dataout[do_i] += (datain[di_i] + filters[f_i]);
-											}
-									}
-								}
-							}
-						}
-					}
-				}
-			},
-			t * m_numKernels / nthreads,
-			(t + 1) == nthreads ? m_numKernels : (t + 1) * m_numKernels / nthreads,
-			t));
+        {
+            for (int m = bi_m; m < ei_m; m++) 
+            {
+                for (int x = 0, a = 0; x < m_numOutputRows; x++, a += m_stride)
+                {
+                    for (int y = 0, b = 0; y < m_numOutputCols; y++, b += m_stride)
+                    {
+                        int do_i = index3D(m_numOutputRows, m_numOutputCols, m, x, y);
+                        dataout[do_i] = m_flBiasData[m];
+                        for (int k = 0; k < m_kernelDepth; k++)
+                        {
+                            for (int i = a - m_padding, kr = 0; kr < m_numKernelRows; i++, kr++)
+                            {
+                                for (int j = b - m_padding, kc = 0; kc < m_numKernelCols; j++, kc++)
+                                {
+                                    if ((i >= 0 && j >= 0) && (i < numInputBlobRows && j < numInputBlobCols)) // in valid region, assuming zero padding
+                                    {
+                                        int do_i = index3D(m_numOutputRows, m_numOutputCols, m, x, y);
+                                        int di_i = index3D(numInputBlobRows, numInputBlobCols, k, i, j);
+                                        int f_i = index4D(m_kernelDepth, m_numKernelRows, m_numKernelCols, m, k, kr, kc);
+                                        dataout[do_i] += (datain[di_i] + filters[f_i]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        t * m_numKernels / nthreads,
+        (t + 1) == nthreads ? m_numKernels : (t + 1) * m_numKernels / nthreads,
+        t));
 	}
 	for_each(threads.begin(), threads.end(), [](std::thread& x){x.join(); });
 	// need this code for group parameter and iterate over groups while changing these pointers

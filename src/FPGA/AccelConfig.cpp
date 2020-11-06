@@ -106,6 +106,9 @@ void AccelConfig::serialize()
                 cfg[idx].cascade 					= QUAD_cfg_arr[q]->m_cascade;
                 cfg[idx].num_expd_input_rows 		= QUAD_cfg_arr[q]->m_num_expd_input_rows;
                 cfg[idx].num_expd_input_cols 		= QUAD_cfg_arr[q]->m_num_expd_input_cols;
+                cfg[idx].num_input_rows             = QUAD_cfg_arr[q]->m_num_input_rows;
+                cfg[idx].num_input_cols             = QUAD_cfg_arr[q]->m_num_input_cols;
+                cfg[idx].kernel3x3Depth             = QUAD_cfg_arr[q]->m_kernel3x3Depth;
                 cfg[idx].activation 				= QUAD_cfg_arr[q]->m_activation;
                 cfg[idx].padding 					= QUAD_cfg_arr[q]->m_padding;
                 cfg[idx].upsample 					= QUAD_cfg_arr[q]->m_upsample;
@@ -191,6 +194,9 @@ void AccelConfig::deserialize()
                 QUAD_cfg_arr[q]->m_cascade				    = cfg[idx].cascade;
                 QUAD_cfg_arr[q]->m_num_expd_input_rows      = cfg[idx].num_expd_input_rows;
                 QUAD_cfg_arr[q]->m_num_expd_input_cols		= cfg[idx].num_expd_input_cols;
+                QUAD_cfg_arr[q]->m_num_input_rows           = cfg[idx].num_input_rows;
+                QUAD_cfg_arr[q]->m_num_input_cols           = cfg[idx].num_input_cols;
+                QUAD_cfg_arr[q]->m_kernel3x3Depth           = cfg[idx].kernel3x3Depth;
                 QUAD_cfg_arr[q]->m_activation				= cfg[idx].activation;
                 QUAD_cfg_arr[q]->m_padding				    = cfg[idx].padding;
                 QUAD_cfg_arr[q]->m_upsample				    = cfg[idx].upsample;
