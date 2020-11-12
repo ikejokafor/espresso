@@ -107,7 +107,7 @@ Layer_Job::Layer_Job(
 #ifdef SYSTEMC
     m_sysc_fpga_hndl    = reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
     m_pyld = new DummyPayload();
-	m_pyld->m_size = ACCL_OUTPUT_SIZE;
+	m_pyld->m_size = ACCL_META_OUTPUT_SIZE;
     m_pyld->m_buffer = (void*)malloc(m_pyld->m_size);
 #else
 
@@ -376,13 +376,21 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             m_sysc_fpga_hndl->wrConfig(m_lay_it_arr[k][d]->m_accelCfg);
             m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_inputMaps);
             m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels3x3);
-            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels1x1);
-            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_partialMaps);
-            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_residualMaps);
+            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels3x3Bias);
+            (m_lay_it_arr[k][d]->m_kernels1x1) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels1x1)
+                :   m_sysc_fpga_hndl->wrParam(m_pyld);
+            (m_lay_it_arr[k][d]->m_kernels1x1Bias) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels1x1Bias)
+                :   m_sysc_fpga_hndl->wrParam(m_pyld);
+            (m_lay_it_arr[k][d]->m_partialMaps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_partialMaps)
+                :   m_sysc_fpga_hndl->wrParam(m_pyld);
+            (m_lay_it_arr[k][d]->m_residualMaps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_residualMaps)
+                :   m_sysc_fpga_hndl->wrParam(m_pyld);
+            (m_lay_it_arr[k][d]->m_prev1x1Maps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_prev1x1Maps)
+                :   m_sysc_fpga_hndl->wrParam(m_pyld);
             m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_outputMaps);
             m_sysc_fpga_hndl->sendStart();
             m_sysc_fpga_hndl->waitComplete();
-            m_sysc_fpga_hndl->getOutput(reinterpret_cast<Accel_Payload*>(m_pyld));
+            m_sysc_fpga_hndl->getOutput(m_lay_it_arr[k][d]->m_outputMaps);
             double* ptr = (double*)m_pyld->m_buffer;
             elapsed_time += (ptr[0]);
             memPower += (ptr[1]);

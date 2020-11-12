@@ -94,6 +94,8 @@ void AccelConfig::serialize()
                 cfg[idx].outMapAddr					= m_FAS_cfg_arr[f]->m_outMapAddr;
                 cfg[idx].prevMapAddr				= m_FAS_cfg_arr[f]->m_prevMapAddr;
 				cfg[idx].pixelSeqAddr 				= m_FAS_cfg_arr[f]->m_pixelSeqAddr;
+				cfg[idx].m_num_output_rows_cfg		= m_FAS_cfg_arr[f]->m_num_output_rows_cfg;
+				cfg[idx].m_num_output_cols_cfg		= m_FAS_cfg_arr[f]->m_num_output_cols_cfg;				
                 cfg[idx].QUAD_id 					= QUAD_cfg_arr[q]->m_QUAD_id;
                 cfg[idx].res_high_watermark         = QUAD_cfg_arr[q]->m_res_high_watermark;
                 cfg[idx].QUAD_en					= QUAD_en_arr[q];
@@ -181,7 +183,9 @@ void AccelConfig::deserialize()
                 m_FAS_cfg_arr[f]->m_resMapAddr				= cfg[idx].resMapAddr;
                 m_FAS_cfg_arr[f]->m_outMapAddr				= cfg[idx].outMapAddr;
                 m_FAS_cfg_arr[f]->m_pixelSeqAddr			= cfg[idx].pixelSeqAddr;
-				m_FAS_cfg_arr[f]->m_prevMapAddr				= cfg[idx].prevMapAddr; 
+				m_FAS_cfg_arr[f]->m_prevMapAddr				= cfg[idx].prevMapAddr;			
+				m_FAS_cfg_arr[f]->m_num_output_rows_cfg		= cfg[idx].m_num_output_rows_cfg; 
+				m_FAS_cfg_arr[f]->m_num_output_cols_cfg		= cfg[idx].m_num_output_cols_cfg;
                 QUAD_cfg_arr[q]->m_QUAD_id				    = cfg[idx].QUAD_id;
                 QUAD_cfg_arr[q]->m_res_high_watermark       = cfg[idx].res_high_watermark;
                 QUAD_en_arr[q]				                = cfg[idx].QUAD_en;

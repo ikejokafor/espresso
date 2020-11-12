@@ -65,7 +65,10 @@ class FAS_cfg
             int pv_fetch_amount,
             bool krnl1x1_pding ,
             int krnl1x1_pad_bgn,
-            int krnl1x1_pad_end
+            int krnl1x1_pad_end,
+			int num_output_rows_cfg,
+			int num_output_cols_cfg,
+			int output_depth_cfg
         );
         ~FAS_cfg();
 
@@ -105,6 +108,9 @@ class FAS_cfg
         bool m_krnl1x1_pding;
         int m_krnl1x1_pad_bgn;
         int m_krnl1x1_pad_end;
+		int m_num_output_rows_cfg;
+		int m_num_output_cols_cfg;
+		int m_output_depth_cfg;
         std::vector<AWP_cfg*> m_AWP_cfg_arr;
         std::vector<bool> m_AWP_en_arr;
 };

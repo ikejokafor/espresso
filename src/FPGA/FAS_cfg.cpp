@@ -40,7 +40,10 @@ FAS_cfg::FAS_cfg(
 	int pv_fetch_amount,
 	bool krnl1x1_pding,
 	int krnl1x1_pad_bgn,
-	int krnl1x1_pad_end
+	int krnl1x1_pad_end,
+	int num_output_rows_cfg,
+	int num_output_cols_cfg,
+	int output_depth_cfg
 ) :
    	m_inMapAddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
 	m_krnl3x3AddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
@@ -77,6 +80,9 @@ FAS_cfg::FAS_cfg(
 	m_krnl1x1_pding = krnl1x1_pding;
 	m_krnl1x1_pad_bgn = krnl1x1_pad_bgn;
 	m_krnl1x1_pad_end = krnl1x1_pad_end;
+	m_num_output_rows_cfg = num_output_rows_cfg;
+	m_num_output_cols_cfg = num_output_cols_cfg;
+	m_output_depth_cfg = m_output_depth_cfg;
 }
 
 
