@@ -52,7 +52,8 @@ Layer_Job::Layer_Job(
     m_kernels3x3Bias        = NULL;
     m_kernels1x1            = NULL;
     m_kernels1x1Bias        = NULL;
-	m_pyld					= NULL;
+	m_Spyld					= NULL;
+	m_Dpyld					= NULL;
     m_layerName             = layerName         ;
     m_inputMapDepth         = inputMapDepth     ;
     m_numInputMapRows       = numInputMapRows   ;
@@ -106,9 +107,9 @@ Layer_Job::Layer_Job(
 	m_fpga_hndl		 = fpga_hndl;
 #ifdef SYSTEMC
     m_sysc_fpga_hndl    = reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
-    m_pyld = new DummyPayload();
-	m_pyld->m_size = ACCL_META_OUTPUT_SIZE;
-    m_pyld->m_buffer = (void*)malloc(m_pyld->m_size);
+    m_Spyld = new StatPayload();
+	m_Spyld->m_size = ACCL_META_OUTPUT_SIZE;
+    m_Spyld->m_buffer = (void*)malloc(m_Spyld->m_size);	
 #else
 
 #endif
@@ -124,7 +125,8 @@ Layer_Job::~Layer_Job()
 	(m_kernels3x3Bias) ? delete m_kernels3x3Bias : void();
     (m_kernels1x1) ? delete m_kernels1x1 : void();
     (m_kernels1x1Bias) ? delete m_kernels1x1Bias : void();
-	(m_pyld) ? delete m_pyld : void();
+	(m_Spyld) ? delete m_Spyld : void();
+	(m_Dpyld) ? delete m_Dpyld : void();
     m_inputMaps = NULL;
 	m_kernels3x3 = NULL;
 	m_residualMaps = NULL;
@@ -132,7 +134,8 @@ Layer_Job::~Layer_Job()
 	m_kernels3x3Bias = NULL;
     m_kernels1x1 = NULL;
     m_kernels1x1Bias = NULL;
-	m_pyld = NULL;
+	m_Spyld = NULL;
+	m_Dpyld = NULL;
 
     int i_end = m_lay_it_arr.size();
     for(int i = 0; i < i_end; i++)
@@ -361,6 +364,9 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
 {
     cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
     cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
+	cout << endl << endl;
+	m_Dpyld = new DummyPayload();
+
     for(int k = 0; k < m_lay_it_arr.size(); k++)
     {
         for(int d = 0; d < m_lay_it_arr[k].size(); d++)
@@ -370,28 +376,32 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             {
                 calcAccelPerfAnalyStats(m_lay_it_arr[k][d], avg_QUAD_time0, avg_FAS_time0);
             }
-            cout << "[ESPRESSO]: " << m_layerName                      << endl;
+			cout << "[ESPRESSO]: " << m_layerName                    << endl;
             cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
             cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;
+			cout << endl << endl;
             m_sysc_fpga_hndl->wrConfig(m_lay_it_arr[k][d]->m_accelCfg);
-            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_inputMaps);
-            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels3x3);
-            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels3x3Bias);
+            (m_lay_it_arr[k][d]->m_inputMaps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_inputMaps)
+				: m_sysc_fpga_hndl->wrParam(m_Dpyld);
+            (m_lay_it_arr[k][d]->m_kernels3x3) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels3x3)
+				: m_sysc_fpga_hndl->wrParam(m_Dpyld);
+            (m_lay_it_arr[k][d]->m_kernels3x3Bias) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels3x3Bias)
+				: m_sysc_fpga_hndl->wrParam(m_Dpyld);
             (m_lay_it_arr[k][d]->m_kernels1x1) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels1x1)
-                :   m_sysc_fpga_hndl->wrParam(m_pyld);
+				: m_sysc_fpga_hndl->wrParam(m_Dpyld);
             (m_lay_it_arr[k][d]->m_kernels1x1Bias) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels1x1Bias)
-                :   m_sysc_fpga_hndl->wrParam(m_pyld);
+				: m_sysc_fpga_hndl->wrParam(m_Dpyld);
             (m_lay_it_arr[k][d]->m_partialMaps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_partialMaps)
-                :   m_sysc_fpga_hndl->wrParam(m_pyld);
+				: m_sysc_fpga_hndl->wrParam(m_Dpyld);
             (m_lay_it_arr[k][d]->m_residualMaps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_residualMaps)
-                :   m_sysc_fpga_hndl->wrParam(m_pyld);
+                : m_sysc_fpga_hndl->wrParam(m_Dpyld);
             (m_lay_it_arr[k][d]->m_prev1x1Maps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_prev1x1Maps)
-                :   m_sysc_fpga_hndl->wrParam(m_pyld);
-            m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_outputMaps);
+                : m_sysc_fpga_hndl->wrParam(m_Dpyld);
             m_sysc_fpga_hndl->sendStart();
             m_sysc_fpga_hndl->waitComplete();
             m_sysc_fpga_hndl->getOutput(m_lay_it_arr[k][d]->m_outputMaps);
-            double* ptr = (double*)m_pyld->m_buffer;
+			m_sysc_fpga_hndl->getOutput(m_Spyld);
+            double* ptr = (double*)m_Spyld->m_buffer;
             elapsed_time += (ptr[0]);
             memPower += (ptr[1]);
 			if(k == 0 && d == 0)
@@ -402,9 +412,9 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             cout << "[ESPRESSO]: " << m_layerName                    << endl;
             cout << "[ESPRESSO]:\tFinished Kernel Iteration - " << (k + 1) << endl;
             cout << "[ESPRESSO]:\tFinished Depth Iteration - "  << (d + 1) << endl;
-            
             cout << "[ESPRESSO]: QUAD time - " << ptr[2] << endl;
             cout << "[ESPRESSO]: FAS time - " << ptr[3] << endl;
+			cout << endl << endl;
         }
     }
 	double numTotalIter = m_num_krnl_iter * m_num_depth_iter;
@@ -412,6 +422,8 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
 	cout << "[ESPRESSO]: Total Layer Processing Time - " << elapsed_time << " ns " << endl;
     cout << "[ESPRESSO]: Avgerage Layer Iteration Time - " << avgIterTime << " ns " << endl;
     cout << "[ESPRESSO]: Total Power Consumed - " << memPower << " mW " << endl;
+	cout << endl << endl;
+	delete(m_Dpyld);
 }
 
 
@@ -433,6 +445,9 @@ void Layer_Job::printConfig(Layer_Iteration* lay_it)
     cout << "[ESPRESSO]:\tKernel 1x1 Bias Fetch Total:                 " << fas_cfg->m_krnl1x1BiasFetchTotal    << endl;
     cout << "[ESPRESSO]:\tResidual Map Fetch Total:                    " << fas_cfg->m_resMapFetchTotal         << endl;
     cout << "[ESPRESSO]:\tOutput Map Store Total:                      " << fas_cfg->m_outMapStoreTotal         << endl;
+	cout << "[ESPRESSO]:\tNum Output Rows:                             " << fas_cfg->m_num_output_rows			<< endl;
+	cout << "[ESPRESSO]:\tNum Output Cols:                             " << fas_cfg->m_num_output_cols			<< endl;
+	cout << "[ESPRESSO]:\tOutput Depth:                                " << fas_cfg->m_output_depth				<< endl;
     cout << "[ESPRESSO]:\tPrev1x1 Map Fetch Total                      " << fas_cfg->m_prevMapFetchTotal        << endl;
     cout << "[ESPRESSO]:\tOutput Map Store Factor:                     " << fas_cfg->m_outMapStoreFactor        << endl;
     cout << "[ESPRESSO]:\tConvOut High Watermark:                      " << fas_cfg->m_co_high_watermark        << endl;
@@ -494,15 +509,12 @@ void Layer_Job::calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& QUAD_ti
     }
     else if(lay_it->m_kernels1x1)
     {
-						 
-					  
         FAS_time  = ((lay_it->m_outputMaps->m_numOutputMapRows * lay_it->m_outputMaps->m_numOutputMapCols) 
                     * (lay_it->m_kernels1x1->m_kernelDepth / K_1_D_S) 
                     * (lay_it->m_kernels1x1->m_numKernels / K_1_S)) * CLK_PRD_NS; 
     }
     else
     {
-					 
         FAS_time = (lay_it->m_outputMaps->m_numOutputMapRows * lay_it->m_outputMaps->m_numOutputMapCols * (lay_it->m_outputMaps->m_outputMapDepth / A_S)) * CLK_PRD_NS;
     }
 }

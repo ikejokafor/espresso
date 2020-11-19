@@ -5,6 +5,9 @@ using namespace std;
 AccelConfig::AccelConfig(FPGA_hndl* fpga_hndl) : Accel_Payload()
 {
 	m_fpga_hndl = fpga_hndl;
+    m_buffer          = NULL;
+    m_size            = 0;
+    m_remAddress      = -1;
 }
 
 
@@ -94,15 +97,15 @@ void AccelConfig::serialize()
                 cfg[idx].outMapAddr					= m_FAS_cfg_arr[f]->m_outMapAddr;
                 cfg[idx].prevMapAddr				= m_FAS_cfg_arr[f]->m_prevMapAddr;
 				cfg[idx].pixelSeqAddr 				= m_FAS_cfg_arr[f]->m_pixelSeqAddr;
-				cfg[idx].m_num_output_rows_cfg		= m_FAS_cfg_arr[f]->m_num_output_rows_cfg;
-				cfg[idx].m_num_output_cols_cfg		= m_FAS_cfg_arr[f]->m_num_output_cols_cfg;				
+				cfg[idx].fas_num_output_rows		= m_FAS_cfg_arr[f]->m_num_output_rows;
+				cfg[idx].fas_num_output_cols		= m_FAS_cfg_arr[f]->m_num_output_cols;				
                 cfg[idx].QUAD_id 					= QUAD_cfg_arr[q]->m_QUAD_id;
                 cfg[idx].res_high_watermark         = QUAD_cfg_arr[q]->m_res_high_watermark;
                 cfg[idx].QUAD_en					= QUAD_en_arr[q];
                 cfg[idx].inMapDepth                 = QUAD_cfg_arr[q]->m_inMapDepth;
                 cfg[idx].stride 					= QUAD_cfg_arr[q]->m_stride;
-                cfg[idx].num_output_rows 			= QUAD_cfg_arr[q]->m_num_output_rows;
-                cfg[idx].num_output_cols	        = QUAD_cfg_arr[q]->m_num_output_cols;
+                cfg[idx].quad_num_output_rows 		= QUAD_cfg_arr[q]->m_num_output_rows;
+                cfg[idx].quad_num_output_cols	    = QUAD_cfg_arr[q]->m_num_output_cols;
                 cfg[idx].num_kernels 				= QUAD_cfg_arr[q]->m_num_kernels;
                 cfg[idx].master_QUAD 				= QUAD_cfg_arr[q]->m_master_QUAD;
                 cfg[idx].cascade 					= QUAD_cfg_arr[q]->m_cascade;
@@ -184,15 +187,15 @@ void AccelConfig::deserialize()
                 m_FAS_cfg_arr[f]->m_outMapAddr				= cfg[idx].outMapAddr;
                 m_FAS_cfg_arr[f]->m_pixelSeqAddr			= cfg[idx].pixelSeqAddr;
 				m_FAS_cfg_arr[f]->m_prevMapAddr				= cfg[idx].prevMapAddr;			
-				m_FAS_cfg_arr[f]->m_num_output_rows_cfg		= cfg[idx].m_num_output_rows_cfg; 
-				m_FAS_cfg_arr[f]->m_num_output_cols_cfg		= cfg[idx].m_num_output_cols_cfg;
+				m_FAS_cfg_arr[f]->m_num_output_rows			= cfg[idx].fas_num_output_rows;
+				m_FAS_cfg_arr[f]->m_num_output_cols			= cfg[idx].fas_num_output_cols;
                 QUAD_cfg_arr[q]->m_QUAD_id				    = cfg[idx].QUAD_id;
                 QUAD_cfg_arr[q]->m_res_high_watermark       = cfg[idx].res_high_watermark;
                 QUAD_en_arr[q]				                = cfg[idx].QUAD_en;
                 QUAD_cfg_arr[q]->m_inMapDepth               = cfg[idx].inMapDepth;
                 QUAD_cfg_arr[q]->m_stride				    = cfg[idx].stride;
-                QUAD_cfg_arr[q]->m_num_output_rows			= cfg[idx].num_output_rows;
-                QUAD_cfg_arr[q]->m_num_output_cols			= cfg[idx].num_output_cols;
+                QUAD_cfg_arr[q]->m_num_output_rows			= cfg[idx].quad_num_output_rows;
+                QUAD_cfg_arr[q]->m_num_output_cols			= cfg[idx].quad_num_output_cols;
                 QUAD_cfg_arr[q]->m_num_kernels				= cfg[idx].num_kernels;
                 QUAD_cfg_arr[q]->m_master_QUAD				= cfg[idx].master_QUAD;
                 QUAD_cfg_arr[q]->m_cascade				    = cfg[idx].cascade;

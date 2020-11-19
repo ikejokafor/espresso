@@ -4,12 +4,15 @@ using namespace std;
 
 Kernels::Kernels(FPGA_hndl* fpga_hndl, int numKernels, int kernelDepth, int numKernelRows, int numKernelCols, float* data) : Accel_Payload()
 {
-    m_fpga_hndl = fpga_hndl;
-	m_numKernels = numKernels;
-	m_kernelDepth = kernelDepth;
-	m_numKernelRows = numKernelRows;
-	m_numKernelCols = numKernelCols;
+    m_fpga_hndl 		= fpga_hndl;
+	m_numKernels 		= numKernels;
+	m_kernelDepth 		= kernelDepth;
+	m_numKernelRows 	= numKernelRows;
+	m_numKernelCols 	= numKernelCols;
 	m_cpu_data.resize(numKernels);
+	m_buffer			= NULL;
+	m_size              = 0;
+	m_remAddress        = -1;
 	for (int i = 0; i < numKernels; i++)
 	{
 		m_cpu_data[i].resize(kernelDepth);
@@ -49,6 +52,13 @@ Kernels::~Kernels()
 			free(m_cpu_data[i][j]);
 		}
 	}
+#ifdef ALPHA_DATA
+	_hndl* _hndl = reinterpret_cast<_hndl*>(m_fpga_hndl);
+	_hndl->deallocate(this);  
+#else
+	SYSC_FPGA_hndl* sysc_fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
+	sysc_fpga_hndl->deallocate(this);   
+#endif
 }
 
 
@@ -77,7 +87,7 @@ void Kernels::serialize()
     }
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-	m_size                          = m_numKernels * m_kernelDepth * m_numKernelRows * m_numKernelCols * sizeof(fixedPoint_t);
+	m_size                          = QUAD_MAX_KERNELS * QUAD_DPTH_SIMD * 3 * 3 * sizeof(fixedPoint_t); // FIXME: remove hardcoding,
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
     fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
 
@@ -89,8 +99,8 @@ void Kernels::serialize()
             {
                 for(int c = 0; c < m_numKernelCols; c++)
                 {
-                    int rIdx = index4D(m_kernelDepth, m_numKernelRows, m_numKernelCols, n, d, r, c);
-                    int cIdx = index2D(m_numKernelCols, r, c);
+                    int rIdx = index4D(QUAD_DPTH_SIMD, 3, 3, n, d, r, c); // FIXME: remove hardcoding,
+                    int cIdx = index2D(3, r, c); // FIXME: remove hardcoding,
                     rmt_data[rIdx] = fixedPoint::create(16, 14, m_cpu_data[n][d][cIdx]); // FIXME: remove hardcoding,
                 }
             }

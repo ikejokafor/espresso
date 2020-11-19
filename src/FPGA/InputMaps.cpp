@@ -9,6 +9,9 @@ InputMaps::InputMaps(FPGA_hndl* fpga_hndl, int inputMapDepth, int numInputMapRow
 	m_numInputMapRows   = numInputMapRows;
 	m_numInputMapCols   = numInputMapCols;
 	m_cpu_data          = data;
+	m_buffer			= NULL;
+	m_size              = 0;
+	m_remAddress        = -1;
 }
 
 
@@ -32,12 +35,12 @@ void InputMaps::serialize()
     m_buffer                        = (void*)_hndl->allocate(this, m_size);
     fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
 
-    for(int d = 0; d < m_inputMapDepth; d++)
-    {
-        for(int r = 0; r < m_numInputMapRows; r++)
-        {
-            for(int c = 0; c < m_numInputMapCols; c++)
-            {
+	for(int r = 0; r < m_numInputMapRows; r++)
+	{
+		for(int c = 0; c < m_numInputMapCols; c++)
+		{
+			for(int d = 0; d < m_inputMapDepth; d++)
+			{
                 int rIdx = index3D(m_numInputMapCols, m_inputMapDepth, r, c, d);
                 int cIdx = index3D(m_numInputMapRows, m_numInputMapCols, d, r, c);
                 rmt_data[rIdx] = fixedPoint::create(16, 14, m_cpu_data[cIdx]);    // FIXME: remove hardcoding and pack values
@@ -46,17 +49,18 @@ void InputMaps::serialize()
     }
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    m_size                          = m_inputMapDepth * m_numInputMapRows * m_numInputMapCols * sizeof(fixedPoint_t);
+    m_size                          = QUAD_DPTH_SIMD * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * sizeof(fixedPoint_t);
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
     fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
+
     for(int d = 0; d < m_inputMapDepth; d++)
     {
         for(int r = 0; r < m_numInputMapRows; r++)
         {
             for(int c = 0; c < m_numInputMapCols; c++)
             {
-                int rIdx = index3D(m_numInputMapRows, m_numInputMapCols, d, r, c);
-                int cIdx = index3D(m_numInputMapRows, m_numInputMapCols, d, r, c);
+                int rIdx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
+                int cIdx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
                 rmt_data[rIdx] = fixedPoint::create(16, 14, m_cpu_data[cIdx]);    // FIXME: remove hardcoding
             }
         }

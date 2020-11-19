@@ -7,6 +7,9 @@ KernelBias::KernelBias(FPGA_hndl* fpga_hndl, int numKernels, float* data) : Acce
     m_fpga_hndl     = fpga_hndl;
 	m_numKernels    = numKernels;
     m_cpu_data      = data;
+	m_buffer		= NULL;
+	m_size          = 0;
+	m_remAddress    = -1;
 }
 
 

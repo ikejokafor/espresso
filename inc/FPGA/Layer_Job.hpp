@@ -41,10 +41,19 @@ typedef struct
 } layAclPrm_t;
 
 #ifdef SYSTEMC
+class StatPayload : public Accel_Payload
+{
+    public:
+        StatPayload() { m_buffer = NULL; m_size = 0; m_remAddress = -1; }
+        ~StatPayload() { }
+		void serialize() { }
+        void deserialize() { }
+};
+
 class DummyPayload : public Accel_Payload
 {
     public:
-        DummyPayload() { }
+        DummyPayload() { m_buffer = NULL; m_size = 0; m_remAddress = -1; }
         ~DummyPayload() { }
 		void serialize() { }
         void deserialize() { }
@@ -147,7 +156,8 @@ class Layer_Job
         bool m_do_res_1x1;
 		FPGA_hndl* m_fpga_hndl;
 #ifdef SYSTEMC
-		DummyPayload* m_pyld;
+		DummyPayload* m_Dpyld;
+		StatPayload* m_Spyld;
 		SYSC_FPGA_hndl* m_sysc_fpga_hndl;
         int m_pseudo_addr;
 #else

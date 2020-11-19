@@ -89,8 +89,11 @@ class AccelConfig : public Accel_Payload
 			uint64_t crpd_input_col_start       ;
 			uint64_t crpd_input_row_end         ;
 			uint64_t crpd_input_col_end         ;
-			uint64_t m_num_output_rows_cfg		;
-			uint64_t m_num_output_cols_cfg		;
+			uint64_t fas_num_output_rows    	;
+			uint64_t fas_num_output_cols	    ;
+			uint64_t quad_num_output_rows	    ;
+			uint64_t quad_num_output_cols	    ;	
+			
 		} cfg_t;
 
 

@@ -9,6 +9,9 @@ ResidualMaps::ResidualMaps(FPGA_hndl* fpga_hndl, int residualMapDepth, int numRe
 	m_numResidualMapRows    = numResidualMapRows;
 	m_numResidualMapCols    = numResidualMapCols;
 	m_cpu_data              = data;
+	m_buffer				= NULL;
+	m_size              	= 0;
+	m_remAddress        	= -1;
 }
 
 
@@ -27,7 +30,7 @@ ResidualMaps::~ResidualMaps()
 void ResidualMaps::serialize()
 {
 #ifdef ALPHA_DATA
-     _hndl*  _hndl                  = reinterpret_cast<_hndl*>(m_fpga_hndl);
+    _hndl*  _hndl                   = reinterpret_cast<_hndl*>(m_fpga_hndl);
     m_size                          = m_residualMapDepth * m_numResidualMapRows * m_numResidualMapCols * PIXEL_SIZE;
     m_buffer                        = (void*)_hndl->allocate(this, m_size);
     fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
@@ -46,18 +49,18 @@ void ResidualMaps::serialize()
     }
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    m_size                          = m_residualMapDepth * m_numResidualMapRows * m_numResidualMapCols * PIXEL_SIZE;
+    m_size                          = QUAD_DPTH_SIMD * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * sizeof(fixedPoint);
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
     fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
 
-    for(int r = 0; r < m_numResidualMapRows; r++)
+    for(int d = 0; d < m_residualMapDepth; d++)
     {
-        for(int c = 0; c < m_numResidualMapCols; c++)
+        for(int r = 0; r < m_numResidualMapRows; r++)
         {
-            for(int d = 0; d < m_residualMapDepth; d++)
+            for(int c = 0; c < m_numResidualMapCols; c++)
             {
-                int rIdx = index3D(m_numResidualMapCols, m_residualMapDepth, r, c, d);
-                int cIdx = index3D(m_numResidualMapRows, m_numResidualMapCols, d, r, c);
+                int rIdx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
+                int cIdx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
                 rmt_data[rIdx] = fixedPoint::create(16, 14, m_cpu_data[cIdx]);    // FIXME: remove hardcoding
             }
         }

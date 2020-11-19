@@ -111,7 +111,7 @@ espresso::CNN_Network::CNN_Network(vector<espresso::layerInfo_obj*>& layerInfoAr
     {
         cout << "[ESPRESSO]: Loaded Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
     }
-    cout << endl;
+    cout << endl << endl;
     GetTopAndBottomLayers();
     for (int i = 0; i < m_cnn.size(); i++)
     {
@@ -364,7 +364,7 @@ void espresso::CNN_Network::Forward(string start, string end)
             int mli = m_cnn[i]->m_merged_layers[j];
             cout << ", " << m_cnn[mli]->m_layerName;
         }
-        cout << endl;
+        cout << endl << endl << endl;
         //////
 		if(m_cnn[i]->m_layerType == espresso::CONVOLUTION
             || m_cnn[i]->m_layerType == espresso::RESIDUAL)
@@ -378,7 +378,7 @@ void espresso::CNN_Network::Forward(string start, string end)
             int mli = m_cnn[i]->m_merged_layers[j];
             cout << ", " << m_cnn[mli]->m_layerName;
         }
-        cout << endl;
+        cout << endl << endl << endl;
     }
 }
 
