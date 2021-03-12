@@ -5,6 +5,9 @@
 #include <string>
 #include <math.h>
 #include <fstream>
+#include <thread>
+#include <algorithm>
+#include <functional>
 #include "espresso_FPGA_common.hpp"
 #include "SYSC_FPGA_shim.hpp"
 #include "Layer_Iteration.hpp"
@@ -16,6 +19,7 @@
 #include "OutputMaps.hpp"
 #include "PartialMaps.hpp"
 #include "Prev1x1Maps.hpp"
+
 
 
 static double K_3_S = 1;
@@ -91,7 +95,8 @@ class Layer_Job
 			int padding,
 			bool do_resLayer,
             bool do_resLayer_only,
-			bool activation,
+            bool m_fpgaAct3x3,
+            bool m_fpgaAct1x1,
 			bool do_kernels1x1,
 			FPGA_hndl* fpga_hndl,
 			bool krnl_1x1_layer,
@@ -116,6 +121,20 @@ class Layer_Job
         void process(double& elapsed_time, double& avgIterTime, double& memPower, double& avg_QUAD_time0, double& avg_FAS_time0, double& avg_QUAD_time1, double& avg_FAS_time1);
         void calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& avg_QUAD_time, double& avg_FAS_time);
 
+
+        void process(fixedPoint_t* layOut);
+        void esp_copy(int desDepth, int nDesRows, int nDesCols, fixedPoint_t* src, fixedPoint_t* dst);
+        void UpSample(int inputDepth, int numInputRows, int numInputCols, int stride, fixedPoint_t* inMap, fixedPoint_t* outMap);
+        void do_conv(
+            int num_input_rows, int num_input_cols, fixedPoint_t* inMap, 
+            int stride, int padding, bool doAct,
+            int nKR, int nKC, int kernelDepth, 
+            int num_kernels, fixedPoint_t* filters, fixedPoint_t* bias, bool doBias,
+            int num_output_rows, int num_output_cols, fixedPoint_t* outMap
+        );
+
+        void do_accum(int num_accum_rows, int num_accum_cols, int accum_depth, fixedPoint_t* inMapA, fixedPoint_t* inMapB, fixedPoint_t* outMap);
+
 		std::string m_layerName;
         int m_inputMapDepth;
         int m_numInputMapRows;
@@ -137,7 +156,8 @@ class Layer_Job
 		bool m_do_resLayer;
         bool m_do_resLayer_only;
 		bool m_do_kernels1x1;
-		bool m_activation;
+        bool m_act3x3;
+        bool m_act1x1;
 		bool m_krnl1x1_pding;
 		int m_krnl1x1_pad_bgn;
 		int m_krnl1x1_pad_end;

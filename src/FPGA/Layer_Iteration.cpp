@@ -17,7 +17,8 @@ Layer_Iteration::Layer_Iteration(
 	int stride,
 	bool upsample,
 	int padding,
-	bool activation,
+    bool act3x3,
+    bool act1x1,
 	bool krnl1x1_pding,
 	int krnl1x1_pad_bgn,
 	int krnl1x1_pad_end,	
@@ -96,9 +97,10 @@ Layer_Iteration::Layer_Iteration(
 			krnl1x1_pding,
 			krnl1x1_pad_bgn,
 			krnl1x1_pad_end,
+            act1x1,
 			m_outputMaps->m_numOutputMapRows,
 			m_outputMaps->m_numOutputMapCols,
-			m_outputMaps->m_outputMapDepth			
+			m_outputMaps->m_outputMapDepth
 		));
 		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (m_partialMaps) ? m_partialMaps->m_remAddress : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (m_residualMaps) ? m_residualMaps->m_remAddress : -1;
@@ -135,7 +137,7 @@ Layer_Iteration::Layer_Iteration(
 						stride,
 						upsample,
 						padding,
-						activation,
+						act3x3,
 						master_QUAD,
 						cascade,
 						(remDepth > QUAD_MAX_DEPTH) ? QUAD_MAX_DEPTH : remDepth

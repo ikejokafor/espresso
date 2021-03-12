@@ -276,6 +276,8 @@ void espresso::CNN_Network::cfgFPGALayers()
     {
         if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1)
         {
+            m_cnn[i]->m_fpgaAct3x3              = (m_cnn[i]->m_numKernelRows == 3) ? true : false; 
+            m_cnn[i]->m_fpgaAct1x1              = (m_cnn[i]->m_numKernelRows == 1) ? true : false; 
             m_cnn[i]->m_kernel1x1Data           = m_cnn[i]->m_flFilterData;
             m_cnn[i]->m_bias1x1Data             = m_cnn[i]->m_flBiasData;
             m_cnn[i]->m_num1x1Kernels           = m_cnn[i]->m_numKernels;
@@ -335,6 +337,8 @@ void espresso::CNN_Network::cfgFPGALayers(string mrgFmt_fn)
     {
         if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1 && !m_cnn[i]->m_fpga_merged)
         {
+            m_cnn[i]->m_fpgaAct3x3              = (m_cnn[i]->m_numKernelRows == 3) ? true : false; 
+            m_cnn[i]->m_fpgaAct1x1              = (m_cnn[i]->m_numKernelRows == 1) ? true : false; 
             m_cnn[i]->m_kernel1x1Data           = m_cnn[i]->m_flFilterData;
             m_cnn[i]->m_bias1x1Data             = m_cnn[i]->m_flBiasData;
             m_cnn[i]->m_num1x1Kernels           = m_cnn[i]->m_numKernels;

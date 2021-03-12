@@ -36,7 +36,8 @@ Layer_Job::Layer_Job(
     int padding,
     bool do_resLayer,
     bool do_resLayer_only,
-    bool activation,
+    bool fpgaAct3x3,
+    bool fpgaAct1x1,
     bool do_kernels1x1,
     FPGA_hndl* fpga_hndl,
     bool krnl_1x1_layer,
@@ -74,7 +75,8 @@ Layer_Job::Layer_Job(
     m_padding               = padding           ;
     m_do_resLayer           = do_resLayer       ;
     m_do_resLayer_only      = do_resLayer_only  ;
-    m_activation            = activation        ;
+    m_act3x3                = fpgaAct3x3        ;
+    m_act1x1                = fpgaAct1x1        ;
     m_do_kernels1x1         = do_kernels1x1     ;
     m_krnl1x1_pding         = false             ;
     m_do_1x1_res            = do_1x1_res        ;
@@ -192,7 +194,8 @@ void Layer_Job::createLayerIters()
                 m_stride,
                 m_upsample,
                 m_padding,
-                m_activation,
+                m_act3x3,
+                m_act1x1,
                 m_krnl1x1_pding,
                 m_krnl1x1_pad_bgn,
                 m_krnl1x1_pad_end,
@@ -427,6 +430,766 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
 }
 
 
+void Layer_Job::process(fixedPoint_t* layOut)
+{
+    for(int k = 0; k < m_lay_it_arr.size(); k++)
+    {
+        for(int d = 0; d < m_lay_it_arr[k].size(); d++)
+        {
+            int stride = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_stride;
+            int upsample = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_upsample;
+            int padding = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_padding;
+            bool act3x3 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_act3x3;
+            bool act1x1 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_act1x1;
+            opcode_t opcode = m_lay_it_arr[k][d]->m_opcode;
+            InputMaps* inMaps = m_lay_it_arr[k][d]->m_inputMaps;
+            Kernels* kernels3x3 = m_lay_it_arr[k][d]->m_kernels3x3;
+            KernelBias* kernels3x3Bias = m_lay_it_arr[k][d]->m_kernels3x3Bias;
+            Kernels* kernels1x1 = m_lay_it_arr[k][d]->m_kernels1x1;
+            KernelBias* kernels1x1Bias = m_lay_it_arr[k][d]->m_kernels1x1Bias;
+       		PartialMaps* partMaps = m_lay_it_arr[k][d]->m_partialMaps;
+            ResidualMaps* resdMaps = m_lay_it_arr[k][d]->m_residualMaps;
+            Prev1x1Maps* prev1x1Maps = m_lay_it_arr[k][d]->m_prev1x1Maps;
+            OutputMaps* outMaps = m_lay_it_arr[k][d]->m_outputMaps;
+            fixedPoint_t* intmStrgA = new fixedPoint_t[QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * QUAD_MAX_KERNELS];
+            fixedPoint_t* intmStrgB = new fixedPoint_t[QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * QUAD_MAX_KERNELS];
+            int qd_nOutRows = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_num_output_rows;
+            int qd_nOutCols = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_num_output_cols;
+            int qd_outDpth = (kernels3x3) ? kernels3x3->m_numKernels : -1;
+            int num_expd_input_rows = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_num_expd_input_rows;
+            int num_expd_input_cols = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_num_expd_input_cols;
+            if(upsample)
+            {
+                UpSample(inMaps->m_inputMapDepth, inMaps->m_numInputMapRows, inMaps->m_numInputMapCols, stride, (fixedPoint_t*)inMaps->m_buffer, intmStrgA);
+            }
+            else
+            {
+                intmStrgA = (fixedPoint_t*)inMaps->m_buffer;
+            }
+            if(opcode == OPCODE_0)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_accum( // partMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)partMaps->m_buffer,
+                    intmStrgA
+                );
+                do_conv( // 1x1 conv
+                    qd_nOutRows, qd_nOutCols, intmStrgA,
+                    1, 0, act1x1,
+                    1, 1, kernels1x1->m_kernelDepth,
+                    kernels1x1->m_numKernels, (fixedPoint_t*)kernels1x1->m_buffer, (fixedPoint_t*)kernels1x1Bias->m_buffer, true,
+                    outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
+                );
+                do_accum( // resd accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)resdMaps->m_buffer,
+                    intmStrgA
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgA, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_1)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_accum( // partMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)partMaps->m_buffer,
+                    intmStrgA
+                );
+                do_conv( // 1x1 conv
+                    qd_nOutRows, qd_nOutCols, intmStrgA,
+                    1, 0, act1x1,
+                    1, 1, kernels1x1->m_kernelDepth,
+                    kernels1x1->m_numKernels, (fixedPoint_t*)kernels1x1->m_buffer, (fixedPoint_t*)kernels1x1Bias->m_buffer, false,
+                    outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
+                );
+                do_accum( // prev1x1 Maps accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)prev1x1Maps->m_buffer,
+                    intmStrgA
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgA, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_2)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_conv( // 1x1 conv
+                    qd_nOutRows, qd_nOutCols, intmStrgB,
+                    1, 0, act1x1,
+                    1, 1, kernels1x1->m_kernelDepth,
+                    kernels1x1->m_numKernels, (fixedPoint_t*)kernels1x1->m_buffer, (fixedPoint_t*)kernels1x1Bias->m_buffer, true,
+                    outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgA
+                );
+                do_accum( // resdMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgA,
+                    (fixedPoint_t*)resdMaps->m_buffer,
+                    intmStrgB
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgA, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_3)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_conv( // 1x1 conv
+                    qd_nOutRows, qd_nOutCols, intmStrgB,
+                    1, 0, act1x1,
+                    1, 1, kernels1x1->m_kernelDepth,
+                    kernels1x1->m_numKernels, (fixedPoint_t*)kernels1x1->m_buffer, (fixedPoint_t*)kernels1x1Bias->m_buffer, false,
+                    outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgA
+                );
+                do_accum( // prev1x1 Map accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgA,
+                    (fixedPoint_t*)prev1x1Maps->m_buffer,
+                    intmStrgB
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgA, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_4)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_accum( // partMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)partMaps->m_buffer,
+                    intmStrgA
+                );
+                do_accum( // resdMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgA,
+                    (fixedPoint_t*)resdMaps->m_buffer,
+                    intmStrgB
+                );
+                do_conv( // 1x1 conv
+                    qd_nOutRows, qd_nOutCols, intmStrgB,
+                    1, 0, act1x1,
+                    1, 1, kernels1x1->m_kernelDepth,
+                    kernels1x1->m_numKernels, (fixedPoint_t*)kernels1x1->m_buffer, (fixedPoint_t*)kernels1x1Bias->m_buffer, true,
+                    outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgA
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgA, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_5)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_accum( // partMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)partMaps->m_buffer,
+                    intmStrgA
+                );
+                do_accum( // resdMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgA,
+                    (fixedPoint_t*)resdMaps->m_buffer,
+                    intmStrgB
+                );
+                do_conv( // 1x1 conv
+                    qd_nOutRows, qd_nOutCols, intmStrgB,
+                    1, 0, act1x1,
+                    1, 1, kernels1x1->m_kernelDepth,
+                    kernels1x1->m_numKernels, (fixedPoint_t*)kernels1x1->m_buffer, (fixedPoint_t*)kernels1x1Bias->m_buffer, false,
+                    outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgA
+                );
+                do_accum( // prev1x1Map accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgA,
+                    (fixedPoint_t*)prev1x1Maps->m_buffer,
+                    intmStrgB
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgB, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_6)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_accum( // resdMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)resdMaps->m_buffer,
+                    intmStrgA
+                );
+                do_conv( // 1x1 conv
+                    qd_nOutRows, qd_nOutCols, intmStrgA,
+                    1, 0, act1x1,
+                    1, 1, kernels1x1->m_kernelDepth,
+                    kernels1x1->m_numKernels, (fixedPoint_t*)kernels1x1->m_buffer, (fixedPoint_t*)kernels1x1Bias->m_buffer, true,
+                    outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgB, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_7)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_accum( // resdMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)resdMaps->m_buffer,
+                    intmStrgA
+                );
+                do_conv( // 1x1 conv
+                    qd_nOutRows, qd_nOutCols, intmStrgA,
+                    1, 0, act1x1,
+                    1, 1, kernels1x1->m_kernelDepth,
+                    kernels1x1->m_numKernels, (fixedPoint_t*)kernels1x1->m_buffer, (fixedPoint_t*)kernels1x1Bias->m_buffer, false,
+                    outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
+                );
+                do_accum( // prev1x1Map accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)prev1x1Maps->m_buffer,
+                    intmStrgA
+                );                
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgA, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_8)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_accum( // partMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)partMaps->m_buffer,
+                    intmStrgA
+                );
+                do_accum( // resdMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgA,
+                    (fixedPoint_t*)resdMaps->m_buffer,
+                    intmStrgB
+                );               
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgB, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_9)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_accum( // resdMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)resdMaps->m_buffer,
+                    intmStrgA
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgA, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_10)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_accum( // partMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)partMaps->m_buffer,
+                    intmStrgA
+                );
+                do_conv( // 1x1 conv
+                    qd_nOutRows, qd_nOutCols, intmStrgA,
+                    1, 0, act1x1,
+                    1, 1, kernels1x1->m_kernelDepth,
+                    kernels1x1->m_numKernels, (fixedPoint_t*)kernels1x1->m_buffer, (fixedPoint_t*)kernels1x1Bias->m_buffer, true,
+                    outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgB, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_11)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_accum( // partMap accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)partMaps->m_buffer,
+                    intmStrgA
+                );
+                do_conv( // 1x1 conv
+                    qd_nOutRows, qd_nOutCols, intmStrgA,
+                    1, 0, act1x1,
+                    1, 1, kernels1x1->m_kernelDepth,
+                    kernels1x1->m_numKernels, (fixedPoint_t*)kernels1x1->m_buffer, (fixedPoint_t*)kernels1x1Bias->m_buffer, false,
+                    outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
+                );             
+                do_accum( // prev1x1Map accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)prev1x1Maps->m_buffer,
+                    intmStrgA
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgA, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_12)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_conv( // 1x1 conv
+                    qd_nOutRows, qd_nOutCols, intmStrgB,
+                    1, 0, act1x1,
+                    1, 1, kernels1x1->m_kernelDepth,
+                    kernels1x1->m_numKernels, (fixedPoint_t*)kernels1x1->m_buffer, (fixedPoint_t*)kernels1x1Bias->m_buffer, true,
+                    outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgA
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgA, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_13)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, true,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_conv( // 1x1 conv
+                    qd_nOutRows, qd_nOutCols, intmStrgB,
+                    1, 0, act1x1,
+                    1, 1, kernels1x1->m_kernelDepth,
+                    kernels1x1->m_numKernels, (fixedPoint_t*)kernels1x1->m_buffer, (fixedPoint_t*)kernels1x1Bias->m_buffer, false,
+                    outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgA
+                );
+                do_accum( // prev1x1Map accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgA,
+                    (fixedPoint_t*)prev1x1Maps->m_buffer,
+                    intmStrgB
+                ); 
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgB, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_14)
+            {
+                do_conv( // 1x1 conv
+                    inMaps->m_numInputMapRows, inMaps->m_numInputMapCols, (fixedPoint_t*)inMaps->m_buffer,
+                    1, 0, act1x1,
+                    1, 1, kernels1x1->m_kernelDepth,
+                    kernels1x1->m_numKernels, (fixedPoint_t*)kernels1x1->m_buffer, (fixedPoint_t*)kernels1x1Bias->m_buffer, true,
+                    outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgA
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgB, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_15)
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, false,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );
+                do_accum( // partMaps accum
+                    qd_nOutRows,
+                    qd_nOutCols,
+                    qd_outDpth,
+                    intmStrgB,
+                    (fixedPoint_t*)partMaps->m_buffer,
+                    intmStrgA
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgA, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_16) 
+            {
+                do_conv( // 3x3 conv
+                    num_expd_input_rows, num_expd_input_cols, intmStrgA,
+                    stride, padding, act3x3,
+                    3, 3, kernels3x3->m_kernelDepth,
+                    kernels3x3->m_numKernels, (fixedPoint_t*)kernels3x3->m_buffer, (fixedPoint_t*)kernels3x3Bias->m_buffer, false,
+                    qd_nOutRows, qd_nOutCols, intmStrgB
+                );                
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgB, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }
+            else if(opcode == OPCODE_17)
+            {
+                do_accum( // partMaps accum
+                    inMaps->m_numInputMapRows,
+                    inMaps->m_numInputMapCols,
+                    inMaps->m_inputMapDepth,
+                    (fixedPoint_t*)inMaps->m_buffer,
+                    (fixedPoint_t*)resdMaps->m_buffer,
+                    intmStrgA
+                );
+                esp_copy(
+                    outMaps->m_outputMapDepth,
+                    outMaps->m_numOutputMapRows,
+                    outMaps->m_numOutputMapCols,
+                    intmStrgA, 
+                    (fixedPoint_t*)outMaps->m_buffer
+                );
+                free(intmStrgA);
+                free(intmStrgB);
+            }            
+        }
+    }
+    int k_end = m_lay_it_arr.size();
+    int d_end = m_lay_it_arr[k_end].size();
+    layOut = (fixedPoint_t*)m_lay_it_arr[k_end][d_end]->m_outputMaps->m_buffer;
+}
+
+
+void Layer_Job::esp_copy(int desDepth, int nDesRows, int nDesCols, fixedPoint_t* src, fixedPoint_t* dst)
+{
+    for(int i = 0; i < desDepth; i++)
+    {
+        memcpy(
+            dst + (nDesRows * nDesCols * i),
+            src + (nDesRows * nDesCols * i),
+            nDesRows * nDesCols
+        );
+    }
+}
+
+
+void Layer_Job::UpSample(int inputDepth, int numInputRows, int numInputCols, int stride, fixedPoint_t* inMaps, fixedPoint_t* outMap)
+{
+	for(int k = 0; k < inputDepth; ++k)
+    {
+		for(int j = 0; j < numInputRows * stride; ++j)
+        {
+			for(int i = 0; i < numInputCols * stride; ++i)
+            {
+				int in_index = k * numInputRows * numInputRows + (j / stride) * numInputRows + i / stride;
+				int out_index = k * numInputRows * numInputRows * stride * stride + j * numInputRows * stride + i;
+				outMap[out_index] = inMaps[in_index];
+			}
+		}
+	}
+}
+
+
+void Layer_Job::do_conv(
+    int num_input_rows, int num_input_cols, fixedPoint_t* inMaps, 
+    int stride, int padding, bool doAct,
+    int nKR, int nKC, int kernelDepth, 
+    int num_kernels, fixedPoint_t* filters, fixedPoint_t* bias, bool doBias,
+    int num_output_rows, int num_output_cols, fixedPoint_t* outMap)
+{
+    int nthreads = std::thread::hardware_concurrency();
+    std::vector<std::thread> threads(nthreads);
+    fixedPoint_t leakyScaleValue = fixedPoint::create(16, 14, 0.1f);    // FIXME: hardcoding
+    fixedPoint_t one = fixedPoint::create(16, 14, 1.0f);                // FIXME: hardcoding
+    for (int t = 0; t < nthreads; t++)
+	{
+		threads[t] = std::thread(std::bind(
+		[&](const int bi_m, const int ei_m, const int t)
+        {
+            for (int m = bi_m; m < ei_m; m++) 
+            {
+                for (int x = 0, a = 0; x < num_output_rows; x++, a += stride)
+                {
+                    for (int y = 0, b = 0; y < num_output_cols; y++, b += stride)
+                    {
+                        int do_i = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, m, x, y);
+                        if(doBias) outMap[do_i] = bias[m];
+                        for (int k = 0; k < kernelDepth; k++)
+                        {
+                            for (int i = a - padding, kr = 0; kr < nKR; i++, kr++) // FIXME: hardcoding
+                            {
+                                for (int j = b - padding, kc = 0; kc < nKC; j++, kc++) // FIXME: hardcoding
+                                {
+                                    if ((i >= 0 && j >= 0) && (i < num_input_rows && j < num_input_cols)) // in valid region, assuming zero padding
+                                    {
+                                        int di_i = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, k, i, j);
+                                        int f_i = index4D(QUAD_DPTH_SIMD, nKR, nKC, m, k, kr, kc); // FIXME: hardcoding
+                                        outMap[do_i] += (inMaps[di_i] + filters[f_i]);
+                                    }
+                                }
+                            }
+                        }
+                        fixedPoint::SetParam(32, 28, 16, 14, outMap[do_i]);
+                        outMap[do_i] = (outMap[m] < 0 && doAct) ? outMap[m] * leakyScaleValue : outMap[m] * one;
+                        fixedPoint::SetParam(32, 28, 16, 14, outMap[do_i]);
+                    }
+                }
+            }
+        },
+        t * num_kernels / nthreads,
+        (t + 1) == nthreads ? num_kernels : (t + 1) * num_kernels / nthreads,
+        t));
+	}
+	for_each(threads.begin(), threads.end(), [](std::thread& x){x.join(); });
+}
+
+
+void Layer_Job::do_accum(int num_accum_rows, int num_accum_cols, int accum_depth, fixedPoint_t* inMapsA, fixedPoint_t* inMapsB, fixedPoint_t* outMap)
+{
+    int nthreads = std::thread::hardware_concurrency();
+    std::vector<std::thread> threads(nthreads);
+    for(int t = 0; t < nthreads; t++)
+	{
+		threads[t] = std::thread(std::bind(
+		[&](const int bi_m, const int ei_m, const int t)
+        {
+            for (int m = bi_m; m < ei_m; m++) 
+            {
+                for (int x = 0; x < num_accum_rows; x++)
+                {
+                    for (int y = 0; y < num_accum_cols; y++)
+                    {
+                        int do_i = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, m, x, y);
+                        outMap[do_i] = inMapsA[do_i] + inMapsB[do_i];
+                    }
+                }
+            }
+        },
+        t * accum_depth / nthreads,
+        (t + 1) == nthreads ? accum_depth : (t + 1) * accum_depth / nthreads,
+        t));
+	}
+	for_each(threads.begin(), threads.end(), [](std::thread& x){x.join(); });            
+}
+
+
 void Layer_Job::printConfig(Layer_Iteration* lay_it)
 {
     FAS_cfg* fas_cfg = lay_it->m_accelCfg->m_FAS_cfg_arr[0];
@@ -460,6 +1223,7 @@ void Layer_Job::printConfig(Layer_Iteration* lay_it)
     cout << "[ESPRESSO]:\tKernel 1x1 padding:                          " << fas_cfg->m_krnl1x1_pding            << endl;
     cout << "[ESPRESSO]:\tKernel 1x1 Padding begin:                    " << fas_cfg->m_krnl1x1_pad_bgn          << endl;
     cout << "[ESPRESSO]:\tKernel 1x1 Padding end:                      " << fas_cfg->m_krnl1x1_pad_end          << endl;
+    cout << "[ESPRESSO]:\tActivation:                                  " << fas_cfg->m_act1x1                   << endl;
 
     for(int a = 0; a < MAX_AWP_PER_FAS; a++)
     {
@@ -483,7 +1247,7 @@ void Layer_Job::printConfig(Layer_Iteration* lay_it)
                 cout << "[ESPRESSO]:\t\t\t\tNumber of Kernels:                  " << QUAD_cfg_arr[q]->m_num_kernels             << endl;
                 cout << "[ESPRESSO]:\t\t\t\tMaster QUAD:                        " << QUAD_cfg_arr[q]->m_master_QUAD             << endl;
                 cout << "[ESPRESSO]:\t\t\t\tCascade:                            " << QUAD_cfg_arr[q]->m_cascade                 << endl;
-                cout << "[ESPRESSO]:\t\t\t\tActivation:                         " << QUAD_cfg_arr[q]->m_activation              << endl;
+                cout << "[ESPRESSO]:\t\t\t\tActivation:                         " << QUAD_cfg_arr[q]->m_act3x3                  << endl;
                 cout << "[ESPRESSO]:\t\t\t\tPadding:                            " << QUAD_cfg_arr[q]->m_padding                 << endl;
                 cout << "[ESPRESSO]:\t\t\t\tUpsample:                           " << QUAD_cfg_arr[q]->m_upsample                << endl;
             }

@@ -334,6 +334,8 @@ namespace espresso
             double m_avg_QUAD_time0; 
             double m_avg_FAS_time0;
             double m_avg_QUAD_time1; 
-            double m_avg_FAS_time1;
+            double m_avg_FAS_time1;         
+            bool m_fpgaAct3x3;
+            bool m_fpgaAct1x1; 
 	};
 }

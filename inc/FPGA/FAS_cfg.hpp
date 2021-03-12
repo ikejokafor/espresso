@@ -66,6 +66,7 @@ class FAS_cfg
             bool krnl1x1_pding ,
             int krnl1x1_pad_bgn,
             int krnl1x1_pad_end,
+            bool act1x1,
 			int num_output_rows,
 			int num_output_cols,
 			int output_depth_cfg
@@ -108,6 +109,7 @@ class FAS_cfg
         bool m_krnl1x1_pding;
         int m_krnl1x1_pad_bgn;
         int m_krnl1x1_pad_end;
+        bool m_act1x1;
 		int m_num_output_rows;
 		int m_num_output_cols;
 		int m_output_depth;

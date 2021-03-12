@@ -65,7 +65,8 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
 		m_padding,
 		m_fpga_do_res_layer,
         m_fpga_do_res_layer_only,
-		m_activation,
+        m_fpgaAct3x3,
+        m_fpgaAct1x1,
 		m_fpga_do_kernels1x1,
 		m_fpga_hndl,
 		m_fpga_krnl_1x1_layer,
@@ -77,8 +78,10 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
     m_fpga_memPower = 0.0f;
 	m_fpga_avgIterTime = 0.0f;
     m_peakBW = 0.0f;
-	m_layer_job->process(m_fpga_elapsed_time, m_fpga_avgIterTime, m_fpga_memPower, m_avg_QUAD_time0, m_avg_FAS_time0, m_avg_QUAD_time1, m_avg_FAS_time1);
-	delete m_layer_job;
+	// m_layer_job->process(m_fpga_elapsed_time, m_fpga_avgIterTime, m_fpga_memPower, m_avg_QUAD_time0, m_avg_FAS_time0, m_avg_QUAD_time1, m_avg_FAS_time1);
+    m_layer_job->process(m_topLayers[0]->m_blob.fxData);
+
+    delete m_layer_job;
 }
 
 

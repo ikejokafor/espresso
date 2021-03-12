@@ -36,7 +36,8 @@ class Layer_Iteration
 			int stride,
 			bool upsample,
 			int padding,
-			bool activation,
+            bool act3x3,
+            bool act1x1,
 			bool krnl1x1_pding,
 			int krnl1x1_pad_bgn,
 			int krnl1x1_pad_end,
@@ -58,5 +59,5 @@ class Layer_Iteration
 		Prev1x1Maps* m_prev1x1Maps		;
 		opcode_t m_opcode				;
 		bool m_del_res					;
-		bool m_del_1x1					;
+		bool m_del_1x1					; 
 };

@@ -18,7 +18,7 @@ QUAD_cfg::QUAD_cfg(
     int stride,
     bool upsample,
     int padding,
-    bool activation,
+    bool act3x3,
     bool master_QUAD,
     bool cascade,
     int inMapDepth
@@ -38,7 +38,7 @@ QUAD_cfg::QUAD_cfg(
     m_master_QUAD = master_QUAD;
     m_cascade = cascade;
     m_stride = stride;
-    m_activation = activation;
+    m_act3x3 = act3x3;
     m_padding = (padding > 0) ? true : false;
     m_upsample = upsample;
     int kernel_size = 3;

@@ -41,6 +41,7 @@ FAS_cfg::FAS_cfg(
 	bool krnl1x1_pding,
 	int krnl1x1_pad_bgn,
 	int krnl1x1_pad_end,
+    bool act1x1,
 	int num_output_rows,
 	int num_output_cols,
 	int output_depth
@@ -80,6 +81,7 @@ FAS_cfg::FAS_cfg(
 	m_krnl1x1_pding = krnl1x1_pding;
 	m_krnl1x1_pad_bgn = krnl1x1_pad_bgn;
 	m_krnl1x1_pad_end = krnl1x1_pad_end;
+    m_act1x1 = act1x1;
 	m_num_output_rows = num_output_rows;
 	m_num_output_cols = num_output_cols;
 	m_output_depth = output_depth;

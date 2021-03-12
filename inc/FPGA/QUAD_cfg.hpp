@@ -23,7 +23,7 @@ class QUAD_cfg
             int stride = 0,
             bool upsample = false,
             int padding = 0,
-            bool activation = false,
+            bool act3x3 = false,
             bool master_QUAD = false,
             bool cascade = false,
             int inMapDepth = 0
@@ -49,7 +49,8 @@ class QUAD_cfg
         int		m_num_expd_input_cols	;
         int     m_num_input_rows        ;
         int     m_num_input_cols        ;
-        bool	m_activation			;
+        bool	m_act3x3    			;
+        bool    m_act1x1                ;    
         bool	m_padding				;
         bool	m_upsample				;
         int 	m_crpd_input_row_start	;

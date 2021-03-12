@@ -83,6 +83,8 @@ class AccelConfig : public Accel_Payload
             uint64_t num_input_cols             ;
             uint64_t kernel3x3Depth             ;
 			uint64_t activation                 ;
+            uint64_t act3x3                     ;
+            uint64_t act1x1                     ;
 			uint64_t padding                    ;
 			uint64_t upsample                   ;
 			uint64_t crpd_input_row_start       ;
