@@ -265,6 +265,7 @@ void espresso::CNN_Network::mergeLayers(int idx, int seqID, vector<string>& sequ
             m_cnn[idx]->m_kernel1x1Depth      = m_cnn[lay_idx]->m_kernelDepth;
             m_cnn[idx]->m_kernel1x1Data       = m_cnn[lay_idx]->m_flFilterData;
             m_cnn[idx]->m_bias1x1Data         = m_cnn[lay_idx]->m_flBiasData;
+            m_cnn[idx]->m_fpgaAct1x1          = (m_cnn[lay_idx]->m_activation == espresso::LEAKY) ? true : false;
         }
     }
 }
@@ -276,14 +277,17 @@ void espresso::CNN_Network::cfgFPGALayers()
     {
         if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1)
         {
-            m_cnn[i]->m_fpgaAct3x3              = (m_cnn[i]->m_numKernelRows == 3) ? true : false; 
-            m_cnn[i]->m_fpgaAct1x1              = (m_cnn[i]->m_numKernelRows == 1) ? true : false; 
+            m_cnn[i]->m_fpgaAct1x1              = (m_cnn[i]->m_activation == espresso::LEAKY) ? true : false;
             m_cnn[i]->m_kernel1x1Data           = m_cnn[i]->m_flFilterData;
             m_cnn[i]->m_bias1x1Data             = m_cnn[i]->m_flBiasData;
             m_cnn[i]->m_num1x1Kernels           = m_cnn[i]->m_numKernels;
             m_cnn[i]->m_kernel1x1Depth          = m_cnn[i]->m_kernelDepth;
             m_cnn[i]->m_fpga_do_kernels1x1      = true;
             m_cnn[i]->m_fpga_krnl_1x1_layer     = true;
+        }
+        else if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 3)
+        {
+            m_cnn[i]->m_fpgaAct3x3              = (m_cnn[i]->m_activation == espresso::LEAKY) ? true : false;            
         }
         else if(m_cnn[i]->m_layerType == RESIDUAL)
         {
@@ -337,14 +341,17 @@ void espresso::CNN_Network::cfgFPGALayers(string mrgFmt_fn)
     {
         if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1 && !m_cnn[i]->m_fpga_merged)
         {
-            m_cnn[i]->m_fpgaAct3x3              = (m_cnn[i]->m_numKernelRows == 3) ? true : false; 
-            m_cnn[i]->m_fpgaAct1x1              = (m_cnn[i]->m_numKernelRows == 1) ? true : false; 
             m_cnn[i]->m_kernel1x1Data           = m_cnn[i]->m_flFilterData;
             m_cnn[i]->m_bias1x1Data             = m_cnn[i]->m_flBiasData;
             m_cnn[i]->m_num1x1Kernels           = m_cnn[i]->m_numKernels;
             m_cnn[i]->m_kernel1x1Depth          = m_cnn[i]->m_kernelDepth;
             m_cnn[i]->m_fpga_do_kernels1x1      = true;
             m_cnn[i]->m_fpga_krnl_1x1_layer     = true;
+            m_cnn[i]->m_fpgaAct1x1              = (m_cnn[i]->m_activation == espresso::LEAKY) ? true : false; 
+        }
+        else if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 3)
+        {
+            m_cnn[i]->m_fpgaAct3x3              = (m_cnn[i]->m_activation == espresso::LEAKY) ? true : false;            
         }
     }
 }
@@ -377,6 +384,26 @@ void espresso::CNN_Network::Forward(string start, string end)
 		}
         //////
         cout << "[ESPRESSO]: Finished Layer(s) " << i <<  " " << m_cnn[i]->m_layerName;
+        
+        // DEBUG
+        if(m_cnn[i]->m_layerType == espresso::CONVOLUTION)
+        {
+            FILE* fd = fopen(("./out_" + std::to_string(i) + ".txt").c_str(), "w");
+            for(int a = 0; a < m_cnn[i]->m_blob.depth; a++)
+            {
+                for(int b = 0; b < m_cnn[i]->m_blob.numRows; b++)
+                {
+                    for(int c = 0; c < m_cnn[i]->m_blob.numCols; c++)
+                    {
+                        int idx = index3D(m_cnn[i]->m_blob.numRows, m_cnn[i]->m_blob.numCols, a, b, c);
+                        fprintf(fd, "%f ", m_cnn[i]->m_blob.flData[idx]);
+                    }
+                    fprintf(fd, "\n");
+                }
+                fprintf(fd, "\n\n\n");                
+            }
+        }
+        
         for(int j = 0; j < m_cnn[i]->m_merged_layers.size(); j++)
         {
             int mli = m_cnn[i]->m_merged_layers[j];

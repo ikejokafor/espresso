@@ -122,18 +122,18 @@ class Layer_Job
         void calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& avg_QUAD_time, double& avg_FAS_time);
 
 
-        void process(fixedPoint_t* layOut);
-        void esp_copy(int desDepth, int nDesRows, int nDesCols, fixedPoint_t* src, fixedPoint_t* dst);
-        void UpSample(int inputDepth, int numInputRows, int numInputCols, int stride, fixedPoint_t* inMap, fixedPoint_t* outMap);
+        void process(float* layOut);
+        void esp_copy(int desDepth, int nDesRows, int nDesCols, float* src, float* dst);
+        void UpSample(int inputDepth, int numInputRows, int numInputCols, int stride, float* inMap, float* outMap);
         void do_conv(
-            int num_input_rows, int num_input_cols, fixedPoint_t* inMap, 
+            int num_input_rows, int num_input_cols, float* inMap, 
             int stride, int padding, bool doAct,
             int nKR, int nKC, int kernelDepth, 
-            int num_kernels, fixedPoint_t* filters, fixedPoint_t* bias, bool doBias,
-            int num_output_rows, int num_output_cols, fixedPoint_t* outMap
+            int num_kernels, float* filters, float* bias, bool doBias,
+            int num_output_rows, int num_output_cols, float* outMap
         );
 
-        void do_accum(int num_accum_rows, int num_accum_cols, int accum_depth, fixedPoint_t* inMapA, fixedPoint_t* inMapB, fixedPoint_t* outMap);
+        void do_accum(int num_accum_rows, int num_accum_cols, int accum_depth, float* inMapA, float* inMapB, float* outMap);
 
 		std::string m_layerName;
         int m_inputMapDepth;

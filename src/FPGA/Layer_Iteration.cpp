@@ -54,7 +54,7 @@ Layer_Iteration::Layer_Iteration(
 	(m_inputMaps) ? m_inputMaps->serialize() : void();
 	(m_kernels3x3) ? m_kernels3x3->serialize() : void();
 	(m_kernels3x3Bias) ? m_kernels3x3Bias->serialize() : void();
-	m_outputMaps->serialize();
+    m_outputMaps->serialize();
 	(m_kernels1x1) ? m_kernels1x1->serialize() : void();
 	(m_kernels1x1Bias) ? m_kernels1x1Bias->serialize() : void();
 	(m_partialMaps) ? m_partialMaps->serialize() : void();
