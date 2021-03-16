@@ -77,9 +77,9 @@ void PartialMaps::serialize()
     }
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    m_size                          = QUAD_DPTH_SIMD * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * sizeof(fixedPoint_t);
+    m_size                          = QUAD_DPTH_SIMD * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * sizeof(float);
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
-    fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
+    float* rmt_data          = (float*)m_buffer;
 
     if(m_no_permute) 
     {
@@ -94,12 +94,13 @@ void PartialMaps::serialize()
             for(int c = 0; c < m_numPartialMapCols; c++)
             {
                 int rIdx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
-                int cIdx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
-                rmt_data[rIdx] = fixedPoint::create(16, 14, m_cpu_data[cIdx]);    // FIXME: remove hardcoding
+                int cIdx = index3D(m_numPartialMapRows, m_numPartialMapCols, d, r, c);
+                rmt_data[rIdx] = m_cpu_data[cIdx];
             }
         }
     }
 #endif
+
 }
 
 

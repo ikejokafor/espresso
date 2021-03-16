@@ -36,6 +36,33 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
         cout << "Convolutions with (m_numKernelRows > 3 || m_stride > 2 || m_padding > 1 || m_dilation != -1 || (m_numKernelRows == 1 && m_stride > 1) not supported" << endl;
 		return;
 	}
+    
+    FILE *fd = fopen("./kernels.txt", "w");
+    for(int n = 0; n < m_numKernels; n++) 
+    {
+        for(int d = 0; d < m_kernelDepth; d++)
+        {
+            for(int r = 0; r < m_numKernelRows; r++)
+            {
+                for(int c = 0; c < m_numKernelRows; c++)
+                {
+                    int idx = index4D(m_kernelDepth, m_numKernelRows, m_numKernelCols, n, d, r, c);
+                    fprintf(fd, "%f ", m_flFilterData[idx]);
+                }
+                fprintf(fd, "\n");
+            }
+            fprintf(fd, "\n\n\n");
+        }
+    }
+    fclose(fd);
+    
+    fd = fopen("./kernel_bias.txt", "w");
+    for(int n = 0; n < m_numKernels; n++) 
+    {
+        fprintf(fd, "%f\n", m_flBiasData[n]);
+    }
+    fclose(fd);
+    
 
 	Layer_Job* m_layer_job = new Layer_Job(
 		m_layerName,

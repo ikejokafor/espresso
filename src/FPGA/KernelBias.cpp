@@ -15,20 +15,22 @@ KernelBias::KernelBias(FPGA_hndl* fpga_hndl, int numKernels, float* data) : Acce
 
 KernelBias::~KernelBias()
 {
-#ifdef SYSTEMC
-    SYSC_FPGA_hndl* sysc_fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-	sysc_fpga_hndl->deallocate(this);
+#ifdef ALPHA_DATA
+    fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
+	fpga_hndl->deallocate(this);   
 #else
-    
+    SYSC_FPGA_hndl* sysc_fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
+	sysc_fpga_hndl->deallocate(this);    
 #endif
 }
 
 
 void KernelBias::serialize()
 {
-#ifdef SYSTEMC
-    SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    m_size                          = m_numKernels * sizeof(fixedPoint_t);
+
+#ifdef ALPHA_DATA
+    fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
+    m_size                          = m_numKernels * sizeof(float);
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
     fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
 
@@ -37,7 +39,22 @@ void KernelBias::serialize()
         rmt_data[n] = fixedPoint::create(16, 14, m_cpu_data[n]);    // FIXME: remove hardcoding
     }
 #else
+    SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
+    m_size                          = m_numKernels * sizeof(float);
+    m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
+    float* rmt_data                 = (float*)m_buffer;
 
+    for(int n = 0; n < m_numKernels; n++)
+    {
+        rmt_data[n] = m_cpu_data[n];    // FIXME: remove hardcoding
+    }
+    
+    FILE *fd = fopen("./kernel_bias_fpga.txt", "w");
+    for(int n = 0; n < m_numKernels; n++) 
+    {
+        fprintf(fd, "%f\n", rmt_data[n]);
+    }
+    fclose(fd);
 #endif
 }
 

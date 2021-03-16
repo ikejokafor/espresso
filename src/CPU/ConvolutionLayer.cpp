@@ -66,7 +66,7 @@ void ConvolutionLayer::ComputeLayer_FlPt()
 										int do_i = index3D(m_numOutputRows, m_numOutputCols, m, x, y);
 										int di_i = index3D(numInputBlobRows, numInputBlobCols, k, i, j);
 										int f_i = index4D(m_kernelDepth, m_numKernelRows, m_numKernelCols, m, k, kr, kc);
-										dataout[do_i] += (datain[di_i] + filters[f_i]);
+										dataout[do_i] += (datain[di_i] * filters[f_i]);
 									}
 								}
 							}
@@ -138,7 +138,7 @@ void ConvolutionLayer::ComputeLayer_FxPt()
                                         int do_i = index3D(m_numOutputRows, m_numOutputCols, m, x, y);
                                         int di_i = index3D(numInputBlobRows, numInputBlobCols, k, i, j);
                                         int f_i = index4D(m_kernelDepth, m_numKernelRows, m_numKernelCols, m, k, kr, kc);
-                                        dataout[do_i] += (datain[di_i] + filters[f_i]);
+                                        dataout[do_i] += (datain[di_i] * filters[f_i]);
                                     }
                                 }
                             }

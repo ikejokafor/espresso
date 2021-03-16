@@ -28,8 +28,8 @@ static int RE_TRAN_AMT                 = 8;
 #define NUM_TOTAL_QUADS             (MAX_AWP_PER_FAS * MAX_QUAD_PER_AWP)
 #define QUAD_MAX_KERNELS	        64
 #define QUAD_MAX_DEPTH		        8
-#define QUAD_MAX_INPUT_ROWS         1024
-#define QUAD_MAX_INPUT_COLS         1024
+#define QUAD_MAX_INPUT_ROWS         ((uint64_t)608)
+#define QUAD_MAX_INPUT_COLS         ((uint64_t)608)
 #define QUAD_DPTH_SIMD		        (QUAD_MAX_DEPTH * NUM_TOTAL_QUADS)
 #define PIXEL_SIZE                  2
 #define NUM_DSPS_PER_QUAD           16

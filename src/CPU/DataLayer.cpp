@@ -7,7 +7,7 @@ DataLayer::DataLayer(espresso::layerInfo_obj* layerInfo) : Layer(layerInfo) { }
 DataLayer::~DataLayer() { }
 
 
-void DataLayer::ComputeLayer() {}
+void DataLayer::ComputeLayer() { }
 
 
 void DataLayer::ComputeLayer_FlPt() {}
