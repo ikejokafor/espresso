@@ -123,7 +123,7 @@ class Layer_Job
 
 
         void process(float* layOut);
-        void esp_copy(float* src, int depth, int nRows, int nCols, float* dst);
+        void esp_copy(float* src, int nSRows, int nSCols, float* dst, int nDRows, int nDCols, int dDepth);
         void UpSample(int inputDepth, int numInputRows, int numInputCols, int stride, float* inMap, float* outMap);
         void do_conv(
             int num_input_rows, int num_input_cols, float* inMap, 

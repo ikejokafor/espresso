@@ -90,9 +90,10 @@ namespace espresso
 
 	typedef enum
 	{
-		LEAKY   = 0,
-		RELU    = 1,
-		LINEAR  = 2
+        NONE    = 0,
+		LEAKY   = 1,
+		RELU    = 2,
+		LINEAR  = 3
 	} activation_t;
 
 
@@ -163,7 +164,7 @@ namespace espresso
 				alpha = 0.0001f;
 				flBeta = 0.75f;
 				fxBeta = 0.000001f;
-				activation = espresso::RELU;
+				activation = espresso::NONE;
 				darknetNormScaleBias = false;
 				darknetAct = false;
 				darknet_n_param = 0;

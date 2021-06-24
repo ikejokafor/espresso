@@ -38,7 +38,7 @@ void ConvolutionLayer::ComputeLayer_FlPt()
     float *dataout = m_topLayers[0]->m_blob.flData;
     float *filters = m_flFilterData;
 #ifdef HIGH_PERF
-	int nthreads = std::thread::hardware_concurrency();
+ 	int nthreads = std::thread::hardware_concurrency();
 #else
 	int nthreads = 1;
 #endif
@@ -81,6 +81,7 @@ void ConvolutionLayer::ComputeLayer_FlPt()
 	// dataout += ((m_outputDepth / m_group) * m_numOutputRows * m_numOutputCols);
 	// datain  += ((inputBlobDepth / m_group) * numInputBlobRows * numInputBlobCols);
 	// filters += ((m_numKernels / m_group) * m_kernelDepth * m_numKernelRows * m_numKernelCols);
+    
 	if(m_darknetAct)
 	{
 		if (m_activation == espresso::LEAKY)

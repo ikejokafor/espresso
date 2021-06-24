@@ -66,21 +66,21 @@ void InputMaps::serialize()
         }
     }
     
-    // FILE *fd = fopen("./inputMaps.txt", "w");
-    // for(int d = 0; d < m_inputMapDepth; d++)
-    // {
-    //     for(int r = 0; r < m_numInputMapRows; r++)
-    //     {
-    //         for(int c = 0; c < m_numInputMapCols; c++)
-    //         {
-    //             int idx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
-    //             fprintf(fd, "%f ", rmt_data[idx]);
-    //         }
-    //         fprintf(fd, "\n");
-    //     }
-    //     fprintf(fd, "\n\n\n");
-    // }
-    // fclose(fd);
+    FILE *fd = fopen("./inputMaps_fpga.txt", "w");
+    for(int d = 0; d < m_inputMapDepth; d++)
+    {
+        for(int r = 0; r < m_numInputMapRows; r++)
+        {
+            for(int c = 0; c < m_numInputMapCols; c++)
+            {
+                int idx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
+                fprintf(fd, "%f ", rmt_data[idx]);
+            }
+            fprintf(fd, "\n");
+        }
+        fprintf(fd, "\n\n\n");
+    }
+    fclose(fd);
 #endif
 }
 

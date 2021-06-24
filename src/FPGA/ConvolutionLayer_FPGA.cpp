@@ -108,7 +108,7 @@ void ConvolutionLayer_FPGA::ComputeLayer_FlPt()
 	// m_layer_job->process(m_fpga_elapsed_time, m_fpga_avgIterTime, m_fpga_memPower, m_avg_QUAD_time0, m_avg_FAS_time0, m_avg_QUAD_time1, m_avg_FAS_time1);
     m_layer_job->process(m_topLayers[0]->m_blob.flData);
 
-    // FIXME: delete m_layer_job;
+    delete m_layer_job;
 }
 
 

@@ -136,11 +136,11 @@ espresso::CNN_Network::~CNN_Network()
 void espresso::CNN_Network::GetTopAndBottomLayers()
 {
     for(int i = 0; i < m_cnn.size() ; i++) // for every layer
+    {
+       for (uint32_t j = 0; j < m_cnn[i]->m_topLayerNames.size(); j++) // for every top layer of the current cnn layer
        {
-           for (uint32_t j = 0; j < m_cnn[i]->m_topLayerNames.size(); j++) // for every top layer of the current cnn layer
+           for (uint32_t k = 0; k < m_cnn.size(); k++) // search for the top layer: where I write my data to
            {
-               for (uint32_t k = 0; k < m_cnn.size(); k++) // search for the top layer: where I write my data to
-               {
                 if (m_cnn[i]->m_topLayerNames[j] == m_cnn[k]->m_layerName)
                 {
                     m_cnn[i]->m_topLayers.push_back(m_cnn[k]);
@@ -383,33 +383,37 @@ void espresso::CNN_Network::Forward(string start, string end)
 			m_cnn[i]->ComputeLayer();
 		}
         //////
-        cout << "[ESPRESSO]: Finished Layer(s) " << i <<  " " << m_cnn[i]->m_layerName;
+        cout << "[ESPRESSO]: Finished Primary Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
         
         // DEBUG
-        if(m_cnn[i]->m_layerType == espresso::CONVOLUTION)
+        // if(m_cnn[i]->m_layerType == espresso::CONVOLUTION)
+        // {
+        //     FILE* fd = fopen(("./out_" + std::to_string(i) + ".txt").c_str(), "w");
+        //     for(int a = 0; a < m_cnn[i]->m_topLayers[0]->m_blob.depth; a++)
+        //     {
+        //         for(int b = 0; b < m_cnn[i]->m_topLayers[0]->m_blob.numRows; b++)
+        //         {
+        //             for(int c = 0; c < m_cnn[i]->m_topLayers[0]->m_blob.numCols; c++)
+        //             {
+        //                 int idx = index3D(m_cnn[i]->m_blob.numRows, m_cnn[i]->m_blob.numCols, a, b, c);
+        //                 fprintf(fd, "%f ", m_cnn[i]->m_topLayers[0]->m_blob.flData[idx]);
+        //             }
+        //             fprintf(fd, "\n");
+        //         }
+        //         fprintf(fd, "\n\n\n");                
+        //     }
+        //     exit(0);
+        // }
+        if(m_cnn[i]->m_merged_layers.size() > 0)
         {
-            FILE* fd = fopen(("./out_" + std::to_string(i) + ".txt").c_str(), "w");
-            for(int a = 0; a < m_cnn[i]->m_blob.depth; a++)
+            cout << "[ESPRESSO]: Finished Merged Layer(s) " << i <<  " ";
+            for(int j = 0; j < m_cnn[i]->m_merged_layers.size(); j++)
             {
-                for(int b = 0; b < m_cnn[i]->m_blob.numRows; b++)
-                {
-                    for(int c = 0; c < m_cnn[i]->m_blob.numCols; c++)
-                    {
-                        int idx = index3D(m_cnn[i]->m_blob.numRows, m_cnn[i]->m_blob.numCols, a, b, c);
-                        fprintf(fd, "%f ", m_cnn[i]->m_blob.flData[idx]);
-                    }
-                    fprintf(fd, "\n");
-                }
-                fprintf(fd, "\n\n\n");                
+                int mli = m_cnn[i]->m_merged_layers[j];
+                cout << ", " << m_cnn[mli]->m_layerName;
             }
+            cout << endl << endl << endl;
         }
-        
-        for(int j = 0; j < m_cnn[i]->m_merged_layers.size(); j++)
-        {
-            int mli = m_cnn[i]->m_merged_layers[j];
-            cout << ", " << m_cnn[mli]->m_layerName;
-        }
-        cout << endl << endl << endl;
     }
 }
 
