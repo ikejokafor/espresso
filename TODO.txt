@@ -19,10 +19,5 @@ Networks which still need work in fixed point:
 
 Other issues:
 	Check softmax alexnet output
-
-
-
-
-Functionally verify using systemC
-    
+   
     

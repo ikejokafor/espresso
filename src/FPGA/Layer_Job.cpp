@@ -465,6 +465,18 @@ void Layer_Job::process(float* layOut)
             {
                 UpSample(inMaps->m_inputMapDepth, inMaps->m_numInputMapRows, inMaps->m_numInputMapCols, stride, (float*)inMaps->m_buffer, intmStrgA);
             }
+            else if(opcode == OPCODE_14)
+            {
+                 esp_copy(
+                    (float*)partMaps->m_buffer,
+                    QUAD_MAX_INPUT_ROWS, 
+                    QUAD_MAX_INPUT_COLS,
+                    intmStrgA,
+                    QUAD_MAX_INPUT_ROWS, 
+                    QUAD_MAX_INPUT_COLS,
+                    partMaps->m_partialMapDepth
+                );               
+            }
             else
             {
                 esp_copy(
@@ -478,21 +490,21 @@ void Layer_Job::process(float* layOut)
                 );
             }
             
-            FILE *fd = fopen("./intmStrgA.txt", "w");
-            for(int d = 0; d < inMaps->m_inputMapDepth; d++)
-            {
-                for(int r = 0; r < inMaps->m_numInputMapRows; r++)
-                {
-                    for(int c = 0; c < inMaps->m_numInputMapCols; c++)
-                    {
-                        int idx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
-                        fprintf(fd, "%f ", intmStrgA[idx]);
-                    }
-                    fprintf(fd, "\n");
-                }
-                fprintf(fd, "\n\n\n");
-            }
-            fclose(fd);
+            // FILE *fd = fopen("./intmStrgA.txt", "w");
+            // for(int d = 0; d < inMaps->m_inputMapDepth; d++)
+            // {
+            //     for(int r = 0; r < inMaps->m_numInputMapRows; r++)
+            //     {
+            //         for(int c = 0; c < inMaps->m_numInputMapCols; c++)
+            //         {
+            //             int idx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
+            //             fprintf(fd, "%f ", intmStrgA[idx]);
+            //         }
+            //         fprintf(fd, "\n");
+            //     }
+            //     fprintf(fd, "\n\n\n");
+            // }
+            // fclose(fd);
             
   
             if(opcode == OPCODE_0)
@@ -644,7 +656,7 @@ void Layer_Job::process(float* layOut)
                     intmStrgB
                 );
                 esp_copy(
-                    intmStrgA,
+                    intmStrgB,
                     QUAD_MAX_INPUT_ROWS, 
                     QUAD_MAX_INPUT_COLS,
                     (float*)outMaps->m_buffer,
@@ -740,7 +752,7 @@ void Layer_Job::process(float* layOut)
                     intmStrgB
                 );
                 esp_copy(
-                    intmStrgA,
+                    intmStrgB,
                     QUAD_MAX_INPUT_ROWS, 
                     QUAD_MAX_INPUT_COLS,
                     (float*)outMaps->m_buffer,
@@ -776,7 +788,7 @@ void Layer_Job::process(float* layOut)
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
                 );
                 esp_copy(
-                    intmStrgA,
+                    intmStrgB,
                     QUAD_MAX_INPUT_ROWS, 
                     QUAD_MAX_INPUT_COLS,
                     (float*)outMaps->m_buffer,
@@ -857,7 +869,7 @@ void Layer_Job::process(float* layOut)
                     intmStrgB
                 );               
                 esp_copy(
-                    intmStrgA,
+                    intmStrgB,
                     QUAD_MAX_INPUT_ROWS, 
                     QUAD_MAX_INPUT_COLS,
                     (float*)outMaps->m_buffer,
@@ -922,7 +934,7 @@ void Layer_Job::process(float* layOut)
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
                 );
                 esp_copy(
-                    intmStrgA,
+                    intmStrgB,
                     QUAD_MAX_INPUT_ROWS, 
                     QUAD_MAX_INPUT_COLS,
                     (float*)outMaps->m_buffer,
@@ -1030,7 +1042,7 @@ void Layer_Job::process(float* layOut)
                     intmStrgB
                 ); 
                 esp_copy(
-                    intmStrgA,
+                    intmStrgB,
                     QUAD_MAX_INPUT_ROWS, 
                     QUAD_MAX_INPUT_COLS,
                     (float*)outMaps->m_buffer,
@@ -1051,7 +1063,7 @@ void Layer_Job::process(float* layOut)
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
                 );
                 esp_copy(
-                    intmStrgA,
+                    intmStrgB,
                     QUAD_MAX_INPUT_ROWS, 
                     QUAD_MAX_INPUT_COLS,
                     (float*)outMaps->m_buffer,
@@ -1138,7 +1150,6 @@ void Layer_Job::process(float* layOut)
     }
     int k_end = m_lay_it_arr.size() - 1;
     int d_end = m_lay_it_arr[k_end].size() - 1;
-    layOut = (float*)m_lay_it_arr[k_end][d_end]->m_outputMaps->m_buffer;  
     int outputMapDepth = m_lay_it_arr[k_end][d_end]->m_outputMaps->m_outputMapDepth;
     int numOutputMapRows = m_lay_it_arr[k_end][d_end]->m_outputMaps->m_numOutputMapRows;
     int numOutputMapCols = m_lay_it_arr[k_end][d_end]->m_outputMaps->m_numOutputMapCols;
@@ -1169,7 +1180,6 @@ void Layer_Job::process(float* layOut)
         fprintf(fd, "\n\n\n");
     }
     fclose(fd);
-    exit(0);
     // Debug ----------------------------------------------------------
 }
 

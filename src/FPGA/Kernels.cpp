@@ -39,6 +39,18 @@ Kernels::Kernels(FPGA_hndl* fpga_hndl, int numKernels, int kernelDepth, int numK
 	m_numKernelRows = numKernelRows;
 	m_numKernelCols = numKernelCols;
     m_cpu_data      = data;
+    m_cpu_data.resize(numKernels);
+    for (int i = 0; i < numKernels; i++)
+	{
+		m_cpu_data[i].resize(kernelDepth);
+		for (int j = 0; j < kernelDepth; j++)
+		{
+			int size = numKernelRows * numKernelCols * sizeof(float);
+			m_cpu_data[i][j] = (float*)malloc(size);
+			int cpySize = numKernelRows * numKernelCols * sizeof(float);
+			memcpy((void*)m_cpu_data[i][j], (void*)data[i][j], cpySize);
+		}
+	}
 }
 
 
