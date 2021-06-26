@@ -1,4 +1,5 @@
 #include "QUAD_cfg.hpp"
+using namespace espresso;
 
 
 QUAD_cfg::QUAD_cfg() { }
@@ -18,7 +19,7 @@ QUAD_cfg::QUAD_cfg(
     int stride,
     bool upsample,
     int padding,
-    bool act3x3,
+    activation_t act3x3,
     bool master_QUAD,
     bool cascade,
     int inMapDepth

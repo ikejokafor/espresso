@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "espresso_FPGA_common.hpp"
+#include "espresso_common.hpp"
 
 
 class QUAD_cfg
@@ -23,7 +24,7 @@ class QUAD_cfg
             int stride = 0,
             bool upsample = false,
             int padding = 0,
-            bool act3x3 = false,
+            espresso::activation_t act3x3 = espresso::NONE,
             bool master_QUAD = false,
             bool cascade = false,
             int inMapDepth = 0
@@ -49,8 +50,7 @@ class QUAD_cfg
         int		m_num_expd_input_cols	;
         int     m_num_input_rows        ;
         int     m_num_input_cols        ;
-        bool	m_act3x3    			;
-        bool    m_act1x1                ;    
+        espresso::activation_t	m_act3x3    	;
         bool	m_padding				;
         bool	m_upsample				;
         int 	m_crpd_input_row_start	;

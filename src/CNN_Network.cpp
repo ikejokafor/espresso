@@ -265,7 +265,7 @@ void espresso::CNN_Network::mergeLayers(int idx, int seqID, vector<string>& sequ
             m_cnn[idx]->m_kernel1x1Depth      = m_cnn[lay_idx]->m_kernelDepth;
             m_cnn[idx]->m_kernel1x1Data       = m_cnn[lay_idx]->m_flFilterData;
             m_cnn[idx]->m_bias1x1Data         = m_cnn[lay_idx]->m_flBiasData;
-            m_cnn[idx]->m_fpgaAct1x1          = (m_cnn[lay_idx]->m_activation == espresso::LEAKY) ? true : false;
+            m_cnn[idx]->m_fpgaAct1x1          = m_cnn[lay_idx]->m_activation;
         }
     }
 }
@@ -277,7 +277,7 @@ void espresso::CNN_Network::cfgFPGALayers()
     {
         if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1)
         {
-            m_cnn[i]->m_fpgaAct1x1              = (m_cnn[i]->m_activation == espresso::LEAKY) ? true : false;
+            m_cnn[i]->m_fpgaAct1x1              = m_cnn[i]->m_activation;
             m_cnn[i]->m_kernel1x1Data           = m_cnn[i]->m_flFilterData;
             m_cnn[i]->m_bias1x1Data             = m_cnn[i]->m_flBiasData;
             m_cnn[i]->m_num1x1Kernels           = m_cnn[i]->m_numKernels;
@@ -287,7 +287,7 @@ void espresso::CNN_Network::cfgFPGALayers()
         }
         else if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 3)
         {
-            m_cnn[i]->m_fpgaAct3x3              = (m_cnn[i]->m_activation == espresso::LEAKY) ? true : false;            
+            m_cnn[i]->m_fpgaAct3x3              = m_cnn[i]->m_activation;        
         }
         else if(m_cnn[i]->m_layerType == RESIDUAL)
         {
@@ -347,11 +347,11 @@ void espresso::CNN_Network::cfgFPGALayers(string mrgFmt_fn)
             m_cnn[i]->m_kernel1x1Depth          = m_cnn[i]->m_kernelDepth;
             m_cnn[i]->m_fpga_do_kernels1x1      = true;
             m_cnn[i]->m_fpga_krnl_1x1_layer     = true;
-            m_cnn[i]->m_fpgaAct1x1              = (m_cnn[i]->m_activation == espresso::LEAKY) ? true : false; 
+            m_cnn[i]->m_fpgaAct1x1              = m_cnn[i]->m_activation;
         }
         else if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 3)
         {
-            m_cnn[i]->m_fpgaAct3x3              = (m_cnn[i]->m_activation == espresso::LEAKY) ? true : false;            
+            m_cnn[i]->m_fpgaAct3x3              = m_cnn[i]->m_activation;        
         }
     }
 }
@@ -377,43 +377,33 @@ void espresso::CNN_Network::Forward(string start, string end)
         }
         cout << endl << endl << endl;
         //////
-		if(m_cnn[i]->m_layerType == espresso::CONVOLUTION
-            || m_cnn[i]->m_layerType == espresso::RESIDUAL)
+		if(m_cnn[i]->m_layerType == espresso::CONVOLUTION || m_cnn[i]->m_layerType == espresso::RESIDUAL)
 		{
 			m_cnn[i]->ComputeLayer();
 		}
         //////
-        cout << "[ESPRESSO]: Finished Primary Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
+        cout << "[ESPRESSO]: Finished Layer Processing " << endl;
         
         // DEBUG
-        // if(m_cnn[i]->m_layerType == espresso::CONVOLUTION)
-        // {
-        //     FILE* fd = fopen(("./out_" + std::to_string(i) + ".txt").c_str(), "w");
-        //     for(int a = 0; a < m_cnn[i]->m_topLayers[0]->m_blob.depth; a++)
-        //     {
-        //         for(int b = 0; b < m_cnn[i]->m_topLayers[0]->m_blob.numRows; b++)
-        //         {
-        //             for(int c = 0; c < m_cnn[i]->m_topLayers[0]->m_blob.numCols; c++)
-        //             {
-        //                 int idx = index3D(m_cnn[i]->m_blob.numRows, m_cnn[i]->m_blob.numCols, a, b, c);
-        //                 fprintf(fd, "%f ", m_cnn[i]->m_topLayers[0]->m_blob.flData[idx]);
-        //             }
-        //             fprintf(fd, "\n");
-        //         }
-        //         fprintf(fd, "\n\n\n");                
-        //     }
-        //     exit(0);
-        // }
-        if(m_cnn[i]->m_merged_layers.size() > 0)
+        if(m_cnn[i]->m_layerType == espresso::CONVOLUTION)
         {
-            cout << "[ESPRESSO]: Finished Merged Layer(s) " << i <<  " ";
-            for(int j = 0; j < m_cnn[i]->m_merged_layers.size(); j++)
+            FILE* fd = fopen(("./out_" + std::to_string(i) + ".txt").c_str(), "w");
+            for(int a = 0; a < m_cnn[i]->m_topLayers[0]->m_blob.depth; a++)
             {
-                int mli = m_cnn[i]->m_merged_layers[j];
-                cout << ", " << m_cnn[mli]->m_layerName;
+                for(int b = 0; b < m_cnn[i]->m_topLayers[0]->m_blob.numRows; b++)
+                {
+                    for(int c = 0; c < m_cnn[i]->m_topLayers[0]->m_blob.numCols; c++)
+                    {
+                        int idx = index3D(m_cnn[i]->m_blob.numRows, m_cnn[i]->m_blob.numCols, a, b, c);
+                        fprintf(fd, "%f ", m_cnn[i]->m_topLayers[0]->m_blob.flData[idx]);
+                    }
+                    fprintf(fd, "\n");
+                }
+                fprintf(fd, "\n\n\n");                
             }
-            cout << endl << endl << endl;
         }
+        if(i == 3)
+            exit(0);
     }
 }
 

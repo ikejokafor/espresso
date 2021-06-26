@@ -50,6 +50,7 @@
 #include "lstm_layer.h"
 #include "util.hpp"
 #include "fixedPoint.hpp"
+#include "espresso_common.hpp"
 // #ifdef FPGA
 #include "Layer_Job.hpp"
 // #endif
@@ -86,16 +87,6 @@ namespace espresso
 		FLOAT = 0,
 		FIXED = 1
 	} precision_t;
-
-
-	typedef enum
-	{
-        NONE    = 0,
-		LEAKY   = 1,
-		RELU    = 2,
-		LINEAR  = 3
-	} activation_t;
-
 
 	typedef enum
 	{
@@ -336,7 +327,7 @@ namespace espresso
             double m_avg_FAS_time0;
             double m_avg_QUAD_time1; 
             double m_avg_FAS_time1;         
-            bool m_fpgaAct3x3;
-            bool m_fpgaAct1x1; 
+            activation_t m_fpgaAct3x3;
+            activation_t m_fpgaAct1x1; 
 	};
 }

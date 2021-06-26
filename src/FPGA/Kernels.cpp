@@ -99,7 +99,7 @@ void Kernels::serialize()
     }
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-	m_size                          = 1024 * QUAD_DPTH_SIMD * m_numKernelRows * m_numKernelCols * sizeof(float); // FIXME, hardcoding
+	m_size                          = 1024 * QUAD_MAX_KERNELS * m_numKernelRows * m_numKernelCols * sizeof(float); // FIXME, hardcoding
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
     float* rmt_data                 = (float*)m_buffer;
 
@@ -111,7 +111,7 @@ void Kernels::serialize()
             {
                 for(int c = 0; c < m_numKernelCols; c++)
                 {
-                    int rIdx = index4D(QUAD_DPTH_SIMD, m_numKernelRows, m_numKernelCols, n, d, r, c);
+                    int rIdx = index4D(QUAD_MAX_KERNELS, m_numKernelRows, m_numKernelCols, n, d, r, c);
                     int cIdx = index2D(m_numKernelCols, r, c);
                     rmt_data[rIdx] = m_cpu_data[n][d][cIdx];
                 }
@@ -128,7 +128,7 @@ void Kernels::serialize()
             {
                 for(int c = 0; c < m_numKernelCols; c++)
                 {
-                    int idx = index4D(QUAD_DPTH_SIMD, m_numKernelRows, m_numKernelCols, n, d, r, c);
+                    int idx = index4D(QUAD_MAX_KERNELS, m_numKernelRows, m_numKernelCols, n, d, r, c);
                     fprintf(fd, "%f ", rmt_data[idx]);
                 }
                 fprintf(fd, "\n");

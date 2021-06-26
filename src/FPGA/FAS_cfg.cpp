@@ -1,5 +1,6 @@
 #include "FAS_cfg.hpp"
 using namespace std;
+using namespace espresso;
 
 
 FAS_cfg::FAS_cfg() :
@@ -41,7 +42,7 @@ FAS_cfg::FAS_cfg(
 	bool krnl1x1_pding,
 	int krnl1x1_pad_bgn,
 	int krnl1x1_pad_end,
-    bool act1x1,
+    activation_t act1x1,
 	int num_output_rows,
 	int num_output_cols,
 	int output_depth

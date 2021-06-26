@@ -1,5 +1,6 @@
 #include "AccelConfig.hpp"
 using namespace std;
+using namespace espresso;
 
 
 AccelConfig::AccelConfig(FPGA_hndl* fpga_hndl) : Accel_Payload()
@@ -98,7 +99,8 @@ void AccelConfig::serialize()
                 cfg[idx].prevMapAddr				= m_FAS_cfg_arr[f]->m_prevMapAddr;
 				cfg[idx].pixelSeqAddr 				= m_FAS_cfg_arr[f]->m_pixelSeqAddr;
 				cfg[idx].fas_num_output_rows		= m_FAS_cfg_arr[f]->m_num_output_rows;
-				cfg[idx].fas_num_output_cols		= m_FAS_cfg_arr[f]->m_num_output_cols;				
+				cfg[idx].fas_num_output_cols		= m_FAS_cfg_arr[f]->m_num_output_cols;
+                cfg[idx].act1x1                     = (uint64_t)m_FAS_cfg_arr[f]->m_act1x1;
                 cfg[idx].QUAD_id 					= QUAD_cfg_arr[q]->m_QUAD_id;
                 cfg[idx].res_high_watermark         = QUAD_cfg_arr[q]->m_res_high_watermark;
                 cfg[idx].QUAD_en					= QUAD_en_arr[q];
@@ -114,7 +116,7 @@ void AccelConfig::serialize()
                 cfg[idx].num_input_rows             = QUAD_cfg_arr[q]->m_num_input_rows;
                 cfg[idx].num_input_cols             = QUAD_cfg_arr[q]->m_num_input_cols;
                 cfg[idx].kernel3x3Depth             = QUAD_cfg_arr[q]->m_kernel3x3Depth;
-                cfg[idx].act3x3                     = QUAD_cfg_arr[q]->m_act3x3;
+                cfg[idx].act3x3                     = (uint64_t)QUAD_cfg_arr[q]->m_act3x3;
                 cfg[idx].padding 					= QUAD_cfg_arr[q]->m_padding;
                 cfg[idx].upsample 					= QUAD_cfg_arr[q]->m_upsample;
                 cfg[idx].crpd_input_row_start 		= QUAD_cfg_arr[q]->m_crpd_input_row_start;
@@ -177,6 +179,7 @@ void AccelConfig::deserialize()
                 m_FAS_cfg_arr[f]->m_krnl1x1_pding           = cfg[idx].krnl1x1_pding;
                 m_FAS_cfg_arr[f]->m_krnl1x1_pad_bgn         = cfg[idx].krnl1x1_pad_bgn;
                 m_FAS_cfg_arr[f]->m_krnl1x1_pad_end         = cfg[idx].krnl1x1_pad_end;
+                m_FAS_cfg_arr[f]->m_act1x1                  = (activation_t)cfg[idx].act1x1;
                 inMapAddrArr[a][q]				            = cfg[idx].imAddrArr;
                 krnl3x3AddrArr[a][q]				        = cfg[idx].krnl3x3Addr;
                 krnl3x3BiasAddrArr[a][q]				    = cfg[idx].krnl3x3BiasAddr;
@@ -204,8 +207,7 @@ void AccelConfig::deserialize()
                 QUAD_cfg_arr[q]->m_num_input_rows           = cfg[idx].num_input_rows;
                 QUAD_cfg_arr[q]->m_num_input_cols           = cfg[idx].num_input_cols;
                 QUAD_cfg_arr[q]->m_kernel3x3Depth           = cfg[idx].kernel3x3Depth;
-                QUAD_cfg_arr[q]->m_act3x3                   = cfg[idx].act3x3;
-                QUAD_cfg_arr[q]->m_act1x1                   = cfg[idx].act1x1; 
+                QUAD_cfg_arr[q]->m_act3x3                   = (activation_t)cfg[idx].act3x3;
                 QUAD_cfg_arr[q]->m_padding				    = cfg[idx].padding;
                 QUAD_cfg_arr[q]->m_upsample				    = cfg[idx].upsample;
                 QUAD_cfg_arr[q]->m_crpd_input_row_start     = cfg[idx].crpd_input_row_start;

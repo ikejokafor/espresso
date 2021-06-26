@@ -12,6 +12,7 @@
 #include "PartialMaps.hpp"
 #include "Prev1x1Maps.hpp"
 #include "espresso_FPGA_common.hpp"
+#include "espresso_common.hpp"
 #include "AccelConfig.hpp"
 #include "FAS_cfg.hpp"
 #include "QUAD_cfg.hpp"
@@ -36,8 +37,8 @@ class Layer_Iteration
 			int stride,
 			bool upsample,
 			int padding,
-            bool act3x3,
-            bool act1x1,
+            espresso::activation_t act3x3,
+            espresso::activation_t act1x1,
 			bool krnl1x1_pding,
 			int krnl1x1_pad_bgn,
 			int krnl1x1_pad_end,

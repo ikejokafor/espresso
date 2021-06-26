@@ -11,6 +11,7 @@
 #include "AWP_cfg.hpp"
 #include "util.hpp"
 #include "espresso_FPGA_common.hpp"
+#include "espresso_common.hpp"
 #ifdef SYSTEMC
 #include "SYSC_FPGA_shim.hpp"
 #else

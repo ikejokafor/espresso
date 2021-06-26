@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <functional>
 #include "espresso_FPGA_common.hpp"
+#include "espresso_common.hpp"
 #include "SYSC_FPGA_shim.hpp"
 #include "Layer_Iteration.hpp"
 #include "fixedPoint.hpp"
@@ -19,6 +20,7 @@
 #include "OutputMaps.hpp"
 #include "PartialMaps.hpp"
 #include "Prev1x1Maps.hpp"
+#include "espresso_common.hpp"
 
 
 
@@ -95,8 +97,8 @@ class Layer_Job
 			int padding,
 			bool do_resLayer,
             bool do_resLayer_only,
-            bool m_fpgaAct3x3,
-            bool m_fpgaAct1x1,
+            espresso::activation_t m_fpgaAct3x3,
+            espresso::activation_t m_fpgaAct1x1,
 			bool do_kernels1x1,
 			FPGA_hndl* fpga_hndl,
 			bool krnl_1x1_layer,
@@ -127,7 +129,7 @@ class Layer_Job
         void UpSample(int inputDepth, int numInputRows, int numInputCols, int stride, float* inMap, float* outMap);
         void do_conv(
             int num_input_rows, int num_input_cols, float* inMap, 
-            int stride, int padding, bool doAct,
+            int stride, int padding, espresso::activation_t doAct,
             int nKR, int nKC, int kernelDepth, 
             int num_kernels, float* filters, float* bias, bool doBias,
             int num_output_rows, int num_output_cols, float* outMap
@@ -156,8 +158,8 @@ class Layer_Job
 		bool m_do_resLayer;
         bool m_do_resLayer_only;
 		bool m_do_kernels1x1;
-        bool m_act3x3;
-        bool m_act1x1;
+        espresso::activation_t m_act3x3;
+        espresso::activation_t m_act1x1;
 		bool m_krnl1x1_pding;
 		int m_krnl1x1_pad_bgn;
 		int m_krnl1x1_pad_end;

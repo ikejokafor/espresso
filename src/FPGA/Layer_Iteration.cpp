@@ -1,5 +1,6 @@
 #include "Layer_Iteration.hpp"
 using namespace std;
+using namespace espresso;
 
 
 Layer_Iteration::Layer_Iteration(
@@ -17,8 +18,8 @@ Layer_Iteration::Layer_Iteration(
 	int stride,
 	bool upsample,
 	int padding,
-    bool act3x3,
-    bool act1x1,
+    activation_t act3x3,
+    activation_t act1x1,
 	bool krnl1x1_pding,
 	int krnl1x1_pad_bgn,
 	int krnl1x1_pad_end,	

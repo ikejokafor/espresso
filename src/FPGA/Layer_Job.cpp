@@ -1,5 +1,6 @@
 #include "Layer_Job.hpp"
 using namespace std;
+using namespace espresso;
 
 
 bool isPowerOfTwo(ulong x)
@@ -36,8 +37,8 @@ Layer_Job::Layer_Job(
     int padding,
     bool do_resLayer,
     bool do_resLayer_only,
-    bool fpgaAct3x3,
-    bool fpgaAct1x1,
+    activation_t fpgaAct3x3,
+    activation_t fpgaAct1x1,
     bool do_kernels1x1,
     FPGA_hndl* fpga_hndl,
     bool krnl_1x1_layer,
@@ -443,8 +444,8 @@ void Layer_Job::process(float* layOut)
             int stride = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_stride;
             int upsample = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_upsample;
             int padding = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_padding;
-            bool act3x3 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_act3x3;
-            bool act1x1 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_act1x1;
+            activation_t act3x3 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_act3x3;
+            activation_t act1x1 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_act1x1;
             opcode_t opcode = m_lay_it_arr[k][d]->m_opcode;
             InputMaps* inMaps = m_lay_it_arr[k][d]->m_inputMaps;
             Kernels* kernels3x3 = m_lay_it_arr[k][d]->m_kernels3x3;
@@ -1220,7 +1221,7 @@ void Layer_Job::UpSample(int inputDepth, int numInputRows, int numInputCols, int
 
 void Layer_Job::do_conv(
     int num_input_rows, int num_input_cols, float* inMaps, 
-    int stride, int padding, bool doAct,
+    int stride, int padding, activation_t doAct,
     int nKR, int nKC, int kernelDepth, 
     int num_kernels, float* filters, float* bias, bool doBias,
     int num_output_rows, int num_output_cols, float* outMap)
@@ -1249,13 +1250,13 @@ void Layer_Job::do_conv(
                                     if ((i >= 0 && j >= 0) && (i < num_input_rows && j < num_input_cols)) // in valid region, assuming zero padding
                                     {
                                         int di_i = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, k, i, j);
-                                        int f_i = index4D(QUAD_DPTH_SIMD, nKR, nKC, m, k, kr, kc);
+                                        int f_i = index4D(QUAD_MAX_KERNELS, nKR, nKC, m, k, kr, kc);
                                         outMap[do_i] += (inMaps[di_i] * filters[f_i]);
                                     }
                                 }
                             }
                         }
-                        outMap[do_i] = (outMap[do_i] < 0.0 && doAct) ? outMap[do_i] * 0.1f : outMap[do_i];
+                        outMap[do_i] = (outMap[do_i] < 0.0 && doAct == espresso::LEAKY) ? outMap[do_i] * 0.1f : outMap[do_i];
                     }
                 }
             }
