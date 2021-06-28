@@ -1250,7 +1250,7 @@ void Layer_Job::do_conv(
                                     if ((i >= 0 && j >= 0) && (i < num_input_rows && j < num_input_cols)) // in valid region, assuming zero padding
                                     {
                                         int di_i = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, k, i, j);
-                                        int f_i = index4D(QUAD_MAX_KERNELS, nKR, nKC, m, k, kr, kc);
+                                        int f_i = index4D(QUAD_MAX_KERNELS, 3, 3, m, k, kr, kc);
                                         outMap[do_i] += (inMaps[di_i] * filters[f_i]);
                                     }
                                 }
