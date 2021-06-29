@@ -8,6 +8,8 @@ ResidualMaps::ResidualMaps(FPGA_hndl* fpga_hndl, int residualMapDepth, int numRe
 	m_residualMapDepth      = residualMapDepth;
 	m_numResidualMapRows    = numResidualMapRows;
 	m_numResidualMapCols    = numResidualMapCols;
+    m_cpu_data              = new float[m_residualMapDepth * m_numResidualMapRows * m_numResidualMapCols];
+    memcpy(m_cpu_data, data, sizeof(float) * m_residualMapDepth * m_numResidualMapRows * m_numResidualMapCols);
 	m_cpu_data              = data;
 	m_buffer				= NULL;
 	m_size              	= 0;
@@ -23,6 +25,7 @@ ResidualMaps::~ResidualMaps()
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
 	sysc_fpga_hndl->deallocate(this);    
+    free(m_cpu_data);
 #endif
 }
 

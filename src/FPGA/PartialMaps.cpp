@@ -8,7 +8,8 @@ PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, int partialMapDepth, int numParti
 	m_partialMapDepth   = partialMapDepth;
 	m_numPartialMapRows = numPartialMapRows;
 	m_numPartialMapCols = numPartialMapCols;
-	m_cpu_data          = data;
+    m_cpu_data          = new float[partialMapDepth * numPartialMapRows * numPartialMapCols];
+	memcpy(m_cpu_data, data, sizeof(float) * partialMapDepth * numPartialMapRows * numPartialMapCols);
     m_no_permute        = true;
 	m_buffer			= NULL;
 	m_size              = 0;
@@ -22,7 +23,8 @@ PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, InputMaps* inputMaps)
 	m_partialMapDepth   = inputMaps->m_inputMapDepth;
 	m_numPartialMapRows = inputMaps->m_numInputMapRows;
 	m_numPartialMapCols = inputMaps->m_numInputMapCols;
-	m_cpu_data          = inputMaps->m_cpu_data;
+    m_cpu_data          = new float[m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols];
+	memcpy(m_cpu_data, inputMaps->m_cpu_data, sizeof(float) * m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols);
     m_no_permute        = true;
 }
 
@@ -33,7 +35,8 @@ PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, OutputMaps* outputMaps)
 	m_partialMapDepth   = outputMaps->m_outputMapDepth;
 	m_numPartialMapRows = outputMaps->m_numOutputMapRows;
 	m_numPartialMapCols = outputMaps->m_numOutputMapCols;
-    m_cpu_data          = outputMaps->m_cpu_data;
+    m_cpu_data          = new float[m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols];
+	memcpy(m_cpu_data, outputMaps->m_cpu_data, sizeof(float) * m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols);
     m_no_permute        = false;
 }
 
@@ -45,7 +48,8 @@ PartialMaps::~PartialMaps()
 	_hndl->deallocate(this);
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-	sysc_fpga_hndl->deallocate(this);    
+	sysc_fpga_hndl->deallocate(this);
+    free(m_cpu_data);
 #endif
 }
 

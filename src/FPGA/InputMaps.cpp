@@ -8,7 +8,8 @@ InputMaps::InputMaps(FPGA_hndl* fpga_hndl, int inputMapDepth, int numInputMapRow
 	m_inputMapDepth     = inputMapDepth;
 	m_numInputMapRows   = numInputMapRows;
 	m_numInputMapCols   = numInputMapCols;
-	m_cpu_data          = data;
+	m_cpu_data          = new float[inputMapDepth * numInputMapRows * numInputMapCols];
+    memcpy(m_cpu_data, data, sizeof(float) * inputMapDepth * numInputMapRows * numInputMapCols);
 	m_buffer			= NULL;
 	m_size              = 0;
 	m_remAddress        = -1;
@@ -22,7 +23,8 @@ InputMaps::~InputMaps()
 	_hndl->deallocate(this);  
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-	sysc_fpga_hndl->deallocate(this);   
+	sysc_fpga_hndl->deallocate(this);
+    free(m_cpu_data);    
 #endif
 }
 
