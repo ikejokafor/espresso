@@ -15,13 +15,14 @@
 class KernelBias : public Accel_Payload
 {
 	public:
-		KernelBias(FPGA_hndl* fpga_hndl, int numKernels, float* data);
+		KernelBias(FPGA_hndl* fpga_hndl, int numKernels, int krnlSize, float* data);
 		~KernelBias();
 		void serialize();
         void deserialize();
 		KernelBias* GetVolume(int krnlBgn, int numKrnl);
 
 		int m_numKernels;
+        int m_krnlSize;
 		float* m_cpu_data;
         FPGA_hndl* m_fpga_hndl;
 };

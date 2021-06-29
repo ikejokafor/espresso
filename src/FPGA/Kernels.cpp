@@ -79,6 +79,8 @@ void Kernels::serialize()
 #ifdef ALPHA_DATA
     _hndl* _hndl                    = reinterpret_cast<_hndl*>(m_fpga_hndl);
 	m_size                          = m_numKernels * m_kernelDepth * m_numKernelRows * m_numKernelCols * sizeof(fixedPoint_t);
+    string ks = (m_numKernelCols == 1) ? "1" : "3";
+    printf("[ESPRESSO]: Allocating Space for %sx%s Kernels\n", ks.c_str(), ks.c_str());    
     m_buffer                        = (void*)_hndl->allocate(this, m_size);
     fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
 
@@ -99,7 +101,9 @@ void Kernels::serialize()
     }
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-	m_size                          = 1024 * QUAD_MAX_KERNELS * m_numKernelRows * m_numKernelCols * sizeof(float); // FIXME, hardcoding
+	m_size                          = FAS_MAX_1X1_KRNLS * SYSC_MAX_KRNL_DEPTH * MAX_KRNL_SIZE * MAX_KRNL_SIZE * sizeof(float); // FIXME, hardcoding
+    string ks = (m_numKernelCols == 1) ? "1" : "3";
+    printf("[ESPRESSO]: Allocating Space for %sx%s Kernels\n", ks.c_str(), ks.c_str());
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
     float* rmt_data                 = (float*)m_buffer;
 
@@ -111,7 +115,7 @@ void Kernels::serialize()
             {
                 for(int c = 0; c < m_numKernelCols; c++)
                 {
-                    int rIdx = index4D(QUAD_MAX_KERNELS, m_numKernelRows, m_numKernelCols, n, d, r, c);
+                    int rIdx = index4D(SYSC_MAX_KRNL_DEPTH, MAX_KRNL_SIZE, MAX_KRNL_SIZE, n, d, r, c);
                     int cIdx = index2D(m_numKernelCols, r, c);
                     rmt_data[rIdx] = m_cpu_data[n][d][cIdx];
                 }
@@ -128,7 +132,7 @@ void Kernels::serialize()
             {
                 for(int c = 0; c < m_numKernelCols; c++)
                 {
-                    int idx = index4D(QUAD_MAX_KERNELS, m_numKernelRows, m_numKernelCols, n, d, r, c);
+                    int idx = index4D(SYSC_MAX_KRNL_DEPTH, MAX_KRNL_SIZE, MAX_KRNL_SIZE, n, d, r, c);
                     fprintf(fd, "%f ", rmt_data[idx]);
                 }
                 fprintf(fd, "\n");

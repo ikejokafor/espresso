@@ -15,6 +15,7 @@ static int RE_TRAN_AMT                 = 8;
 // int PM_FIFO_DEPTH               = 256;
 // int PV_FIFO_DEPTH               = 256;
 
+#define FAS_MAX_1X1_KRNLS           1024
 #define WINDOW_3x3_NUM_CYCLES		5
 #define AXI_BUS_SIZE				64
 #define ACCL_NUM_OUTPUT             4
@@ -31,6 +32,7 @@ static int RE_TRAN_AMT                 = 8;
 #define QUAD_MAX_INPUT_ROWS         ((uint64_t)608)
 #define QUAD_MAX_INPUT_COLS         ((uint64_t)608)
 #define QUAD_DPTH_SIMD		        (QUAD_MAX_DEPTH * NUM_TOTAL_QUADS)
+#define MAX_KRNL_SIZE               3
 #define PIXEL_SIZE                  2
 #define NUM_DSPS_PER_QUAD           16
 #define NUM_DSPS_PER_FAS            7 // based on Kernel Depth SIMD 32, and 5x clock
@@ -42,3 +44,4 @@ static int RE_TRAN_AMT                 = 8;
 #define RM_FETCH_FACTOR             1
 #define PM_FETCH_FACTOR             1
 #define PV_FETCH_FACTOR             1
+#define SYSC_MAX_KRNL_DEPTH         max(QUAD_MAX_DEPTH, QUAD_MAX_KERNELS)

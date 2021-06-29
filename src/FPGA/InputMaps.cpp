@@ -32,6 +32,7 @@ void InputMaps::serialize()
 #ifdef ALPHA_DATA
     _hndl* _hndl                    = reinterpret_cast< hndl*>(m_fpga_hndl);
     m_size                          = m_inputMapDepth * m_numInputMapRows * m_numInputMapCols * sizeof(fixedPoint_t);
+    printf("[ESPRESSO]: Allocating Space for InputMaps\n");
     m_buffer                        = (void*)_hndl->allocate(this, m_size);
     fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
 
@@ -50,6 +51,7 @@ void InputMaps::serialize()
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
     m_size                          = QUAD_DPTH_SIMD * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * sizeof(float);
+    printf("[ESPRESSO]: Allocating Space for InputMaps\n");
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
     float* rmt_data                 = (float*)m_buffer;
 

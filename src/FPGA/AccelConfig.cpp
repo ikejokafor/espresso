@@ -42,6 +42,7 @@ void AccelConfig::serialize()
 {
 #ifdef SYSTEMC
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
+    printf("[ESPRESSO]: Allocating Space for Accelerator Configuration\n");
     m_size                          = MAX_AWP_PER_FAS * NUM_TOTAL_QUADS * sizeof(cfg_t);
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
     

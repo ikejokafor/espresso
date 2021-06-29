@@ -2,10 +2,11 @@
 using namespace std;
 
 
-KernelBias::KernelBias(FPGA_hndl* fpga_hndl, int numKernels, float* data) : Accel_Payload()
+KernelBias::KernelBias(FPGA_hndl* fpga_hndl, int numKernels, int krnlSize, float* data) : Accel_Payload()
 {
     m_fpga_hndl     = fpga_hndl;
 	m_numKernels    = numKernels;
+    m_krnlSize      = krnlSize;
     m_cpu_data      = data;
 	m_buffer		= NULL;
 	m_size          = 0;
@@ -31,6 +32,8 @@ void KernelBias::serialize()
 #ifdef ALPHA_DATA
     fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
     m_size                          = m_numKernels * sizeof(float);
+    string ks = (m_krnlSize == 1) ? "1" : "3";
+    printf("[ESPRESSO]: Allocating Space for %sx%s Kernel Biases\n", ks.c_str(), ks.c_str());    
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
     fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
 
@@ -41,6 +44,8 @@ void KernelBias::serialize()
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
     m_size                          = m_numKernels * sizeof(float);
+    string ks = (m_krnlSize == 1) ? "1" : "3";
+    printf("[ESPRESSO]: Allocating Space for %sx%s Kernel Biases\n", ks.c_str(), ks.c_str());
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
     float* rmt_data                 = (float*)m_buffer;
 
@@ -69,5 +74,5 @@ KernelBias* KernelBias::GetVolume(int krnlBgn, int numKrnl)
 {
 	float* ptr;
 	ptr = (float*)(m_cpu_data + krnlBgn);
-	return new KernelBias(m_fpga_hndl, numKrnl, ptr);
+	return new KernelBias(m_fpga_hndl, numKrnl, m_krnlSize, ptr);
 }

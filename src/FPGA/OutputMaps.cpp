@@ -34,6 +34,7 @@ void OutputMaps::serialize()
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
     m_size                          = (uint64_t)1024 * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * (uint64_t)sizeof(float);  // FIXME, hardcoding
+    printf("[ESPRESSO]: Allocating Space for Output Maps\n");
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
 #endif
 }

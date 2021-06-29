@@ -88,7 +88,7 @@ Layer_Job::Layer_Job(
     {
         m_residualMaps      = new ResidualMaps(fpga_hndl, residualMapDepth, numResidualMapRows, numResidualMapCols, residualMapData);
     }
-    m_kernels3x3Bias        = new KernelBias(fpga_hndl, num3x3Kernels, kernel3x3Bias);
+    m_kernels3x3Bias        = new KernelBias(fpga_hndl, num3x3Kernels, 3, kernel3x3Bias);
     m_krnl1x1_pad_bgn = -1;
     m_krnl1x1_pad_end = -1;
     if(do_kernels1x1)
@@ -104,7 +104,7 @@ Layer_Job::Layer_Job(
             m_krnl1x1_pad_end = num1x1Kernels;
         }
         m_kernels1x1        = new Kernels(fpga_hndl, num1x1Kernels, m_kernel1x1Depth, 1, 1, kernel1x1Data);
-        m_kernels1x1Bias    = new KernelBias(fpga_hndl, num1x1Kernels, kernel1x1Bias);
+        m_kernels1x1Bias    = new KernelBias(fpga_hndl, num1x1Kernels, 1, kernel1x1Bias);
     }
     m_krnl_1x1_layer = krnl_1x1_layer;
 	m_fpga_hndl		 = fpga_hndl;
@@ -457,8 +457,8 @@ void Layer_Job::process(float* layOut)
             Prev1x1Maps* prev1x1Maps = m_lay_it_arr[k][d]->m_prev1x1Maps;
             OutputMaps* outMaps = m_lay_it_arr[k][d]->m_outputMaps;
             int depth = max(1024, QUAD_DPTH_SIMD); // FIXME, hardcoding
-            float* intmStrgA = new float[QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * depth];
-            float* intmStrgB = new float[QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * depth];
+            float* intmStrgA = new float[depth * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS];
+            float* intmStrgB = new float[depth * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS];
             int qd_nOutRows = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_num_output_rows;
             int qd_nOutCols = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_num_output_cols;
             int qd_outDpth = (kernels3x3) ? kernels3x3->m_numKernels : -1;
@@ -491,21 +491,21 @@ void Layer_Job::process(float* layOut)
                 );
             }
             
-            // FILE *fd = fopen("./intmStrgA.txt", "w");
-            // for(int d = 0; d < inMaps->m_inputMapDepth; d++)
-            // {
-            //     for(int r = 0; r < inMaps->m_numInputMapRows; r++)
-            //     {
-            //         for(int c = 0; c < inMaps->m_numInputMapCols; c++)
-            //         {
-            //             int idx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
-            //             fprintf(fd, "%f ", intmStrgA[idx]);
-            //         }
-            //         fprintf(fd, "\n");
-            //     }
-            //     fprintf(fd, "\n\n\n");
-            // }
-            // fclose(fd);
+            FILE *fd = fopen("./intmStrgA.txt", "w");
+            for(int d = 0; d < m_inputMapDepth; d++)
+            {
+                for(int r = 0; r < m_numInputMapRows; r++)
+                {
+                    for(int c = 0; c < m_numInputMapCols; c++)
+                    {
+                        int idx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
+                        fprintf(fd, "%f ", intmStrgA[idx]);
+                    }
+                    fprintf(fd, "\n");
+                }
+                fprintf(fd, "\n\n\n");
+            }
+            fclose(fd);
             
   
             if(opcode == OPCODE_0)
@@ -1250,7 +1250,7 @@ void Layer_Job::do_conv(
                                     if ((i >= 0 && j >= 0) && (i < num_input_rows && j < num_input_cols)) // in valid region, assuming zero padding
                                     {
                                         int di_i = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, k, i, j);
-                                        int f_i = index4D(QUAD_MAX_KERNELS, 3, 3, m, k, kr, kc);
+                                        int f_i = index4D(SYSC_MAX_KRNL_DEPTH, MAX_KRNL_SIZE, MAX_KRNL_SIZE, m, k, kr, kc);
                                         outMap[do_i] += (inMaps[di_i] * filters[f_i]);
                                     }
                                 }
