@@ -295,7 +295,7 @@ void espresso::CNN_Network::cfgFPGALayers()
             m_cnn[i]->m_residualMapDepth    = m_cnn[i]->m_bottomLayers[0]->m_blob.depth;
             m_cnn[i]->m_numResidualMapRows  = m_cnn[i]->m_bottomLayers[0]->m_blob.numRows;
             m_cnn[i]->m_numResidualMapsCols = m_cnn[i]->m_bottomLayers[0]->m_blob.numCols;
-            m_cnn[i]->m_residualMapData     = m_cnn[i]->m_bottomLayers[0]->m_blob.flData;
+            m_cnn[i]->m_residualMapData     = m_cnn[i]->m_bottomLayers[1]->m_blob.flData;
         }
     }
 }
@@ -385,7 +385,7 @@ void espresso::CNN_Network::Forward(string start, string end)
         cout << "[ESPRESSO]: Finished Layer Processing " << endl;
         
         // DEBUG
-        if(m_cnn[i]->m_layerType == espresso::CONVOLUTION)
+        if(m_cnn[i]->m_layerType == espresso::CONVOLUTION || m_cnn[i]->m_layerType == espresso::RESIDUAL)
         {
             FILE* fd = fopen(("./out_" + std::to_string(i) + ".txt").c_str(), "w");
             for(int a = 0; a < m_cnn[i]->m_topLayers[0]->m_blob.depth; a++)
@@ -404,8 +404,8 @@ void espresso::CNN_Network::Forward(string start, string end)
             fclose(fd);
         }
 
-        // if(i == 3)
-        //     exit(0);
+        if(i == 6)
+            exit(0);
     }
 }
 

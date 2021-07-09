@@ -25,7 +25,7 @@ static int RE_TRAN_AMT                 = 8;
 #define NUM_CE_PER_QUAD             8
 #define NUM_FAS				        1
 #define MAX_AWP_PER_FAS             1
-#define MAX_QUAD_PER_AWP            4
+#define MAX_QUAD_PER_AWP            1
 #define NUM_TOTAL_QUADS             (MAX_AWP_PER_FAS * MAX_QUAD_PER_AWP)
 #define QUAD_MAX_KERNELS	        64
 #define QUAD_MAX_DEPTH		        8

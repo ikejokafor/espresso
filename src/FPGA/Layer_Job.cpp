@@ -440,7 +440,7 @@ void Layer_Job::process(float* layOut)
     for(int k = 0; k < m_lay_it_arr.size(); k++)
     {
         for(int d = 0; d < m_lay_it_arr[k].size(); d++)
-        {
+        {            
             int stride = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_stride;
             int upsample = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_upsample;
             int padding = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_padding;
@@ -466,9 +466,9 @@ void Layer_Job::process(float* layOut)
             {
                 UpSample(inMaps->m_inputMapDepth, inMaps->m_numInputMapRows, inMaps->m_numInputMapCols, stride, (float*)inMaps->m_buffer, intmStrgA);
             }
-            else if(opcode == OPCODE_14)
+            else if(opcode == OPCODE_14 || opcode == OPCODE_17)
             {
-                 esp_copy(
+                esp_copy(
                     (float*)partMaps->m_buffer,
                     QUAD_MAX_INPUT_ROWS, 
                     QUAD_MAX_INPUT_COLS,
@@ -506,6 +506,12 @@ void Layer_Job::process(float* layOut)
                 fprintf(fd, "\n\n\n");
             }
             fclose(fd);
+            
+            cout << "[ESPRESSO]: " << m_layerName                    << endl;
+            cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
+            cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;
+            cout << "[ESPRESSO]:\tOpcode - " << opcode << endl;
+			cout << endl << endl;
             
   
             if(opcode == OPCODE_0)
@@ -1128,15 +1134,15 @@ void Layer_Job::process(float* layOut)
             else if(opcode == OPCODE_17)
             {
                 do_accum( // resdMaps accum
-                    inMaps->m_numInputMapRows,
-                    inMaps->m_numInputMapCols,
-                    inMaps->m_inputMapDepth,
-                    (float*)inMaps->m_buffer,
+                    partMaps->m_numPartialMapRows,
+                    partMaps->m_numPartialMapCols,
+                    partMaps->m_partialMapDepth,
+                    intmStrgA,
                     (float*)resdMaps->m_buffer,
-                    intmStrgA
+                    intmStrgB
                 );
                 esp_copy(
-                    intmStrgA,
+                    intmStrgB,
                     QUAD_MAX_INPUT_ROWS, 
                     QUAD_MAX_INPUT_COLS,
                     (float*)outMaps->m_buffer,
@@ -1146,7 +1152,11 @@ void Layer_Job::process(float* layOut)
                 );
                 free(intmStrgA);
                 free(intmStrgB);
-            }            
+            }
+            cout << "[ESPRESSO]: " << m_layerName                    << endl;
+            cout << "[ESPRESSO]:\tFinished Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
+            cout << "[ESPRESSO]:\tFinished Depth Iteration - "  << (d + 1) << "/" << m_num_depth_iter << endl;
+            cout << "[ESPRESSO]:\tOpcode - " << opcode << endl;
         }
     }
     int k_end = m_lay_it_arr.size() - 1;

@@ -34,6 +34,23 @@ void ResidualLayer_FPGA::ComputeLayer_FxPt()
 		cout << "[ESPRESSO]: " << m_layerName << " Merged" << endl;
 		return;
 	}
+    
+    
+    FILE *fd = fopen("./residualMaps.txt", "w");
+    for(int d = 0; d < m_residualMapDepth; d++)
+    {
+        for(int r = 0; r < m_numResidualMapRows; r++)
+        {
+            for(int c = 0; c < m_numResidualMapsCols; c++)
+            {
+                int idx = index3D(m_numResidualMapRows, m_numResidualMapsCols, d, r, c);
+                fprintf(fd, "%f ", m_residualMapData[idx]);
+            }
+            fprintf(fd, "\n");
+        }
+        fprintf(fd, "\n\n\n");
+    }
+    fclose(fd);
 
     Layer_Job* m_layer_job = new Layer_Job(
 		m_layerName,
