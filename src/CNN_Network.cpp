@@ -385,26 +385,26 @@ void espresso::CNN_Network::Forward(string start, string end)
         cout << "[ESPRESSO]: Finished Layer Processing " << endl;
         
         // DEBUG
-        if(m_cnn[i]->m_layerType == espresso::CONVOLUTION || m_cnn[i]->m_layerType == espresso::RESIDUAL)
-        {
-            FILE* fd = fopen(("./out_" + std::to_string(i) + ".txt").c_str(), "w");
-            for(int a = 0; a < m_cnn[i]->m_topLayers[0]->m_blob.depth; a++)
-            {
-                for(int b = 0; b < m_cnn[i]->m_topLayers[0]->m_blob.numRows; b++)
-                {
-                    for(int c = 0; c < m_cnn[i]->m_topLayers[0]->m_blob.numCols; c++)
-                    {
-                        int idx = index3D(m_cnn[i]->m_blob.numRows, m_cnn[i]->m_blob.numCols, a, b, c);
-                        fprintf(fd, "%f ", m_cnn[i]->m_topLayers[0]->m_blob.flData[idx]);
-                    }
-                    fprintf(fd, "\n");
-                }
-                fprintf(fd, "\n\n\n");                
-            }
-            fclose(fd);
-        }
+        // if(m_cnn[i]->m_layerType == espresso::CONVOLUTION || m_cnn[i]->m_layerType == espresso::RESIDUAL)
+        // {
+        //     FILE* fd = fopen(("./out_" + std::to_string(i) + ".txt").c_str(), "w");
+        //     for(int a = 0; a < m_cnn[i]->m_topLayers[0]->m_blob.depth; a++)
+        //     {
+        //         for(int b = 0; b < m_cnn[i]->m_topLayers[0]->m_blob.numRows; b++)
+        //         {
+        //             for(int c = 0; c < m_cnn[i]->m_topLayers[0]->m_blob.numCols; c++)
+        //             {
+        //                 int idx = index3D(m_cnn[i]->m_blob.numRows, m_cnn[i]->m_blob.numCols, a, b, c);
+        //                 fprintf(fd, "%f ", m_cnn[i]->m_topLayers[0]->m_blob.flData[idx]);
+        //             }
+        //             fprintf(fd, "\n");
+        //         }
+        //         fprintf(fd, "\n\n\n");                
+        //     }
+        //     fclose(fd);
+        // }
 
-        if(i == 6)
+        if(i == 2)
             exit(0);
     }
 }

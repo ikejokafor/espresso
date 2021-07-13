@@ -53,7 +53,7 @@ void ResidualMaps::serialize()
     }
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    m_size                          = QUAD_DPTH_SIMD * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * sizeof(float);
+    m_size                          = ACCL_MAX_KRNLS * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * sizeof(float);
     printf("[ESPRESSO]: Allocating Space for Residual Maps\n");
     m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
     float* rmt_data                 = (float*)m_buffer;
@@ -70,23 +70,6 @@ void ResidualMaps::serialize()
             }
         }
     }
-    
-    
-    FILE *fd = fopen("./resduialMaps_fpga.txt", "w");
-    for(int d = 0; d < m_residualMapDepth; d++)
-    {
-        for(int r = 0; r < m_numResidualMapRows; r++)
-        {
-            for(int c = 0; c < m_numResidualMapCols; c++)
-            {
-                int idx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
-                fprintf(fd, "%f ", rmt_data[idx]);
-            }
-            fprintf(fd, "\n");
-        }
-        fprintf(fd, "\n\n\n");
-    }
-    fclose(fd);
 #endif
 
 }

@@ -154,8 +154,14 @@ Layer_Job::~Layer_Job()
 
 void Layer_Job::createLayerIters()
 {
-    m_num_krnl_iter = (m_krnl_1x1_layer || m_do_resLayer_only) ? 1 : ceil((double)m_num3x3Kernels / (double)(NUM_TOTAL_QUADS * QUAD_MAX_KERNELS));
-    m_num_depth_iter = (m_krnl_1x1_layer|| m_do_resLayer_only) ? 1 : ceil((double)m_inputMapDepth / (double)(NUM_TOTAL_QUADS * QUAD_DPTH_SIMD));
+    m_num_krnl_iter = (m_krnl_1x1_layer || m_do_resLayer_only) ? 1 : ceil((double)m_num3x3Kernels / (double)ACCL_MAX_KRNLS);
+    m_num_depth_iter = (m_krnl_1x1_layer|| m_do_resLayer_only) ? 1 : ceil((double)m_inputMapDepth / (double)ACCL_MAX_DPTH_SIMD);
+    
+    cout << "[ESPRESSO]: Creating Layer Iterations... " << endl;
+    cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
+    cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
+	cout << endl << endl;
+    
     int remNumKrnl = m_num3x3Kernels;
     int numKrnl;
     layAclPrm_t* layAclPrm;
@@ -332,7 +338,6 @@ layAclPrm_t* Layer_Job::createAccelParams(
     {
         layAclPrm->outputMaps = new OutputMaps(m_fpga_hndl, numKrnl3x3, m_numOutputMapRows, m_numOutputMapCols);
     }
-    //////
     if(m_do_resLayer_only)
     {
         layAclPrm->outputMaps = new OutputMaps(m_fpga_hndl, m_residualMaps->m_residualMapDepth, m_residualMaps->m_numResidualMapRows, m_residualMaps->m_numResidualMapCols);
@@ -431,11 +436,90 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
 }
 
 
+void printMaps(string fn, float* buf, int depth, int rows, int cols, bool sel)
+{
+    FILE *fd = fopen(fn.c_str(), "w");
+    for(int d = 0; d < depth; d++)
+    {
+        for(int r = 0; r < rows; r++)
+        {
+            for(int c = 0; c < cols; c++)
+            {
+                int idx = (sel) ? index3D(rows, cols, d, r, c)
+                    : index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
+                fprintf(fd, "%f ", buf[idx]);
+            }
+            fprintf(fd, "\n");
+        }
+        fprintf(fd, "\n\n\n");
+    }
+    fclose(fd);   
+}
+
+
+void printKrnls(string fn, float* buf, int num, int depth, int rows, int cols)
+{
+    FILE *fd = fopen(fn.c_str(), "w");
+	for(int n = 0; n < num; n++) 
+    {
+        for(int d = 0; d < depth; d++)
+        {
+            for(int r = 0; r < rows; r++)
+            {
+                for(int c = 0; c < cols; c++)
+                {
+                    int idx = index4D(SYSC_MAX_KRNL_DEPTH, MAX_KRNL_SIZE, MAX_KRNL_SIZE, n, d, r, c);
+                    fprintf(fd, "%f ", buf[idx]);
+                }
+                fprintf(fd, "\n");
+            }
+            fprintf(fd, "\n\n\n");
+        }
+    }
+    fclose(fd);   
+}
+
+
+void printKrnls(string fn, krnl_data_t& krnl_data, int num, int depth, int rows, int cols)
+{
+    FILE *fd = fopen(fn.c_str(), "w");
+	for(int n = 0; n < num; n++) 
+    {
+        for(int d = 0; d < depth; d++)
+        {
+            for(int r = 0; r < rows; r++)
+            {
+                for(int c = 0; c < cols; c++)
+                {
+                    int idx = index2D(rows, r, c);
+                    fprintf(fd, "%f ", krnl_data[n][d][idx]);
+                }
+                fprintf(fd, "\n");
+            }
+            fprintf(fd, "\n\n\n");
+        }
+    }
+    fclose(fd);   
+}
+
+
+void printKBias(string fn, float* buf, int num)
+{
+    FILE *fd = fopen(fn.c_str(), "w");
+	for(int n = 0; n < num; n++) 
+    {
+        fprintf(fd, "%f ", buf[n]);
+    }
+    fclose(fd);   
+}
+
+
 void Layer_Job::process(float* layOut)
 {
-    cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
-    cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
-	cout << endl << endl;
+    printMaps("./inputMaps_fpga.txt", (float*)m_inputMaps->m_cpu_data, m_inputMaps->m_inputMapDepth, m_inputMaps->m_numInputMapRows, m_inputMaps->m_numInputMapCols, true);
+    (m_kernels3x3) ? printKrnls("./kernels_fpga.txt", m_kernels3x3->m_cpu_data, m_kernels3x3->m_numKernels, m_kernels3x3->m_kernelDepth, 3, 3)
+    : void();
+    (m_kernels3x3Bias) ? printKBias("./kernel_bias_fpga.txt", (float*)m_kernels3x3Bias->m_cpu_data, m_kernels3x3Bias->m_numKernels) : void();
 
     for(int k = 0; k < m_lay_it_arr.size(); k++)
     {
@@ -456,12 +540,18 @@ void Layer_Job::process(float* layOut)
             ResidualMaps* resdMaps = m_lay_it_arr[k][d]->m_residualMaps;
             Prev1x1Maps* prev1x1Maps = m_lay_it_arr[k][d]->m_prev1x1Maps;
             OutputMaps* outMaps = m_lay_it_arr[k][d]->m_outputMaps;
-            int depth = max(1024, QUAD_DPTH_SIMD); // FIXME, hardcoding
+            int depth = max(FAS_MAX_1X1_KRNLS, ACCL_MAX_DPTH_SIMD); // FIXME, hardcoding
             float* intmStrgA = new float[depth * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS];
             float* intmStrgB = new float[depth * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS];
             int qd_nOutRows = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_num_output_rows;
             int qd_nOutCols = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_num_output_cols;
             int qd_outDpth = (kernels3x3) ? kernels3x3->m_numKernels : -1;
+            
+            printMaps("./inputMaps_fpga_" + to_string(k) + "_" + to_string(d) + ".txt", (float*)inMaps->m_buffer, inMaps->m_inputMapDepth, inMaps->m_numInputMapRows, inMaps->m_numInputMapCols, false);
+            (kernels3x3) ? printKrnls("./kernels_fpga_" + to_string(k) + "_" + to_string(d) + ".txt", (float*)kernels3x3->m_buffer, kernels3x3->m_numKernels, kernels3x3->m_kernelDepth, 3, 3)
+            : void();
+            (kernels3x3Bias) ? printKBias("./kernel_bias_fpga_" + to_string(k) + "_" + to_string(d) + ".txt",  (float*)kernels3x3Bias->m_buffer, kernels3x3Bias->m_numKernels) : void();
+            
             if(upsample)
             {
                 UpSample(inMaps->m_inputMapDepth, inMaps->m_numInputMapRows, inMaps->m_numInputMapCols, stride, (float*)inMaps->m_buffer, intmStrgA);
@@ -480,32 +570,18 @@ void Layer_Job::process(float* layOut)
             }
             else
             {
-                esp_copy(
-                    (float*)inMaps->m_buffer,
-                    QUAD_MAX_INPUT_ROWS, 
-                    QUAD_MAX_INPUT_COLS,
-                    intmStrgA,
-                    QUAD_MAX_INPUT_ROWS, 
-                    QUAD_MAX_INPUT_COLS,
-                    inMaps->m_inputMapDepth
-                );
+                // esp_copy(
+                //     (float*)inMaps->m_buffer,
+                //     QUAD_MAX_INPUT_ROWS, 
+                //     QUAD_MAX_INPUT_COLS,
+                //     intmStrgA,
+                //     QUAD_MAX_INPUT_ROWS, 
+                //     QUAD_MAX_INPUT_COLS,
+                //     inMaps->m_inputMapDepth
+                // );
             }
             
-            FILE *fd = fopen("./intmStrgA.txt", "w");
-            for(int d = 0; d < m_inputMapDepth; d++)
-            {
-                for(int r = 0; r < m_numInputMapRows; r++)
-                {
-                    for(int c = 0; c < m_numInputMapCols; c++)
-                    {
-                        int idx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
-                        fprintf(fd, "%f ", intmStrgA[idx]);
-                    }
-                    fprintf(fd, "\n");
-                }
-                fprintf(fd, "\n\n\n");
-            }
-            fclose(fd);
+            printMaps("./intmStrgA_" + to_string(k) + "_" + to_string(d) + ".txt" , intmStrgA, m_inputMapDepth, m_numInputMapRows, m_numInputMapCols, false);
             
             cout << "[ESPRESSO]: " << m_layerName                    << endl;
             cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
@@ -1083,51 +1159,51 @@ void Layer_Job::process(float* layOut)
             }
             else if(opcode == OPCODE_15)
             {
-                do_conv( // 3x3 conv
-                    m_numInputMapRows, m_numInputMapCols, intmStrgA,
-                    stride, padding, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, false,
-                    qd_nOutRows, qd_nOutCols, intmStrgB
-                );
-                do_accum( // partMaps accum
-                    qd_nOutRows,
-                    qd_nOutCols,
-                    qd_outDpth,
-                    intmStrgB,
-                    (float*)partMaps->m_buffer,
-                    intmStrgA
-                );
-                esp_copy(
-                    intmStrgA,
-                    QUAD_MAX_INPUT_ROWS, 
-                    QUAD_MAX_INPUT_COLS,
-                    (float*)outMaps->m_buffer,
-                    QUAD_MAX_INPUT_ROWS, 
-                    QUAD_MAX_INPUT_COLS,
-                    outMaps->m_outputMapDepth
-                );
+                // do_conv( // 3x3 conv
+                //     m_numInputMapRows, m_numInputMapCols, intmStrgA ,
+                //     stride, padding, act3x3,
+                //     3, 3, kernels3x3->m_kernelDepth,
+                //     kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, false,
+                //     qd_nOutRows, qd_nOutCols, intmStrgB
+                // );
+                // do_accum( // partMaps accum
+                //     qd_nOutRows,
+                //     qd_nOutCols,
+                //     qd_outDpth,
+                //     intmStrgB,
+                //     (float*)partMaps->m_buffer,
+                //     intmStrgA
+                // );
+                // esp_copy(
+                //     intmStrgB,
+                //     QUAD_MAX_INPUT_ROWS, 
+                //     QUAD_MAX_INPUT_COLS,
+                //     (float*)outMaps->m_buffer,
+                //     QUAD_MAX_INPUT_ROWS, 
+                //     QUAD_MAX_INPUT_COLS,
+                //     outMaps->m_outputMapDepth
+                // );
                 free(intmStrgA);
                 free(intmStrgB);
             }
             else if(opcode == OPCODE_16) 
             {
-                do_conv( // 3x3 conv
-                    m_numInputMapRows, m_numInputMapCols, intmStrgA,
-                    stride, padding, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, true,
-                    qd_nOutRows, qd_nOutCols, intmStrgB
-                );                
-                esp_copy(
-                    intmStrgB,
-                    QUAD_MAX_INPUT_ROWS, 
-                    QUAD_MAX_INPUT_COLS,
-                    (float*)outMaps->m_buffer,
-                    QUAD_MAX_INPUT_ROWS, 
-                    QUAD_MAX_INPUT_COLS,
-                    outMaps->m_outputMapDepth
-                );
+                // do_conv( // 3x3 conv
+                //     m_numInputMapRows, m_numInputMapCols, intmStrgA,
+                //     stride, padding, act3x3,
+                //     3, 3, kernels3x3->m_kernelDepth,
+                //     kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, true,
+                //     qd_nOutRows, qd_nOutCols, intmStrgB
+                // );                
+                // esp_copy(
+                //     intmStrgB,
+                //     QUAD_MAX_INPUT_ROWS, 
+                //     QUAD_MAX_INPUT_COLS,
+                //     (float*)outMaps->m_buffer,
+                //     QUAD_MAX_INPUT_ROWS, 
+                //     QUAD_MAX_INPUT_COLS,
+                //     outMaps->m_outputMapDepth
+                // );
                 free(intmStrgA);
                 free(intmStrgB);
             }
@@ -1164,33 +1240,17 @@ void Layer_Job::process(float* layOut)
     int outputMapDepth = m_lay_it_arr[k_end][d_end]->m_outputMaps->m_outputMapDepth;
     int numOutputMapRows = m_lay_it_arr[k_end][d_end]->m_outputMaps->m_numOutputMapRows;
     int numOutputMapCols = m_lay_it_arr[k_end][d_end]->m_outputMaps->m_numOutputMapCols;
-    esp_copy(
-        (float*)m_lay_it_arr[k_end][d_end]->m_outputMaps->m_buffer,
-        QUAD_MAX_INPUT_ROWS, 
-        QUAD_MAX_INPUT_COLS,
-        layOut,
-        numOutputMapRows, 
-        numOutputMapCols,
-        outputMapDepth
-    );
+    // esp_copy(
+    //     (float*)m_lay_it_arr[k_end][d_end]->m_outputMaps->m_buffer,
+    //     QUAD_MAX_INPUT_ROWS, 
+    //     QUAD_MAX_INPUT_COLS,
+    //     layOut,
+    //     numOutputMapRows, 
+    //     numOutputMapCols,
+    //     outputMapDepth
+    // );
     
-
-    // Debug ----------------------------------------------------------
-    FILE *fd = fopen((m_layerName + ".txt").c_str(), "w");
-    for(int d = 0; d < outputMapDepth; d++)
-    {
-        for(int r = 0; r < numOutputMapRows; r++)
-        {
-            for(int c = 0; c < numOutputMapCols; c++)
-            {
-                int idx = index3D(numOutputMapRows, numOutputMapCols, d, r, c);
-                fprintf(fd, "%f ", layOut[idx]);
-            }
-            fprintf(fd, "\n");
-        }
-        fprintf(fd, "\n\n\n");
-    }
-    fclose(fd);
+    printMaps(m_layerName + ".txt" , layOut, outputMapDepth, numOutputMapRows, numOutputMapCols, true);
     // Debug ----------------------------------------------------------
 }
 
@@ -1236,7 +1296,8 @@ void Layer_Job::do_conv(
     int num_kernels, float* filters, float* bias, bool doBias,
     int num_output_rows, int num_output_cols, float* outMap)
 {   
-    int nthreads = std::thread::hardware_concurrency();
+    // int nthreads = std::thread::hardware_concurrency();
+    int nthreads = 1;
     std::vector<std::thread> threads(nthreads);
     for (int t = 0; t < nthreads; t++)
 	{
@@ -1281,7 +1342,8 @@ void Layer_Job::do_conv(
 
 void Layer_Job::do_accum(int num_accum_rows, int num_accum_cols, int accum_depth, float* inMapsA, float* inMapsB, float* outMap)
 {
-    int nthreads = std::thread::hardware_concurrency();
+    // int nthreads = std::thread::hardware_concurrency();
+    int nthreads = 1;
     std::vector<std::thread> threads(nthreads);
     for(int t = 0; t < nthreads; t++)
 	{

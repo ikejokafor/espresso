@@ -33,7 +33,7 @@ void InputMaps::serialize()
 {
 #ifdef ALPHA_DATA
     _hndl* _hndl                    = reinterpret_cast< hndl*>(m_fpga_hndl);
-    m_size                          = m_inputMapDepth * m_numInputMapRows * m_numInputMapCols * sizeof(fixedPoint_t);
+    m_size                          = m_inputMapDepth * m_numInputMapRows * m_numInputMapCols * PIXEL_SIZE;
     printf("[ESPRESSO]: Allocating Space for InputMaps\n");
     m_buffer                        = (void*)_hndl->allocate(this, m_size);
     fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
@@ -69,22 +69,6 @@ void InputMaps::serialize()
             }
         }
     }
-    
-    FILE *fd = fopen("./inputMaps_fpga.txt", "w");
-    for(int d = 0; d < m_inputMapDepth; d++)
-    {
-        for(int r = 0; r < m_numInputMapRows; r++)
-        {
-            for(int c = 0; c < m_numInputMapCols; c++)
-            {
-                int idx = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, d, r, c);
-                fprintf(fd, "%f ", rmt_data[idx]);
-            }
-            fprintf(fd, "\n");
-        }
-        fprintf(fd, "\n\n\n");
-    }
-    fclose(fd);
 #endif
 }
 

@@ -7,7 +7,8 @@ KernelBias::KernelBias(FPGA_hndl* fpga_hndl, int numKernels, int krnlSize, float
     m_fpga_hndl     = fpga_hndl;
 	m_numKernels    = numKernels;
     m_krnlSize      = krnlSize;
-    m_cpu_data      = data;
+    m_cpu_data      = new float[numKernels];
+    memcpy(m_cpu_data, data, sizeof(float) * numKernels);
 	m_buffer		= NULL;
 	m_size          = 0;
 	m_remAddress    = -1;
@@ -53,13 +54,6 @@ void KernelBias::serialize()
     {
         rmt_data[n] = m_cpu_data[n];    // FIXME: remove hardcoding
     }
-    
-    FILE *fd = fopen("./kernel_bias_fpga.txt", "w");
-    for(int n = 0; n < m_numKernels; n++) 
-    {
-        fprintf(fd, "%f\n", rmt_data[n]);
-    }
-    fclose(fd);
 #endif
 }
 

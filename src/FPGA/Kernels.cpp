@@ -24,8 +24,7 @@ Kernels::Kernels(FPGA_hndl* fpga_hndl, int numKernels, int kernelDepth, int numK
 			int dpth_idx = j * (numKernelRows * numKernelCols);
 			int idx = index2D(krnl_step, i, dpth_idx);
 			float* krnlWndw = &data[idx];
-			int cpySize = numKernelRows * numKernelCols * sizeof(float);
-			memcpy((void*)m_cpu_data[i][j], (void*)krnlWndw, cpySize);
+			memcpy((void*)m_cpu_data[i][j], (void*)krnlWndw, size);
 		}
 	}
 }
@@ -162,7 +161,9 @@ Kernels* Kernels::GetVolume(int krnlBgn, int numKrnl, int depthBgn, int depthSiz
 		int depth_ofst = depthBgn;
 		for (int j = 0; j < depthSize; j++, depth_ofst++)
 		{
-			krnl_data[i][j] = m_cpu_data[krnl_ofst][depth_ofst];
+            int size = m_numKernelRows * m_numKernelCols * sizeof(float);
+			krnl_data[i][j] = (float*)malloc(size);
+			memcpy(krnl_data[i][j], m_cpu_data[krnl_ofst][depth_ofst], size);
 		}
 	}
 	return new Kernels(m_fpga_hndl, numKrnl, depthSize, m_numKernelRows, m_numKernelCols, krnl_data);

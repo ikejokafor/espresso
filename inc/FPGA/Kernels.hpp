@@ -14,9 +14,12 @@
 #include "espresso_FPGA_common.hpp"
 
 
+typedef std::vector<std::vector<float*>> krnl_data_t;
+
+
 class Kernels : public Accel_Payload
 {
-	typedef std::vector<std::vector<float*>> krnl_data_t;
+
 
 	public:
 		Kernels(FPGA_hndl* fpga_hndl, int numKernels, int kernelDepth, int numKernelRows, int numKernelCols, float* data);
