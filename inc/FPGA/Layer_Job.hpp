@@ -44,6 +44,12 @@ typedef struct
 	ResidualMaps* residualMaps;
 	OutputMaps* outputMaps;
     opcode_t opcode;
+    espresso::activation_t act3x3;
+    espresso::activation_t act1x1;
+    bool it_act3x3;
+    bool it_act1x1;
+    bool it_bias3x3;
+    bool it_bias1x1;
 } layAclPrm_t;
 
 #ifdef SYSTEMC
@@ -117,7 +123,7 @@ class Layer_Job
             int krnl3x3Bgn,
             int numKrnl3x3,
 			bool& del_res,
-			bool& del_1x1			
+			bool& del_1x1
 		);
 		void printConfig(Layer_Iteration* lay_it);
         void process(double& elapsed_time, double& avgIterTime, double& memPower, double& avg_QUAD_time0, double& avg_FAS_time0, double& avg_QUAD_time1, double& avg_FAS_time1);
@@ -129,7 +135,7 @@ class Layer_Job
         void UpSample(int inputDepth, int numInputRows, int numInputCols, int stride, float* inMap, float* outMap);
         void do_conv(
             int num_input_rows, int num_input_cols, float* inMap, 
-            int stride, int padding, espresso::activation_t doAct,
+            int stride, int padding, bool it_act, espresso::activation_t act,
             int nKR, int nKC, int kernelDepth, 
             int num_kernels, float* filters, float* bias, bool doBias,
             int num_output_rows, int num_output_cols, float* outMap

@@ -68,6 +68,8 @@ class FAS_cfg
             int krnl1x1_pad_bgn,
             int krnl1x1_pad_end,
             espresso::activation_t act1x1,
+            bool it_act1x1,
+            bool it_bias1x1,
 			int num_output_rows,
 			int num_output_cols,
 			int output_depth_cfg
@@ -111,6 +113,8 @@ class FAS_cfg
         int m_krnl1x1_pad_bgn;
         int m_krnl1x1_pad_end;
         espresso::activation_t m_act1x1;
+        bool m_it_act1x1;
+        bool m_it_bias1x1;
 		int m_num_output_rows;
 		int m_num_output_cols;
 		int m_output_depth;

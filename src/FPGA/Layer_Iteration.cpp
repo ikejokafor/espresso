@@ -20,9 +20,13 @@ Layer_Iteration::Layer_Iteration(
 	int padding,
     activation_t act3x3,
     activation_t act1x1,
+    bool it_act3x3,
+    bool it_act1x1,
+    bool it_bias3x3,
+    bool it_bias1x1,
 	bool krnl1x1_pding,
 	int krnl1x1_pad_bgn,
-	int krnl1x1_pad_end,	
+	int krnl1x1_pad_end,
 	bool del_res,
 	bool del_1x1)
 {
@@ -99,6 +103,8 @@ Layer_Iteration::Layer_Iteration(
 			krnl1x1_pad_bgn,
 			krnl1x1_pad_end,
             act1x1,
+            it_act1x1,
+            it_bias1x1,
 			m_outputMaps->m_numOutputMapRows,
 			m_outputMaps->m_numOutputMapCols,
 			m_outputMaps->m_outputMapDepth
@@ -139,6 +145,8 @@ Layer_Iteration::Layer_Iteration(
 						upsample,
 						padding,
 						act3x3,
+                        (master_QUAD) ? it_act3x3 : false,
+                        (master_QUAD) ? it_bias3x3 : false,
 						master_QUAD,
 						cascade,
 						(remDepth > QUAD_MAX_DEPTH) ? QUAD_MAX_DEPTH : remDepth

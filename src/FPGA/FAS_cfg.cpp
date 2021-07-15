@@ -43,6 +43,8 @@ FAS_cfg::FAS_cfg(
 	int krnl1x1_pad_bgn,
 	int krnl1x1_pad_end,
     activation_t act1x1,
+    bool it_act1x1,
+    bool it_bias1x1,
 	int num_output_rows,
 	int num_output_cols,
 	int output_depth
@@ -83,6 +85,8 @@ FAS_cfg::FAS_cfg(
 	m_krnl1x1_pad_bgn = krnl1x1_pad_bgn;
 	m_krnl1x1_pad_end = krnl1x1_pad_end;
     m_act1x1 = act1x1;
+    m_it_act1x1 = it_act1x1;
+    m_it_bias1x1 = it_bias1x1;
 	m_num_output_rows = num_output_rows;
 	m_num_output_cols = num_output_cols;
 	m_output_depth = output_depth;

@@ -20,6 +20,8 @@ QUAD_cfg::QUAD_cfg(
     bool upsample,
     int padding,
     activation_t act3x3,
+    bool it_act3x3,
+    bool it_bias3x3,
     bool master_QUAD,
     bool cascade,
     int inMapDepth
@@ -32,6 +34,8 @@ QUAD_cfg::QUAD_cfg(
 	m_AWP_id = AWP_id;
 	m_QUAD_id = QUAD_id;
     m_inMapDepth = inMapDepth;
+    m_it_act3x3 = it_act3x3;
+    m_it_bias3x3 = it_bias3x3;
 	if(!QUAD_en)
 	{
 		return;

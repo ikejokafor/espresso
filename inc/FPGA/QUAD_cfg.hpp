@@ -25,6 +25,8 @@ class QUAD_cfg
             bool upsample = false,
             int padding = 0,
             espresso::activation_t act3x3 = espresso::NONE,
+            bool it_act3x3 = false,
+            bool it_bias3x3 = false,
             bool master_QUAD = false,
             bool cascade = false,
             int inMapDepth = 0
@@ -51,6 +53,8 @@ class QUAD_cfg
         int     m_num_input_rows        ;
         int     m_num_input_cols        ;
         espresso::activation_t	m_act3x3    	;
+        bool    m_it_act3x3             ;
+        bool    m_it_bias3x3            ;
         bool	m_padding				;
         bool	m_upsample				;
         int 	m_crpd_input_row_start	;

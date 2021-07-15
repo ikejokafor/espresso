@@ -7,6 +7,7 @@ OutputMaps::OutputMaps(FPGA_hndl* fpga_hndl, int outputMapDepth, int numOutputMa
 	m_outputMapDepth    = outputMapDepth;
 	m_numOutputMapRows  = numOutputMapRows;
 	m_numOutputMapCols  = numOutputMapCols;
+    m_cpu_data          = new float[outputMapDepth * numOutputMapRows * numOutputMapCols];
 	m_buffer			= NULL;
 	m_size              = 0;
 	m_remAddress        = -1;
@@ -20,7 +21,8 @@ OutputMaps::~OutputMaps()
 	_hndl->deallocate(this);
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-	sysc_fpga_hndl->deallocate(this);    
+	sysc_fpga_hndl->deallocate(this);
+    free(m_cpu_data);
 #endif
 }
 
