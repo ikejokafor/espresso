@@ -129,7 +129,7 @@ class Layer_Job
         void process(double& elapsed_time, double& avgIterTime, double& memPower, double& avg_QUAD_time0, double& avg_FAS_time0, double& avg_QUAD_time1, double& avg_FAS_time1);
         void calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& avg_QUAD_time, double& avg_FAS_time);
 
-
+        int lasQD(Layer_Iteration* lay_it);
         void process(float* layOut);
         void esp_copy(float* src, int nSRows, int nSCols, float* dst, int nDRows, int nDCols, int dDepth);
         void UpSample(int inputDepth, int numInputRows, int numInputCols, int stride, float* inMap, float* outMap);
@@ -137,7 +137,7 @@ class Layer_Job
             int num_input_rows, int num_input_cols, float* inMap, 
             int stride, int padding, bool it_act, espresso::activation_t act,
             int nKR, int nKC, int kernelDepth, 
-            int num_kernels, float* filters, float* bias, bool doBias,
+            int num_kernels, krnl_data_t filters, float* bias, bool doBias,
             int num_output_rows, int num_output_cols, float* outMap
         );
 

@@ -383,6 +383,7 @@ void espresso::CNN_Network::Forward(string start, string end)
 		}
         //////
         cout << "[ESPRESSO]: Finished Layer Processing " << endl;
+        cout << endl << endl;
         
         // DEBUG
         // if(m_cnn[i]->m_layerType == espresso::CONVOLUTION || m_cnn[i]->m_layerType == espresso::RESIDUAL)
@@ -404,7 +405,7 @@ void espresso::CNN_Network::Forward(string start, string end)
         //     fclose(fd);
         // }
 
-        if(i == 5)
+        if(i == 2)
             exit(0);
     }
 }

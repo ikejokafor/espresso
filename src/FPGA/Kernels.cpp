@@ -121,25 +121,6 @@ void Kernels::serialize()
             }
         }
     }
-    
-    FILE *fd = fopen("./kernels_fpga.txt", "w");
-    for(int n = 0; n < m_numKernels; n++) 
-    {
-        for(int d = 0; d < m_kernelDepth; d++)
-        {
-            for(int r = 0; r < m_numKernelRows; r++)
-            {
-                for(int c = 0; c < m_numKernelCols; c++)
-                {
-                    int idx = index4D(SYSC_MAX_KRNL_DEPTH, MAX_KRNL_SIZE, MAX_KRNL_SIZE, n, d, r, c);
-                    fprintf(fd, "%f ", rmt_data[idx]);
-                }
-                fprintf(fd, "\n");
-            }
-            fprintf(fd, "\n\n\n");
-        }
-    }
-    fclose(fd);
 #endif
 }
 

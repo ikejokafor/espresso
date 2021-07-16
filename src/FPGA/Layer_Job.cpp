@@ -175,7 +175,7 @@ void Layer_Job::createLayerIters()
         {
 			bool del_res;					
 			bool del_1x1;
-            depth = min(QUAD_DPTH_SIMD, remDepth);
+            depth = min(ACCL_MAX_DPTH_SIMD, remDepth);
             layAclPrm = createAccelParams(
                 i,
                 j,
@@ -217,6 +217,7 @@ void Layer_Job::createLayerIters()
         }
         remNumKrnl -= numKrnl;
     }
+    cout << endl << endl;
 }
 
 
@@ -476,6 +477,16 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
 }
 
 
+
+
+
+
+
+
+
+
+
+
 void printMaps(string fn, float* buf, int depth, int rows, int cols, bool sel)
 {
     FILE *fd = fopen(fn.c_str(), "w");
@@ -554,22 +565,51 @@ void printKBias(string fn, float* buf, int num)
 }
 
 
+
+
+
+
+
+
+int Layer_Job::lasQD(Layer_Iteration* lay_it)
+{
+    for(int i = NUM_TOTAL_QUADS - 1; i >= 0; i--)
+    {
+        if(lay_it->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_en_arr[i])
+        {
+            return i;
+        }
+    }
+    return 0;
+}
+
+
 void Layer_Job::process(float* layOut)
 {
+    printMaps("inputMaps_fpga.txt" , (float*)m_inputMaps->m_cpu_data, m_inputMaps->m_inputMapDepth, m_inputMaps->m_numInputMapRows, m_inputMaps->m_numInputMapCols, false);
+    printKrnls("kernels_fpga.txt", m_kernels3x3->m_cpu_data, m_kernels3x3->m_numKernels, m_kernels3x3->m_kernelDepth, 3, 3);
+    printKBias("kernel_bias_fpga.txt", (float*)m_kernels3x3Bias->m_cpu_data, m_kernels3x3Bias->m_numKernels);
+    
     for(int k = 0; k < m_lay_it_arr.size(); k++)
     {
         for(int d = 0; d < m_lay_it_arr[k].size(); d++)
-        {            
+        {       
+
+            cout << "[ESPRESSO]: " << m_layerName                    << endl;
+            cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
+            cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;
+			cout << endl << endl;
+            
             printConfig(m_lay_it_arr[k][d]);         
             int stride = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_stride;
             int upsample = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_upsample;
             int padding = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_padding;
             activation_t act3x3 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_act3x3;
             activation_t act1x1 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_act1x1;
-            int lasQD = NUM_TOTAL_QUADS - 1;
-            bool it_act3x3 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[lasQD]->m_it_act3x3;
+            int lasQD_i = lasQD(m_lay_it_arr[k][d]);
+            bool it_act3x3 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[lasQD_i]->m_it_act3x3;
             bool it_act1x1 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_it_act1x1;
-            bool it_bias3x3 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[lasQD]->m_it_bias3x3;
+            bool it_bias3x3 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[lasQD_i]->m_it_bias3x3;
             bool it_bias1x1 = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_it_bias1x1;
             opcode_t opcode = m_lay_it_arr[k][d]->m_opcode;
             InputMaps* inMaps = m_lay_it_arr[k][d]->m_inputMaps;
@@ -591,12 +631,12 @@ void Layer_Job::process(float* layOut)
             
             if(upsample)
             {
-                UpSample(inMaps->m_inputMapDepth, inMaps->m_numInputMapRows, inMaps->m_numInputMapCols, stride, (float*)inMaps->m_buffer, intmStrgA);
+                UpSample(inMaps->m_inputMapDepth, inMaps->m_numInputMapRows, inMaps->m_numInputMapCols, stride, (float*)inMaps->m_cpu_data, intmStrgA);
             }
             else if(opcode == OPCODE_14 || opcode == OPCODE_17)
             {
                 esp_copy(
-                    (float*)partMaps->m_buffer,
+                    (float*)partMaps->m_cpu_data,
                     QUAD_MAX_INPUT_ROWS, 
                     QUAD_MAX_INPUT_COLS,
                     intmStrgA,
@@ -608,7 +648,7 @@ void Layer_Job::process(float* layOut)
             else
             {
                 esp_copy(
-                    (float*)inMaps->m_buffer,
+                    (float*)inMaps->m_cpu_data,
                     QUAD_MAX_INPUT_ROWS, 
                     QUAD_MAX_INPUT_COLS,
                     intmStrgA,
@@ -617,13 +657,11 @@ void Layer_Job::process(float* layOut)
                     inMaps->m_inputMapDepth
                 );
             }
-
-            cout << "[ESPRESSO]: " << m_layerName                    << endl;
-            cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
-            cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;
-            cout << "[ESPRESSO]:\tOpcode - " << opcode << endl;
-			cout << endl << endl;
             
+            printMaps("inputMaps_fpga_" + to_string(k) + "_" + to_string(d) + ".txt", (float*)inMaps->m_cpu_data, inMaps->m_inputMapDepth, inMaps->m_numInputMapRows, inMaps->m_numInputMapCols, false);
+            printKrnls("kernels_fpga_" + to_string(k) + "_" + to_string(d) + ".txt", kernels3x3->m_cpu_data, kernels3x3->m_numKernels, kernels3x3->m_kernelDepth, 3, 3);
+            printKBias("kernel_bias_fpga_" + to_string(k) + "_" + to_string(d) + ".txt", kernels3x3Bias->m_cpu_data, kernels3x3Bias->m_numKernels);
+            printMaps("intmStrgA_" + to_string(k) + "_" + to_string(d) + ".txt" , intmStrgA, inMaps->m_inputMapDepth, QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, false);            
   
             if(opcode == OPCODE_0)
             {
@@ -631,7 +669,7 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3, 
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_accum( // partMap accum
@@ -639,14 +677,14 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)partMaps->m_buffer,
+                    (float*)partMaps->m_cpu_data,
                     intmStrgA
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, intmStrgA,
                     1, 0, it_act1x1, act1x1,
                     1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, (float*)kernels1x1->m_buffer, (float*)kernels1x1Bias->m_buffer, it_bias1x1,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
                 );
                 do_accum( // resd accum
@@ -654,7 +692,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)resdMaps->m_buffer,
+                    (float*)resdMaps->m_cpu_data,
                     intmStrgA
                 );               
                 esp_copy(
@@ -675,7 +713,7 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_accum( // partMap accum
@@ -683,14 +721,14 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)partMaps->m_buffer,
+                    (float*)partMaps->m_cpu_data,
                     intmStrgA
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, intmStrgA,
                     1, 0, it_act1x1, act1x1,
                     1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, (float*)kernels1x1->m_buffer, (float*)kernels1x1Bias->m_buffer, it_bias1x1,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
                 );
                 do_accum( // prev1x1 Maps accum
@@ -698,7 +736,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)prev1x1Maps->m_buffer,
+                    (float*)prev1x1Maps->m_cpu_data,
                     intmStrgA
                 );
                 esp_copy(
@@ -719,14 +757,14 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, intmStrgB,
                     1, 0, it_act1x1, act1x1,
                     1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, (float*)kernels1x1->m_buffer, (float*)kernels1x1Bias->m_buffer, it_bias1x1,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgA
                 );
                 do_accum( // resdMap accum
@@ -734,7 +772,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgA,
-                    (float*)resdMaps->m_buffer,
+                    (float*)resdMaps->m_cpu_data,
                     intmStrgB
                 );
                 esp_copy(
@@ -755,14 +793,14 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, intmStrgB,
                     1, 0, it_act1x1, act1x1,
                     1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, (float*)kernels1x1->m_buffer, (float*)kernels1x1Bias->m_buffer, it_bias1x1,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgA
                 );
                 do_accum( // prev1x1 Map accum
@@ -770,7 +808,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgA,
-                    (float*)prev1x1Maps->m_buffer,
+                    (float*)prev1x1Maps->m_cpu_data,
                     intmStrgB
                 );
                 esp_copy(
@@ -791,7 +829,7 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_accum( // partMap accum
@@ -799,7 +837,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)partMaps->m_buffer,
+                    (float*)partMaps->m_cpu_data,
                     intmStrgA
                 );
                 do_accum( // resdMap accum
@@ -807,14 +845,14 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgA,
-                    (float*)resdMaps->m_buffer,
+                    (float*)resdMaps->m_cpu_data,
                     intmStrgB
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, intmStrgB,
                     1, 0, it_act1x1, act1x1,
                     1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, (float*)kernels1x1->m_buffer, (float*)kernels1x1Bias->m_buffer, it_bias1x1,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgA
                 );
                 esp_copy(
@@ -835,7 +873,7 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_accum( // partMap accum
@@ -843,7 +881,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)partMaps->m_buffer,
+                    (float*)partMaps->m_cpu_data,
                     intmStrgA
                 );
                 do_accum( // resdMap accum
@@ -851,14 +889,14 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgA,
-                    (float*)resdMaps->m_buffer,
+                    (float*)resdMaps->m_cpu_data,
                     intmStrgB
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, intmStrgB,
                     1, 0, it_act1x1, act1x1,
                     1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, (float*)kernels1x1->m_buffer, (float*)kernels1x1Bias->m_buffer, it_bias1x1,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgA
                 );
                 do_accum( // prev1x1Map accum
@@ -866,7 +904,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgA,
-                    (float*)prev1x1Maps->m_buffer,
+                    (float*)prev1x1Maps->m_cpu_data,
                     intmStrgB
                 );
                 esp_copy(
@@ -887,7 +925,7 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_accum( // resdMap accum
@@ -895,14 +933,14 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)resdMaps->m_buffer,
+                    (float*)resdMaps->m_cpu_data,
                     intmStrgA
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, intmStrgA,
                     1, 0, it_act1x1, act1x1,
                     1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, (float*)kernels1x1->m_buffer, (float*)kernels1x1Bias->m_buffer, it_bias1x1,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
                 );
                 esp_copy(
@@ -923,7 +961,7 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_accum( // resdMap accum
@@ -931,14 +969,14 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)resdMaps->m_buffer,
+                    (float*)resdMaps->m_cpu_data,
                     intmStrgA
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, intmStrgA,
                     1, 0, it_act1x1, act1x1,
                     1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, (float*)kernels1x1->m_buffer, (float*)kernels1x1Bias->m_buffer, it_bias1x1,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
                 );
                 do_accum( // prev1x1Map accum
@@ -946,7 +984,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)prev1x1Maps->m_buffer,
+                    (float*)prev1x1Maps->m_cpu_data,
                     intmStrgA
                 );                
                 esp_copy(
@@ -967,7 +1005,7 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_accum( // partMap accum
@@ -975,7 +1013,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)partMaps->m_buffer,
+                    (float*)partMaps->m_cpu_data,
                     intmStrgA
                 );
                 do_accum( // resdMap accum
@@ -983,7 +1021,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgA,
-                    (float*)resdMaps->m_buffer,
+                    (float*)resdMaps->m_cpu_data,
                     intmStrgB
                 );               
                 esp_copy(
@@ -1004,7 +1042,7 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_accum( // resdMap accum
@@ -1012,7 +1050,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)resdMaps->m_buffer,
+                    (float*)resdMaps->m_cpu_data,
                     intmStrgA
                 );
                 esp_copy(
@@ -1033,7 +1071,7 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_accum( // partMap accum
@@ -1041,14 +1079,14 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)partMaps->m_buffer,
+                    (float*)partMaps->m_cpu_data,
                     intmStrgA
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, intmStrgA,
                     1, 0, it_act1x1, act1x1,
                     1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, (float*)kernels1x1->m_buffer, (float*)kernels1x1Bias->m_buffer, it_bias1x1,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
                 );
                 esp_copy(
@@ -1069,7 +1107,7 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_accum( // partMap accum
@@ -1077,14 +1115,14 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)partMaps->m_buffer,
+                    (float*)partMaps->m_cpu_data,
                     intmStrgA
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, intmStrgA,
                     1, 0, it_act1x1, act1x1,
                     1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, (float*)kernels1x1->m_buffer, (float*)kernels1x1Bias->m_buffer, it_bias1x1,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
                 );             
                 do_accum( // prev1x1Map accum
@@ -1092,7 +1130,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)prev1x1Maps->m_buffer,
+                    (float*)prev1x1Maps->m_cpu_data,
                     intmStrgA
                 );
                 esp_copy(
@@ -1113,14 +1151,14 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, intmStrgB,
                     1, 0, it_act1x1, act1x1,
                     1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, (float*)kernels1x1->m_buffer, (float*)kernels1x1Bias->m_buffer, it_bias1x1,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgA
                 );
                 esp_copy(
@@ -1141,14 +1179,14 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, intmStrgB,
                     1, 0, it_act1x1, act1x1,
                     1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, (float*)kernels1x1->m_buffer, (float*)kernels1x1Bias->m_buffer, it_bias1x1,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgA
                 );
                 do_accum( // prev1x1Map accum
@@ -1156,7 +1194,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgA,
-                    (float*)prev1x1Maps->m_buffer,
+                    (float*)prev1x1Maps->m_cpu_data,
                     intmStrgB
                 ); 
                 esp_copy(
@@ -1177,7 +1215,7 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     1, 0, it_act1x1, act1x1,
                     1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, (float*)kernels1x1->m_buffer, (float*)kernels1x1Bias->m_buffer, it_bias1x1,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
                     outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, intmStrgB
                 );
                 esp_copy(
@@ -1195,10 +1233,10 @@ void Layer_Job::process(float* layOut)
             else if(opcode == OPCODE_15)
             {
                 do_conv( // 3x3 conv
-                    m_numInputMapRows, m_numInputMapCols, intmStrgA ,
+                    m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
                 );
                 do_accum( // partMaps accum
@@ -1206,11 +1244,11 @@ void Layer_Job::process(float* layOut)
                     qd_nOutCols,
                     qd_outDpth,
                     intmStrgB,
-                    (float*)partMaps->m_buffer,
+                    (float*)partMaps->m_cpu_data,
                     intmStrgA
                 );
                 esp_copy(
-                    intmStrgB,
+                    intmStrgA,
                     QUAD_MAX_INPUT_ROWS, 
                     QUAD_MAX_INPUT_COLS,
                     outMaps->m_cpu_data,
@@ -1227,9 +1265,12 @@ void Layer_Job::process(float* layOut)
                     m_numInputMapRows, m_numInputMapCols, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
                     3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, (float*)kernels3x3->m_buffer, (float*)kernels3x3Bias->m_buffer, it_bias3x3,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, kernels3x3Bias->m_cpu_data, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, intmStrgB
-                );                
+                );
+
+                // printMaps("intmStrgB_" + to_string(k) + "_" + to_string(d) + ".txt" , intmStrgB, m_outputMapDepth, m_numOutputMapRows, m_numOutputMapCols, false);
+
                 esp_copy(
                     intmStrgB,
                     QUAD_MAX_INPUT_ROWS, 
@@ -1239,6 +1280,9 @@ void Layer_Job::process(float* layOut)
                     outMaps->m_numOutputMapCols,
                     outMaps->m_outputMapDepth
                 );
+                
+                // printMaps("outMaps_" + to_string(k) + "_" + to_string(d) + ".txt" , outMaps->m_cpu_data, m_outputMapDepth, m_numOutputMapRows, m_numOutputMapCols, false);
+                
                 free(intmStrgA);
                 free(intmStrgB);
             }
@@ -1249,7 +1293,7 @@ void Layer_Job::process(float* layOut)
                     partMaps->m_numPartialMapCols,
                     partMaps->m_partialMapDepth,
                     intmStrgA,
-                    (float*)resdMaps->m_buffer,
+                    (float*)resdMaps->m_cpu_data,
                     intmStrgB
                 );
                 esp_copy(
@@ -1267,7 +1311,6 @@ void Layer_Job::process(float* layOut)
             cout << "[ESPRESSO]: " << m_layerName                    << endl;
             cout << "[ESPRESSO]:\tFinished Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
             cout << "[ESPRESSO]:\tFinished Depth Iteration - "  << (d + 1) << "/" << m_num_depth_iter << endl;
-            cout << "[ESPRESSO]:\tOpcode - " << opcode << endl;
             cout << endl << endl;
         }
     }
@@ -1286,12 +1329,13 @@ void Layer_Job::process(float* layOut)
             (float*)m_lay_it_arr[i][d_end]->m_outputMaps->m_cpu_data,
             it_numOutputMapRows, 
             it_numOutputMapCols,
-            layOut,
+            ptr,
             m_numOutputMapRows, 
             m_numOutputMapCols,
             it_outputMapDepth
         );
         j += it_outputMapDepth;
+        i++;
     }
     printMaps(m_layerName + ".txt" , layOut, m_outputMapDepth, m_numOutputMapRows, m_numOutputMapCols, true);
     // Debug ----------------------------------------------------------
@@ -1336,7 +1380,7 @@ void Layer_Job::do_conv(
     int num_input_rows, int num_input_cols, float* inMaps, 
     int stride, int padding, bool it_act, activation_t act,
     int nKR, int nKC, int kernelDepth, 
-    int num_kernels, float* filters, float* bias, bool doBias,
+    int num_kernels, krnl_data_t filters, float* bias, bool doBias,
     int num_output_rows, int num_output_cols, float* outMap)
 {   
     // int nthreads = std::thread::hardware_concurrency();
@@ -1364,14 +1408,14 @@ void Layer_Job::do_conv(
                                     if ((i >= 0 && j >= 0) && (i < num_input_rows && j < num_input_cols)) // in valid region, assuming zero padding
                                     {
                                         int di_i = index3D(QUAD_MAX_INPUT_ROWS, QUAD_MAX_INPUT_COLS, k, i, j);
-                                        int f_i = index4D(SYSC_MAX_KRNL_DEPTH, MAX_KRNL_SIZE, MAX_KRNL_SIZE, m, k, kr, kc);
-                                        outMap[do_i] += (inMaps[di_i] * filters[f_i]);
+                                        int f_i = index2D(MAX_KRNL_SIZE, kr, kc);
+                                        outMap[do_i] += (inMaps[di_i] * filters[m][k][f_i]);
                                     }
                                 }
                             }
                         }
-                        outMap[do_i] = (outMap[do_i] < 0.0 && it_act && act == espresso::LEAKY) ? outMap[do_i] * 0.1f 
-                                        :   (outMap[do_i] < 0.0 && it_act && act == espresso::RELU) ? 0.0f
+                        outMap[do_i] = (outMap[do_i] < 0.0f && it_act && act == espresso::LEAKY) ? outMap[do_i] * 0.1f 
+                                        :   (outMap[do_i] < 0.0f && it_act && act == espresso::RELU) ? 0.0f
                                         :   outMap[do_i];
                     }
                 }
@@ -1450,6 +1494,7 @@ void Layer_Job::printConfig(Layer_Iteration* lay_it)
     cout << "[ESPRESSO]:\tKernel 1x1 Padding end:                      " << fas_cfg->m_krnl1x1_pad_end          << endl;
     cout << "[ESPRESSO]:\tActivation Type:                             " << fas_cfg->m_act1x1                   << endl;
     cout << "[ESPRESSO]:\tActivate:                                    " << fas_cfg->m_it_act1x1                << endl;
+    cout << "[ESPRESSO]:\tDo Bias:                                     " << fas_cfg->m_it_bias1x1               << endl;
 
     for(int a = 0; a < MAX_AWP_PER_FAS; a++)
     {
@@ -1477,6 +1522,7 @@ void Layer_Job::printConfig(Layer_Iteration* lay_it)
                 cout << "[ESPRESSO]:\t\t\t\tActivate:                           " << QUAD_cfg_arr[q]->m_it_act3x3               << endl;
                 cout << "[ESPRESSO]:\t\t\t\tPadding:                            " << QUAD_cfg_arr[q]->m_padding                 << endl;
                 cout << "[ESPRESSO]:\t\t\t\tUpsample:                           " << QUAD_cfg_arr[q]->m_upsample                << endl;
+                cout << "[ESPRESSO]:\t\t\t\tDo Bias:                            " << QUAD_cfg_arr[q]->m_it_bias3x3              << endl;
             }
             else
             {

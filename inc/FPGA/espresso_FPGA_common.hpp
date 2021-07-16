@@ -31,9 +31,8 @@ static int RE_TRAN_AMT                 = 8;
 #define QUAD_MAX_DEPTH		        8
 #define QUAD_MAX_INPUT_ROWS         ((uint64_t)608)
 #define QUAD_MAX_INPUT_COLS         ((uint64_t)608)
-#define QUAD_DPTH_SIMD		        (QUAD_MAX_DEPTH * NUM_TOTAL_QUADS)
+#define ACCL_MAX_DPTH_SIMD		    (QUAD_MAX_DEPTH * NUM_TOTAL_QUADS)
 #define ACCL_MAX_KRNLS              (NUM_TOTAL_QUADS * QUAD_MAX_KERNELS)
-#define ACCL_MAX_DPTH_SIMD          (NUM_TOTAL_QUADS * QUAD_DPTH_SIMD)
 #define MAX_KRNL_SIZE               3
 #define PIXEL_SIZE                  2
 #define NUM_DSPS_PER_QUAD           16

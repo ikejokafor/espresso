@@ -26,6 +26,7 @@ PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, InputMaps* inputMaps)
     m_cpu_data          = new float[m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols];
 	memcpy(m_cpu_data, inputMaps->m_cpu_data, sizeof(float) * m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols);
     m_no_permute        = true;
+    ref                 = false;
 }
 
 
@@ -38,15 +39,25 @@ PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, OutputMaps* outputMaps)
     m_cpu_data          = new float[m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols];
 	memcpy(m_cpu_data, outputMaps->m_cpu_data, sizeof(float) * m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols);
     m_no_permute        = false;
+    ref                 = true;
 }
 
 
 PartialMaps::~PartialMaps()
 {
 #ifdef ALPHA_DATA
+    if(!ref)
+    {
+        return;
+    }
     _hndl* _hndl = reinterpret_cast<_hndl*>(m_fpga_hndl);
 	_hndl->deallocate(this);
+    free(m_cpu_data);
 #else
+    if(!ref)
+    {
+        return;
+    }
     SYSC_FPGA_hndl* sysc_fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
 	sysc_fpga_hndl->deallocate(this);
     free(m_cpu_data);
@@ -57,6 +68,11 @@ PartialMaps::~PartialMaps()
 void PartialMaps::serialize()
 {
 #ifdef ALPHA_DATA
+    if(ref)
+    {
+        m_buffer = 
+        return;
+    }
     _hndl* _fpga_hndl  		    	= reinterpret_cast<_hndl*>(m_fpga_hndl);
     m_size                          = m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols * PIXEL_SIZE;
     printf("[ESPRESSO]: Allocating Space for Partial Maps\n");
@@ -81,6 +97,10 @@ void PartialMaps::serialize()
         }
     }
 #else
+    if(ref)
+    {
+        return;
+    }
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
     m_size                          = ACCL_MAX_KRNLS * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * sizeof(float);
     printf("[ESPRESSO]: Allocating Space for Partial Maps\n");

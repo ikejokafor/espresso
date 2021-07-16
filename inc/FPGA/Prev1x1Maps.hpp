@@ -21,6 +21,7 @@ class Prev1x1Maps : public Accel_Payload
 		int m_prev1x1MapDepth;
 		int m_numPrev1x1MapRows;
 		int m_numPrev1x1MapCols;
-        void*  m_prevOutdata;
+        float* m_cpu_data;
+        bool ref;
         FPGA_hndl* m_fpga_hndl;
 };
