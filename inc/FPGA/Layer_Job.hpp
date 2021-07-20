@@ -131,17 +131,33 @@ class Layer_Job
 
         int lasQD(Layer_Iteration* lay_it);
         void process(float* layOut);
-        void esp_copy(float* src, int nSRows, int nSCols, float* dst, int nDRows, int nDCols, int dDepth);
-        void UpSample(int inputDepth, int numInputRows, int numInputCols, int stride, float* inMap, float* outMap);
+        void esp_copy(float* dst, int dDepth, int nDRows, int nDCols, float* src, int sDepth, int nSRows, int nSCols);
+        
+        void UpSample(
+            int stride, 
+            float* inMaps, 
+            int inputDepth, 
+            int numInputRows, 
+            int numInputCols, 
+            float* outMap
+        );
+        
         void do_conv(
-            int num_input_rows, int num_input_cols, float* inMap, 
+            int num_input_rows, int num_input_cols, int num_InBuf_rows, int num_InBuf_cols, float* inMaps, 
             int stride, int padding, bool it_act, espresso::activation_t act,
             int nKR, int nKC, int kernelDepth, 
             int num_kernels, krnl_data_t filters, float* bias, bool doBias,
-            int num_output_rows, int num_output_cols, float* outMap
+            int num_output_rows, int num_output_cols, int num_outBuf_rows, int num_outBuf_cols, float* outMap
         );
-
-        void do_accum(int num_accum_rows, int num_accum_cols, int accum_depth, float* inMapA, float* inMapB, float* outMap);
+        void do_accum(
+            espresso::activation_t act, bool it_act,
+            float* inMapsA, 
+            int a_depth, int a_rows, int a_cols,
+            float* inMapsB,
+            int b_depth, int b_rows, int b_cols,
+            float* outMaps,
+            int o_depth, int o_rows, int o_cols
+        );
 
 		std::string m_layerName;
         int m_inputMapDepth;

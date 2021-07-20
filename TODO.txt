@@ -20,4 +20,7 @@ Networks which still need work in fixed point:
 Other issues:
 	Check softmax alexnet output
    
+   
+when using partial maps, may not need to send data back, deserialize output maps, copy to partial maps, and reserialize
+    may be bale to keep data on accel, or if you send it back, may not need to deserialize, instead just set partial map buffer to outputMaps
     

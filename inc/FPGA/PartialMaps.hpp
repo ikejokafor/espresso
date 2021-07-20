@@ -26,6 +26,5 @@ class PartialMaps : public Accel_Payload
 		int m_numPartialMapCols;
 		bool m_no_permute;
 		float* m_cpu_data;
-        bool ref;
         FPGA_hndl* m_fpga_hndl;
 };

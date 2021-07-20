@@ -21,7 +21,7 @@ class Kernels : public Accel_Payload
 {
 	public:
 		Kernels(FPGA_hndl* fpga_hndl, int numKernels, int kernelDepth, int numKernelRows, int numKernelCols, float* data);
-		Kernels(FPGA_hndl* fpga_hndl, int numKernels, int kernelDepth, int numKernelRows, int numKernelCols, krnl_data_t data);
+		Kernels(FPGA_hndl* fpga_hndl, int numKernels, int kernelDepth, int numKernelRows, int numKernelCols, krnl_data_t& data);
 		~Kernels();
 		void serialize();
         void deserialize();
