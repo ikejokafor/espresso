@@ -16,12 +16,10 @@ Prev1x1Maps::Prev1x1Maps(FPGA_hndl* fpga_hndl, OutputMaps* outputMaps)
 
 Prev1x1Maps::~Prev1x1Maps()
 {
+    free(m_cpu_data);
 #ifdef ALPHA_DATA
     _hndl* _hndl = reinterpret_cast<_hndl*>(m_fpga_hndl);
 	_hndl->deallocate(this);
-#else
-    SYSC_FPGA_hndl* sysc_fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-	sysc_fpga_hndl->deallocate(this);   
 #endif
 }
 
@@ -34,12 +32,6 @@ void Prev1x1Maps::serialize()
     printf("[ESPRESSO]: Allocating Space for Previous Maps\n");
     m_buffer                        = (void*)_hndl->allocate(this, m_size);
     memcpy(m_buffer, m_prevOutdata, m_size);
-#else
-    // SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    // printf("[ESPRESSO]: Allocating Space for Previous Maps\n");
-    // m_size                          = ACCL_MAX_DPTH_SIMD * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * sizeof(fixedPoint_t);
-    // m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
-    // memcpy(m_buffer, m_prevOutdata, m_size);	
 #endif
 }
 

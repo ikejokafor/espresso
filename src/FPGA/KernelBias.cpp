@@ -17,12 +17,10 @@ KernelBias::KernelBias(FPGA_hndl* fpga_hndl, int numKernels, int krnlSize, float
 
 KernelBias::~KernelBias()
 {
+    free(m_cpu_data);
 #ifdef ALPHA_DATA
     fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-	fpga_hndl->deallocate(this);   
-#else
-    SYSC_FPGA_hndl* sysc_fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-	sysc_fpga_hndl->deallocate(this);    
+	fpga_hndl->deallocate(this);      
 #endif
 }
 
@@ -41,18 +39,6 @@ void KernelBias::serialize()
     for(int n = 0; n < m_numKernels; n++)
     {
         rmt_data[n] = fixedPoint::create(16, 14, m_cpu_data[n]);    // FIXME: remove hardcoding
-    }
-#else
-    SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    m_size                          = m_numKernels * sizeof(float);
-    string ks = (m_krnlSize == 1) ? "1" : "3";
-    printf("[ESPRESSO]: Allocating Space for %sx%s Kernel Biases\n", ks.c_str(), ks.c_str());
-    m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
-    float* rmt_data                 = (float*)m_buffer;
-
-    for(int n = 0; n < m_numKernels; n++)
-    {
-        rmt_data[n] = m_cpu_data[n];    // FIXME: remove hardcoding
     }
 #endif
 }

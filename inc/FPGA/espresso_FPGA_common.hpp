@@ -29,8 +29,8 @@ static int RE_TRAN_AMT                 = 8;
 #define NUM_TOTAL_QUADS             (MAX_AWP_PER_FAS * MAX_QUAD_PER_AWP)
 #define QUAD_MAX_KERNELS	        64
 #define QUAD_MAX_DEPTH		        8
-#define QUAD_MAX_INPUT_ROWS         ((uint64_t)608)
-#define QUAD_MAX_INPUT_COLS         ((uint64_t)608)
+#define MAX_INPUT_ROWS              ((uint64_t)608)
+#define MAX_INPUT_COLS              ((uint64_t)608)
 #define ACCL_MAX_DPTH_SIMD		    (QUAD_MAX_DEPTH * NUM_TOTAL_QUADS)
 #define ACCL_MAX_KRNLS              (NUM_TOTAL_QUADS * QUAD_MAX_KERNELS)
 #define MAX_KRNL_SIZE               3

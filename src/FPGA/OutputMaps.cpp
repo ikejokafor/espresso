@@ -16,13 +16,10 @@ OutputMaps::OutputMaps(FPGA_hndl* fpga_hndl, int outputMapDepth, int numOutputMa
 
 OutputMaps::~OutputMaps()
 {
+    free(m_cpu_data);
 #ifdef ALPHA_DATA
     _hndl* _hndl = reinterpret_cast<_hndl*>(m_fpga_hndl);
 	_hndl->deallocate(this);
-#else
-    SYSC_FPGA_hndl* sysc_fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-	sysc_fpga_hndl->deallocate(this);
-    free(m_cpu_data);
 #endif
 }
 
@@ -34,11 +31,6 @@ void OutputMaps::serialize()
     m_size                          = m_outputMapDepth * m_numOutputMapRows * m_numOutputMapCols * PIXEL_SIZE;
     printf("[ESPRESSO]: Allocating Space for Output Maps\n");
     m_buffer                        = (void*)_hndl->allocate(this, m_size);
-#else
-    SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    m_size                          = ACCL_MAX_KRNLS * QUAD_MAX_INPUT_ROWS * QUAD_MAX_INPUT_COLS * (uint64_t)sizeof(float);  // FIXME, hardcoding
-    printf("[ESPRESSO]: Allocating Space for Output Maps\n");
-    m_buffer                        = (void*)sysc_fpga_hndl->allocate(this, m_size);
 #endif
 }
 

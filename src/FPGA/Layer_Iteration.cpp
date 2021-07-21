@@ -55,7 +55,7 @@ Layer_Iteration::Layer_Iteration(
 	m_del_res = del_res;
 	m_del_1x1 = del_1x1;
 
-#ifndef FUNC_VERIFY
+#ifndef SYSTEMC
 	(m_inputMaps) ? m_inputMaps->serialize() : void();
 	(m_kernels3x3) ? m_kernels3x3->serialize() : void();
 	(m_kernels3x3Bias) ? m_kernels3x3Bias->serialize() : void();

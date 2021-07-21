@@ -131,7 +131,9 @@ class Layer_Job
 
         int lasQD(Layer_Iteration* lay_it);
         void process(float* layOut);
-        void esp_copy(float* dst, int dDepth, int nDRows, int nDCols, float* src, int sDepth, int nSRows, int nSCols);
+        void esp_copy(float* src, int sDepth, int nSRows, int nSCols, float* dst, int dDepth, int nDRows, int nDCols);
+        void esp_copy_2IntS(float* src, int sDepth, int nSRows, int nSCols, float* intS);
+        void esp_copy_2Buf(float* intS, float* buf, int dDepth, int nDRows, int nDCols);
         
         void UpSample(
             int stride, 
@@ -156,7 +158,8 @@ class Layer_Job
             float* inMapsB,
             int b_depth, int b_rows, int b_cols,
             float* outMaps,
-            int o_depth, int o_rows, int o_cols
+            int o_depth, int o_rows, int o_cols,
+            int depth, int rows, int cols
         );
 
 		std::string m_layerName;
