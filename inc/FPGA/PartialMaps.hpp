@@ -13,7 +13,7 @@
 class PartialMaps : public Accel_Payload
 {
 	public:
-        PartialMaps(FPGA_hndl* fpga_hndl, int partialMapDepth, int numPartialMapRows, int numPartialMapCols, float* data);
+        PartialMaps(FPGA_hndl* fpga_hndl, int depth, int rows, int cols, float* data);
         PartialMaps(FPGA_hndl* fpga_hndl, InputMaps* inputMaps);
         PartialMaps(FPGA_hndl* fpga_hndl, OutputMaps* outputMaps);
 		~PartialMaps();
@@ -21,9 +21,9 @@ class PartialMaps : public Accel_Payload
         void deserialize();
 
 
-		int m_partialMapDepth;
-		int m_numPartialMapRows;
-		int m_numPartialMapCols;
+		int m_depth;
+		int m_rows;
+		int m_cols;
 		bool m_no_permute;
 		float* m_cpu_data;
         FPGA_hndl* m_fpga_hndl;

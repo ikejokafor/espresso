@@ -20,8 +20,8 @@ typedef std::vector<std::vector<float*>> krnl_data_t;
 class Kernels : public Accel_Payload
 {
 	public:
-		Kernels(FPGA_hndl* fpga_hndl, int numKernels, int kernelDepth, int numKernelRows, int numKernelCols, float* data);
-		Kernels(FPGA_hndl* fpga_hndl, int numKernels, int kernelDepth, int numKernelRows, int numKernelCols, krnl_data_t& data);
+		Kernels(FPGA_hndl* fpga_hndl, int numKernels, int depth, int rows, int cols, float* data);
+		Kernels(FPGA_hndl* fpga_hndl, int numKernels, int depth, int rows, int cols, krnl_data_t& data);
 		~Kernels();
 		void serialize();
         void deserialize();
@@ -29,9 +29,9 @@ class Kernels : public Accel_Payload
 
 
 		int m_numKernels;
-		int m_kernelDepth;
-		int m_numKernelRows;
-		int m_numKernelCols;
+		int m_depth;
+		int m_rows;
+		int m_cols;
         FPGA_hndl*  m_fpga_hndl;
 		krnl_data_t m_cpu_data;
 };

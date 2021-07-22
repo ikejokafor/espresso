@@ -2,14 +2,14 @@
 using namespace std;
 
 
-PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, int partialMapDepth, int numPartialMapRows, int numPartialMapCols, float* data)
+PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, int depth, int rows, int cols, float* data)
 {
     m_fpga_hndl         = fpga_hndl;
-	m_partialMapDepth   = partialMapDepth;
-	m_numPartialMapRows = numPartialMapRows;
-	m_numPartialMapCols = numPartialMapCols;
-    m_cpu_data          = new float[partialMapDepth * numPartialMapRows * numPartialMapCols];
-	memcpy(m_cpu_data, data, sizeof(float) * partialMapDepth * numPartialMapRows * numPartialMapCols);
+	m_depth   = depth;
+	m_rows = rows;
+	m_cols = cols;
+    m_cpu_data          = new float[depth * rows * cols];
+	memcpy(m_cpu_data, data, sizeof(float) * depth * rows * cols);
     m_no_permute        = true;
 	m_buffer			= NULL;
 	m_size              = 0;
@@ -20,11 +20,11 @@ PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, int partialMapDepth, int numParti
 PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, InputMaps* inputMaps)
 {
     m_fpga_hndl         = fpga_hndl;
-	m_partialMapDepth   = inputMaps->m_inputMapDepth;
-	m_numPartialMapRows = inputMaps->m_numInputMapRows;
-	m_numPartialMapCols = inputMaps->m_numInputMapCols;
-    m_cpu_data          = new float[m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols];
-	memcpy(m_cpu_data, inputMaps->m_cpu_data, sizeof(float) * m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols);
+	m_depth   = inputMaps->m_inputMapDepth;
+	m_rows = inputMaps->m_numInputMapRows;
+	m_cols = inputMaps->m_numInputMapCols;
+    m_cpu_data          = new float[m_depth * m_rows * m_cols];
+	memcpy(m_cpu_data, inputMaps->m_cpu_data, sizeof(float) * m_depth * m_rows * m_cols);
     m_no_permute        = true;
 }
 
@@ -32,10 +32,10 @@ PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, InputMaps* inputMaps)
 PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, OutputMaps* outputMaps)
 {
     m_fpga_hndl         = fpga_hndl;
-	m_partialMapDepth   = outputMaps->m_outputMapDepth;
-	m_numPartialMapRows = outputMaps->m_numOutputMapRows;
-	m_numPartialMapCols = outputMaps->m_numOutputMapCols;
-    m_cpu_data          = new float[m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols];
+	m_depth   = outputMaps->m_outputMapDepth;
+	m_rows = outputMaps->m_numOutputMapRows;
+	m_cols = outputMaps->m_numOutputMapCols;
+    m_cpu_data          = new float[m_depth * m_rows * m_cols];
     m_no_permute        = false;
 }
 
@@ -54,7 +54,7 @@ void PartialMaps::serialize()
 {
 #ifdef ALPHA_DATA
     _hndl* _fpga_hndl  		    	= reinterpret_cast<_hndl*>(m_fpga_hndl);
-    m_size                          = m_partialMapDepth * m_numPartialMapRows * m_numPartialMapCols * PIXEL_SIZE;
+    m_size                          = m_depth * m_rows * m_cols * PIXEL_SIZE;
     printf("[ESPRESSO]: Allocating Space for Partial Maps\n");
     m_buffer                        = (void*)_hndl->allocate(this, m_size);
     fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
@@ -64,14 +64,14 @@ void PartialMaps::serialize()
         return;
     }
 	
-    for(int r = 0; r < m_numPartialMapRows; r++)
+    for(int r = 0; r < m_rows; r++)
     {
-        for(int c = 0; c < m_numPartialMapCols; c++)
+        for(int c = 0; c < m_cols; c++)
         {
-            for(int d = 0; d < m_partialMapDepth; d++)
+            for(int d = 0; d < m_depth; d++)
             {
-                int rIdx = index3D(m_numPartialMapCols, m_partialMapDepth, r, c, d);
-                int cIdx = index3D(m_numPartialMapRows, m_numPartialMapCols, d, r, c);
+                int rIdx = index3D(m_cols, m_depth, r, c, d);
+                int cIdx = index3D(m_rows, m_cols, d, r, c);
                 rmt_data[rIdx] = fixedPoint::create(16, 14, m_cpu_data[cIdx]);    // FIXME: remove hardcoding
             }
         }

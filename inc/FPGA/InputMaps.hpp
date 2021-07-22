@@ -16,15 +16,15 @@
 class InputMaps : public Accel_Payload
 {
 	public:
-		InputMaps(FPGA_hndl* fpga_hndl, int inputMapDepth, int numInputMapRows, int numInputMapCols, float* data);
+		InputMaps(FPGA_hndl* fpga_hndl, int depth, int rows, int cols, float* data);
 		~InputMaps();
 		void serialize();
         void deserialize();
 		InputMaps* GetVolume(int depthBgn, int depthSize);
 
-		int m_inputMapDepth;
-		int m_numInputMapRows;
-		int m_numInputMapCols;
+		int m_depth;
+		int m_rows;
+		int m_cols;
 		float* m_cpu_data;
         FPGA_hndl* m_fpga_hndl;
 };

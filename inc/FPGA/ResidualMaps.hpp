@@ -16,16 +16,16 @@
 class ResidualMaps : public Accel_Payload
 {
 	public:
-		ResidualMaps(FPGA_hndl* fpga_hndl, int inputMapDepth, int numInputMapRows, int numInputMapCols, float* data);
+		ResidualMaps(FPGA_hndl* fpga_hndl, int depth, int rows, int cols, float* data);
 		~ResidualMaps();
         void serialize();
         void deserialize();
 		void permuteData();
 		ResidualMaps* GetVolume(int depthBgn, int depthSize);
 
-		int m_residualMapDepth;
-		int m_numResidualMapRows;
-		int m_numResidualMapCols;
+		int m_depth;
+		int m_rows;
+		int m_cols;
 		float* m_cpu_data;
         FPGA_hndl* m_fpga_hndl;
 };

@@ -16,14 +16,14 @@
 class OutputMaps : public Accel_Payload
 {
 	public:
-		OutputMaps(FPGA_hndl* fpga_hndl, int outputMapDepth, int numOutputMapRows, int numOutputMapCols);
+		OutputMaps(FPGA_hndl* fpga_hndl, int depth, int rows, int cols);
 		~OutputMaps();
 		void serialize();
         void deserialize();
 
-		int m_outputMapDepth;
-		int m_numOutputMapRows;
-		int m_numOutputMapCols;
+		int m_depth;
+		int m_rows;
+		int m_cols;
 		float* m_cpu_data;
         FPGA_hndl* m_fpga_hndl;
 };
