@@ -42,14 +42,10 @@ PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, OutputMaps* outputMaps)
 
 PartialMaps::~PartialMaps()
 {
+    free(m_cpu_data);
 #ifdef ALPHA_DATA
     _hndl* _hndl = reinterpret_cast<_hndl*>(m_fpga_hndl);
 	_hndl->deallocate(this);
-    free(m_cpu_data);
-#else
-    SYSC_FPGA_hndl* sysc_fpga_hndl = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-	sysc_fpga_hndl->deallocate(this);
-    free(m_cpu_data);
 #endif
 }
 

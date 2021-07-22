@@ -587,9 +587,9 @@ int Layer_Job::lasQD(Layer_Iteration* lay_it)
 void Layer_Job::process(float* layOut)
 {
     string prefix = "/export/home/izo5011/workSpace/espressoTester/";
-    printMaps(prefix + "inputMaps_fpga.txt" , (float*)m_inputMaps->m_cpu_data, m_inputMaps->m_inputMapDepth, m_inputMaps->m_numInputMapRows, m_inputMaps->m_numInputMapCols, false);
-    printKrnls(prefix + "kernels_fpga.txt", m_kernels3x3->m_cpu_data, m_kernels3x3->m_numKernels, m_kernels3x3->m_kernelDepth, 3, 3);
-    printKBias(prefix + "kernel_bias_fpga.txt", (float*)m_kernels3x3Bias->m_cpu_data, m_kernels3x3Bias->m_numKernels);
+    // printMaps(prefix + "inputMaps_fpga.txt" , (float*)m_inputMaps->m_cpu_data, m_inputMaps->m_inputMapDepth, m_inputMaps->m_numInputMapRows, m_inputMaps->m_numInputMapCols, false);
+    // printKrnls(prefix + "kernels_fpga.txt", m_kernels3x3->m_cpu_data, m_kernels3x3->m_numKernels, m_kernels3x3->m_kernelDepth, 3, 3);
+    // printKBias(prefix + "kernel_bias_fpga.txt", (float*)m_kernels3x3Bias->m_cpu_data, m_kernels3x3Bias->m_numKernels);
 
     for(int k = 0; k < m_lay_it_arr.size(); k++)
     {
@@ -636,15 +636,12 @@ void Layer_Job::process(float* layOut)
             }
             else if(opcode == OPCODE_14 || opcode == OPCODE_17)
             {
-                esp_copy(
-                    (float*)partMaps->m_cpu_data,
-                    depth,
-                    MAX_INPUT_ROWS,
-                    MAX_INPUT_COLS,
-                    intmStrgA,
-                    depth,
-                    MAX_INPUT_ROWS,
-                    MAX_INPUT_COLS
+                esp_copy_2IntS(
+                    partMaps->m_cpu_data,
+                    partMaps->m_partialMapDepth,
+                    partMaps->m_numPartialMapRows,
+                    partMaps->m_numPartialMapCols,
+                    intmStrgA
                 );
             }
             else
@@ -1286,7 +1283,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 
-                printMaps(prefix + "partialMaps_" + to_string(k) + "_" + to_string(d) + ".txt", partMaps->m_cpu_data, partMaps->m_partialMapDepth, partMaps->m_numPartialMapRows, partMaps->m_numPartialMapCols, false);
+                // printMaps(prefix + "partialMaps_" + to_string(k) + "_" + to_string(d) + ".txt", partMaps->m_cpu_data, partMaps->m_partialMapDepth, partMaps->m_numPartialMapRows, partMaps->m_numPartialMapCols, false);
 
                 do_accum( // partMaps accum
                     act3x3, it_act3x3,
@@ -1309,7 +1306,7 @@ void Layer_Job::process(float* layOut)
                 free(intmStrgA);
                 free(intmStrgB);
 
-                printMaps(prefix + "outMaps_" + to_string(k) + "_" + to_string(d) + ".txt", outMaps->m_cpu_data, outMaps->m_outputMapDepth, outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, true);
+                // printMaps(prefix + "outMaps_" + to_string(k) + "_" + to_string(d) + ".txt", outMaps->m_cpu_data, outMaps->m_outputMapDepth, outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, true);
             }
             else if(opcode == OPCODE_16)
             {
@@ -1321,7 +1318,7 @@ void Layer_Job::process(float* layOut)
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
 
-                printMaps(prefix + "intmStrgB_" + to_string(k) + "_" + to_string(d) + ".txt" , intmStrgB, depth, MAX_INPUT_ROWS, MAX_INPUT_COLS, false);
+                // printMaps(prefix + "intmStrgB_" + to_string(k) + "_" + to_string(d) + ".txt" , intmStrgB, depth, MAX_INPUT_ROWS, MAX_INPUT_COLS, false);
 
                 esp_copy_2Buf(
                     intmStrgB,
@@ -1331,7 +1328,7 @@ void Layer_Job::process(float* layOut)
                     outMaps->m_numOutputMapCols
                 );
 
-                printMaps(prefix + "outMaps_" + to_string(k) + "_" + to_string(d) + ".txt" , outMaps->m_cpu_data, outMaps->m_outputMapDepth, outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, true);
+                // printMaps(prefix + "outMaps_" + to_string(k) + "_" + to_string(d) + ".txt" , outMaps->m_cpu_data, outMaps->m_outputMapDepth, outMaps->m_numOutputMapRows, outMaps->m_numOutputMapCols, true);
 
                 free(intmStrgA);
                 free(intmStrgB);
@@ -1366,7 +1363,7 @@ void Layer_Job::process(float* layOut)
             cout << "[ESPRESSO]:\tFinished Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
             cout << "[ESPRESSO]:\tFinished Depth Iteration - "  << (d + 1) << "/" << m_num_depth_iter << endl;
             cout << endl << endl;
-            if(opcode == OPCODE_15 && d != (m_lay_it_arr[k].size() - 1) && m_lay_it_arr[k].size() > 0)
+            if(d != (m_lay_it_arr[k].size() - 1) && m_lay_it_arr[k].size() > 0)
             {
                 esp_copy(
                     outMaps->m_cpu_data,
@@ -1506,7 +1503,7 @@ void Layer_Job::do_conv(
                     for (int y = 0, b = 0; y < num_output_cols; y++, b += stride)
                     {
                         int do_i = index3D(num_outBuf_rows, num_outBuf_cols, m, x, y);
-                        if(doBias) outMap[do_i] = bias[m];
+                        outMap[do_i] = (doBias) ? bias[m] : 0.0f;
                         for (int k = 0; k < kernelDepth; k++)
                         {
                             for (int i = a - padding, kr = 0; kr < nKR; i++, kr++)
