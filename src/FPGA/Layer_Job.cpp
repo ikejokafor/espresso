@@ -1335,9 +1335,8 @@ void Layer_Job::process(float* layOut)
                     outMaps->m_rows,
                     outMaps->m_cols,
                     m_lay_it_arr[k][d + 1]->m_partialMaps->m_cpu_data,
-                    m_lay_it_arr[k][d + 1]->m_partialMaps->m_depth,
-                    m_lay_it_arr[k][d + 1]->m_partialMaps->m_rows,
-                    m_lay_it_arr[k][d + 1]->m_partialMaps->m_cols
+                    m_lay_it_arr[k][d + 1]->m_partialMaps->m_depth, m_lay_it_arr[k][d + 1]->m_partialMaps->m_rows, m_lay_it_arr[k][d + 1]->m_partialMaps->m_cols,
+                    m_lay_it_arr[k][d + 1]->m_partialMaps->m_depth, m_lay_it_arr[k][d + 1]->m_partialMaps->m_rows, m_lay_it_arr[k][d + 1]->m_partialMaps->m_cols
                 );
             }
         }
@@ -1346,7 +1345,8 @@ void Layer_Job::process(float* layOut)
     int i = 0;
     int j = 0;
     float* ptr = layOut;
-    while(j < m_outputMapDepth)
+    int j_end = m_outputMapDepth * m_numOutputMapRows * m_numOutputMapCols;
+    while(j < j_end)
     {
         int d_end = m_lay_it_arr[i].size() - 1;
         int it_outputMapDepth = m_lay_it_arr[i][d_end]->m_outputMaps->m_depth;
@@ -1359,11 +1359,10 @@ void Layer_Job::process(float* layOut)
             it_numOutputMapRows,
             it_numOutputMapCols,
             ptr,
-            m_outputMapDepth,
-            m_numOutputMapRows,
-            m_numOutputMapCols
+            m_outputMapDepth, m_numOutputMapRows, m_numOutputMapCols,
+            it_outputMapDepth, it_numOutputMapRows, it_numOutputMapCols
         );
-        j += it_outputMapDepth;
+        j += (it_outputMapDepth *it_numOutputMapRows *it_numOutputMapCols);
         i++;
     }
     printMaps(prefix + m_layerName + ".txt", layOut, m_outputMapDepth, m_numOutputMapRows, m_numOutputMapCols, true);
@@ -1371,13 +1370,13 @@ void Layer_Job::process(float* layOut)
 }
 
 
-void Layer_Job::esp_copy(float* src, int sDepth, int nSRows, int nSCols, float* dst, int dDepth, int nDRows, int nDCols)
+void Layer_Job::esp_copy(float* src, int sDepth, int nSRows, int nSCols, float* dst, int dDepth, int nDRows, int nDCols, int depth, int nRows, int nCols)
 {
-    for(int k = 0; k < dDepth; k++)
+    for(int k = 0; k < depth; k++)
     {
-        for(int i = 0; i < nDRows; i++)
+        for(int i = 0; i < nRows; i++)
         {
-            for(int j = 0; j < nDCols; j++)
+            for(int j = 0; j < nCols; j++)
             {
                 int sidx = index3D(nSRows, nSCols, k, i, j);
                 int didx = index3D(nDRows, nDCols, k, i, j);

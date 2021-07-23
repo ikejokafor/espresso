@@ -404,6 +404,9 @@ void espresso::CNN_Network::Forward(string start, string end)
         //     }
         //     fclose(fd);
         // }
+        
+        // if(i == 6)
+        //     exit(0);
     }
 }
 

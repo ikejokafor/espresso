@@ -32,7 +32,7 @@ static int RE_TRAN_AMT                 = 8;
 #define MAX_INPUT_ROWS              ((uint64_t)608)
 #define MAX_INPUT_COLS              ((uint64_t)608)
 #define ACCL_MAX_DEPTH_SIMD		    (QUAD_MAX_DEPTH * NUM_TOTAL_QUADS)
-#define ACCL_MAX_KRNLS              (NUM_TOTAL_QUADS * QUAD_MAX_KERNELS)
+#define ACCL_MAX_KRNLS              (MAX_AWP_PER_FAS * QUAD_MAX_KERNELS)
 #define MAX_KRNL_SIZE               3
 #define PIXEL_SIZE                  2
 #define NUM_DSPS_PER_QUAD           16

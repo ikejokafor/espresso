@@ -131,7 +131,7 @@ class Layer_Job
 
         int lasQD(Layer_Iteration* lay_it);
         void process(float* layOut);
-        void esp_copy(float* src, int sDepth, int nSRows, int nSCols, float* dst, int dDepth, int nDRows, int nDCols);
+        void esp_copy(float* src, int sDepth, int nSRows, int nSCols, float* dst, int dDepth, int nDRows, int nDCols, int depth, int nRows, int nCols);
         void esp_copy_2IntS(float* src, int sDepth, int nSRows, int nSCols, float* intS);
         void esp_copy_2Buf(float* intS, float* buf, int dDepth, int nDRows, int nDCols);
         
