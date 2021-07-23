@@ -21,7 +21,7 @@ Kernels::Kernels(FPGA_hndl* fpga_hndl, int numKernels, int depth, int rows, int 
 			int size = m_rows * m_cols * sizeof(float);
 			m_cpu_data[i][j] = (float*)malloc(size);
 			int krnl_step = m_depth * m_rows * m_cols;
-			int dpth_idx = j * (numKernelRows * m_cols);
+			int dpth_idx = j * (m_rows * m_cols);
 			int idx = index2D(krnl_step, i, dpth_idx);
 			float* krnlWndw = &data[idx];
 			memcpy((void*)m_cpu_data[i][j], (void*)krnlWndw, size);

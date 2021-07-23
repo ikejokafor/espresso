@@ -155,7 +155,7 @@ Layer_Job::~Layer_Job()
 void Layer_Job::createLayerIters()
 {
     m_num_krnl_iter = (m_krnl_1x1_layer || m_do_resLayer_only) ? 1 : ceil((double)m_num3x3Kernels / (double)ACCL_MAX_KRNLS);
-    m_num_depth_iter = (m_krnl_1x1_layer|| m_do_resLayer_only) ? 1 : ceil((double)m_inputMapDepth / (double)ACCL_MAX_DPTH_SIMD);
+    m_num_depth_iter = (m_krnl_1x1_layer|| m_do_resLayer_only) ? 1 : ceil((double)m_inputMapDepth / (double)ACCL_MAX_DEPTH_SIMD);
 
     cout << "[ESPRESSO]: Creating Layer Iterations... " << endl;
     cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
@@ -175,7 +175,7 @@ void Layer_Job::createLayerIters()
         {
 			bool del_res;
 			bool del_1x1;
-            depth = min(ACCL_MAX_DPTH_SIMD, remDepth);
+            depth = min(ACCL_MAX_DEPTH_SIMD, remDepth);
             layAclPrm = createAccelParams(
                 i,
                 j,
@@ -396,7 +396,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
     else if(m_do_resLayer_only)
     {
         // See ResidualLayer.cpp:ComputeLayerParam()
-        layAclPrm->partialMaps = new PartialMaps(m_fpga_hndl, m_inputMaps->m_inputMapDepth / 2, m_inputMaps->m_numInputMapRows, m_inputMaps->m_numInputMapCols, m_inputMaps->m_cpu_data);
+        layAclPrm->partialMaps = new PartialMaps(m_fpga_hndl, m_inputMaps->m_depth / 2, m_inputMaps->m_rows, m_inputMaps->m_cols, m_inputMaps->m_cpu_data);
     }
     else if(first_depth_iter)
     {
@@ -586,9 +586,9 @@ int Layer_Job::lasQD(Layer_Iteration* lay_it)
 
 void Layer_Job::process(float* layOut)
 {
-    // string prefix = "/export/home/izo5011/workSpace/espressoTester/";
+    string prefix = "/export/home/izo5011/workSpace/espressoTester/";
     // printMaps(prefix + "inputMaps_fpga.txt" , (float*)m_inputMaps->m_cpu_data, m_inputMaps->m_depth, m_inputMaps->m_rows, m_inputMaps->m_cols, false);
-    // printKrnls(prefix + "kernels_fpga.txt", m_kernels3x3->m_cpu_data, m_kernels3x3->m_numKernels, m_kernels3x3->m_kernelDepth, 3, 3);
+    // printKrnls(prefix + "kernels_fpga.txt", m_kernels3x3->m_cpu_data, m_kernels3x3->m_numKernels, m_kernels3x3->m_depth, 3, 3);
     // printKBias(prefix + "kernel_bias_fpga.txt", (float*)m_kernels3x3Bias->m_cpu_data, m_kernels3x3Bias->m_numKernels);
 
     for(int k = 0; k < m_lay_it_arr.size(); k++)
@@ -622,7 +622,7 @@ void Layer_Job::process(float* layOut)
             ResidualMaps* resdMaps = m_lay_it_arr[k][d]->m_residualMaps;
             Prev1x1Maps* prev1x1Maps = m_lay_it_arr[k][d]->m_prev1x1Maps;
             OutputMaps* outMaps = m_lay_it_arr[k][d]->m_outputMaps;
-            int depth = max(FAS_MAX_1X1_KRNLS, ACCL_MAX_DPTH_SIMD);
+            int depth = max(FAS_MAX_1X1_KRNLS, ACCL_MAX_DEPTH_SIMD);
             float* intmStrgA = new float[depth * MAX_INPUT_ROWS * MAX_INPUT_COLS];
             float* intmStrgB = new float[depth * MAX_INPUT_ROWS * MAX_INPUT_COLS];
             int qd_nOutRows = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_num_output_rows;
@@ -632,13 +632,13 @@ void Layer_Job::process(float* layOut)
 
             if(upsample)
             {
-                UpSample(stride, inMaps->m_cpu_data, inMaps->m_inputMapDepth, inMaps->m_numInputMapRows, inMaps->m_numInputMapCols, intmStrgA);
+                UpSample(stride, inMaps->m_cpu_data, inMaps->m_depth, inMaps->m_rows, inMaps->m_cols, intmStrgA);
             }
             else if(opcode == OPCODE_14 || opcode == OPCODE_17)
             {
                 esp_copy_2IntS(
                     partMaps->m_cpu_data,
-                    partMaps->m_partialMapDepth,
+                    partMaps->m_depth,
                     partMaps->m_rows,
                     partMaps->m_cols,
                     intmStrgA
@@ -648,9 +648,9 @@ void Layer_Job::process(float* layOut)
             {
                 esp_copy_2IntS(
                     (float*)inMaps->m_cpu_data,
-                    inMaps->m_inputMapDepth,
-                    inMaps->m_numInputMapRows,
-                    inMaps->m_numInputMapCols,
+                    inMaps->m_depth,
+                    inMaps->m_rows,
+                    inMaps->m_cols,
                     intmStrgA
                 );
             }
@@ -665,27 +665,27 @@ void Layer_Job::process(float* layOut)
             if(opcode == OPCODE_0)
             {
                 do_conv( // 3x3 conv
-                    m_numInputMapRows, m_numInputMapCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
+                    inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, false, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL,, it_bias3x3,
+                    3, 3, kernels3x3->m_depth,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 do_accum( // partMaps accum
                     act3x3, it_act3x3,
                     partMaps->m_cpu_data,
-                    partMaps->m_partialMapDepth, partMaps->m_rows, partMaps->m_cols,
+                    partMaps->m_depth, partMaps->m_rows, partMaps->m_cols,
                     intmStrgB,
                     depth, MAX_INPUT_ROWS, MAX_INPUT_COLS,
                     intmStrgA,
                     depth, MAX_INPUT_ROWS, MAX_INPUT_COLS,
-                    partMaps->m_partialMapDepth, partMaps->m_rows, partMaps->m_cols
+                    partMaps->m_depth, partMaps->m_rows, partMaps->m_cols
                 );
                 do_conv( // 1x1 conv
-                    m_numInputMapRows, m_numInputMapCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
+                    inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     1, 0, it_act1x1, act1x1,
-                    1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, (kernels1x1Bias) ? kernels1x1Bias->m_cpu_data : NULL,, it_bias1x1,
+                    1, 1, kernels1x1->m_depth,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, (kernels1x1Bias) ? kernels1x1Bias->m_cpu_data : NULL, it_bias1x1,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 do_accum( // resd accum
@@ -711,10 +711,10 @@ void Layer_Job::process(float* layOut)
             else if(opcode == OPCODE_1)
             {
                 do_conv( // 3x3 conv
-                    m_numInputMapRows, m_numInputMapCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
+                    inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, false, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL,, it_bias3x3,
+                    3, 3, kernels3x3->m_depth,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 do_accum( // partMaps accum
@@ -728,16 +728,16 @@ void Layer_Job::process(float* layOut)
                     partMaps->m_depth, partMaps->m_rows, partMaps->m_cols
                 );
                 do_conv( // 1x1 conv
-                    qd_nOutRows, qd_nOutCols, intmStrgB,
+                    qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB,
                     1, 0, false, act1x1,
-                    1, 1, kernels1x1->m_kernelDepth,
+                    1, 1, kernels1x1->m_depth,
                     kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
-                    outMaps->m_rows, outMaps->m_cols, intmStrgA
+                    outMaps->m_rows, outMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA
                 );
                 do_accum( // prev1x1Map accum
                     act1x1, it_act1x1,
                     prev1x1Maps->m_cpu_data,
-                    prev1x1Maps->m_partialMapDepth, prev1x1Maps->m_rows, prev1x1Maps->m_cols,
+                    prev1x1Maps->m_depth, prev1x1Maps->m_rows, prev1x1Maps->m_cols,
                     intmStrgA,
                     depth, MAX_INPUT_ROWS, MAX_INPUT_COLS,
                     intmStrgB,
@@ -757,18 +757,18 @@ void Layer_Job::process(float* layOut)
             else if(opcode == OPCODE_2)
             {
                 do_conv( // 3x3 conv
-                    m_numInputMapRows, m_numInputMapCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
+                    inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, false, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL,, it_bias3x3,
+                    3, 3, kernels3x3->m_depth,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 do_conv( // 1x1 conv
-                    qd_nOutRows, qd_nOutCols, intmStrgB,
+                    qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB,
                     1, 0, it_act1x1, act1x1,
-                    1, 1, kernels1x1->m_kernelDepth,
+                    1, 1, kernels1x1->m_depth,
                     kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
-                    outMaps->m_rows, outMaps->m_cols, intmStrgA
+                    outMaps->m_rows, outMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA
                 );
                 do_accum( // resd accum
                     activation_t(), false,
@@ -793,23 +793,23 @@ void Layer_Job::process(float* layOut)
             else if(opcode == OPCODE_3)
             {
                 do_conv( // 3x3 conv
-                    m_numInputMapRows, m_numInputMapCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
+                    inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, false, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL,, it_bias3x3,
+                    3, 3, kernels3x3->m_depth,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 do_conv( // 1x1 conv
-                    qd_nOutRows, qd_nOutCols, intmStrgB,
+                    qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB,
                     1, 0, false, act1x1,
-                    1, 1, kernels1x1->m_kernelDepth,
+                    1, 1, kernels1x1->m_depth,
                     kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
-                    outMaps->m_rows, outMaps->m_cols, intmStrgA
+                    outMaps->m_rows, outMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA
                 );
                 do_accum( // prev1x1Map accum
                     act1x1, it_act1x1,
                     prev1x1Maps->m_cpu_data,
-                    prev1x1Maps->m_partialMapDepth, prev1x1Maps->m_rows, prev1x1Maps->m_cols,
+                    prev1x1Maps->m_depth, prev1x1Maps->m_rows, prev1x1Maps->m_cols,
                     intmStrgA,
                     depth, MAX_INPUT_ROWS, MAX_INPUT_COLS,
                     intmStrgB,
@@ -829,10 +829,10 @@ void Layer_Job::process(float* layOut)
             else if(opcode == OPCODE_4)
             {
                 do_conv( // 3x3 conv
-                    m_numInputMapRows, m_numInputMapCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
+                    inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, false, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL,, it_bias3x3,
+                    3, 3, kernels3x3->m_depth,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 do_accum( // partMaps accum
@@ -856,11 +856,11 @@ void Layer_Job::process(float* layOut)
                     resdMaps->m_depth, resdMaps->m_rows, resdMaps->m_cols
                 );
                 do_conv( // 1x1 conv
-                    qd_nOutRows, qd_nOutCols, intmStrgB,
+                    qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB,
                     1, 0, it_act1x1, act1x1,
-                    1, 1, kernels1x1->m_kernelDepth,
+                    1, 1, kernels1x1->m_depth,
                     kernels1x1->m_numKernels, kernels1x1->m_cpu_data, kernels1x1Bias->m_cpu_data, it_bias1x1,
-                    outMaps->m_rows, outMaps->m_cols, intmStrgA
+                    outMaps->m_rows, outMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA
                 );
                 esp_copy_2Buf(
                     intmStrgA,
@@ -875,10 +875,10 @@ void Layer_Job::process(float* layOut)
             else if(opcode == OPCODE_5)
             {
                 do_conv( // 3x3 conv
-                    m_numInputMapRows, m_numInputMapCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
+                    inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, false, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL,, it_bias3x3,
+                    3, 3, kernels3x3->m_depth,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 do_accum( // partMaps accum
@@ -904,14 +904,14 @@ void Layer_Job::process(float* layOut)
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB,
                     1, 0, false, act1x1,
-                    1, 1, kernels1x1->m_kernelDepth,
+                    1, 1, kernels1x1->m_depth,
                     kernels1x1->m_numKernels, kernels1x1->m_cpu_data, (kernels1x1Bias) ? kernels1x1Bias->m_cpu_data : NULL, it_bias1x1,
                     outMaps->m_rows, outMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA
                 );
                 do_accum( // prev1x1Map accum
                     act1x1, it_act1x1,
                     prev1x1Maps->m_cpu_data,
-                    prev1x1Maps->m_partialMapDepth, prev1x1Maps->m_rows, prev1x1Maps->m_cols,
+                    prev1x1Maps->m_depth, prev1x1Maps->m_rows, prev1x1Maps->m_cols,
                     intmStrgA,
                     depth, MAX_INPUT_ROWS, MAX_INPUT_COLS,
                     intmStrgB,
@@ -931,10 +931,10 @@ void Layer_Job::process(float* layOut)
             else if(opcode == OPCODE_6)
             {
                 do_conv( // 3x3 conv
-                    m_numInputMapRows, m_numInputMapCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
+                    inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL,, it_bias3x3,
+                    3, 3, kernels3x3->m_depth,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                  do_accum( // resd accum
@@ -950,7 +950,7 @@ void Layer_Job::process(float* layOut)
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB,
                     1, 0, it_act1x1, act1x1,
-                    1, 1, kernels1x1->m_kernelDepth,
+                    1, 1, kernels1x1->m_depth,
                     kernels1x1->m_numKernels, kernels1x1->m_cpu_data, (kernels1x1Bias) ? kernels1x1Bias->m_cpu_data : NULL, it_bias1x1,
                     outMaps->m_rows, outMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA
                 );
@@ -967,10 +967,10 @@ void Layer_Job::process(float* layOut)
             else if(opcode == OPCODE_7)
             {
                 do_conv( // 3x3 conv
-                    m_numInputMapRows, m_numInputMapCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
+                    inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL,, it_bias3x3,
+                    3, 3, kernels3x3->m_depth,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 do_accum( // resd accum
@@ -986,14 +986,14 @@ void Layer_Job::process(float* layOut)
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB,
                     1, 0, false, act1x1,
-                    1, 1, kernels1x1->m_kernelDepth,
+                    1, 1, kernels1x1->m_depth,
                     kernels1x1->m_numKernels, kernels1x1->m_cpu_data, (kernels1x1Bias) ? kernels1x1Bias->m_cpu_data : NULL, it_bias1x1,
                     outMaps->m_rows, outMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA
                 );
                 do_accum( // prev1x1Map accum
                     act1x1, it_act1x1,
                     prev1x1Maps->m_cpu_data,
-                    prev1x1Maps->m_partialMapDepth, prev1x1Maps->m_rows, prev1x1Maps->m_cols,
+                    prev1x1Maps->m_depth, prev1x1Maps->m_rows, prev1x1Maps->m_cols,
                     intmStrgA,
                     depth, MAX_INPUT_ROWS, MAX_INPUT_COLS,
                     intmStrgB,
@@ -1013,10 +1013,10 @@ void Layer_Job::process(float* layOut)
             else if(opcode == OPCODE_8)
             {
                 do_conv( // 3x3 conv
-                    m_numInputMapRows, m_numInputMapCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
+                    inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL,, it_bias3x3,
+                    3, 3, kernels3x3->m_depth,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 do_accum( // partMaps accum
@@ -1052,10 +1052,10 @@ void Layer_Job::process(float* layOut)
             else if(opcode == OPCODE_9)
             {
                 do_conv( // 3x3 conv
-                    m_numInputMapRows, m_numInputMapCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
+                    inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, false, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
-                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL,, it_bias3x3,
+                    3, 3, kernels3x3->m_depth,
+                    kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 do_accum( // resd accum
@@ -1083,7 +1083,7 @@ void Layer_Job::process(float* layOut)
                 do_conv( // 3x3 conv
                     inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, false, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
+                    3, 3, kernels3x3->m_depth,
                     kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
@@ -1100,7 +1100,7 @@ void Layer_Job::process(float* layOut)
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB,
                     1, 0, false, act1x1,
-                    1, 1, kernels1x1->m_kernelDepth,
+                    1, 1, kernels1x1->m_depth,
                     kernels1x1->m_numKernels, kernels1x1->m_cpu_data, (kernels1x1Bias) ? kernels1x1Bias->m_cpu_data : NULL, it_bias1x1,
                     outMaps->m_rows, outMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA
                 );
@@ -1119,7 +1119,7 @@ void Layer_Job::process(float* layOut)
                 do_conv( // 3x3 conv
                     inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
+                    3, 3, kernels3x3->m_depth,
                     kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
@@ -1136,14 +1136,14 @@ void Layer_Job::process(float* layOut)
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB,
                     1, 0, false, act1x1,
-                    1, 1, kernels1x1->m_kernelDepth,
+                    1, 1, kernels1x1->m_depth,
                     kernels1x1->m_numKernels, kernels1x1->m_cpu_data, (kernels1x1Bias) ? kernels1x1Bias->m_cpu_data : NULL, it_bias1x1,
                     outMaps->m_rows, outMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA
                 );
                 do_accum( // prev1x1Map accum
                     act1x1, it_act1x1,
                     prev1x1Maps->m_cpu_data,
-                    prev1x1Maps->m_partialMapDepth, prev1x1Maps->m_rows, prev1x1Maps->m_cols,
+                    prev1x1Maps->m_depth, prev1x1Maps->m_rows, prev1x1Maps->m_cols,
                     intmStrgA,
                     depth, MAX_INPUT_ROWS, MAX_INPUT_COLS,
                     intmStrgB,
@@ -1165,14 +1165,14 @@ void Layer_Job::process(float* layOut)
                 do_conv( // 3x3 conv
                     inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
+                    3, 3, kernels3x3->m_depth,
                     kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB,
                     1, 0, it_act1x1, act1x1,
-                    1, 1, kernels1x1->m_kernelDepth,
+                    1, 1, kernels1x1->m_depth,
                     kernels1x1->m_numKernels, kernels1x1->m_cpu_data, (kernels1x1Bias) ? kernels1x1Bias->m_cpu_data : NULL, it_bias1x1,
                     outMaps->m_rows, outMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA
                 );
@@ -1191,21 +1191,21 @@ void Layer_Job::process(float* layOut)
                 do_conv( // 3x3 conv
                     inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, it_act3x3, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
+                    3, 3, kernels3x3->m_depth,
                     kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 do_conv( // 1x1 conv
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB,
                     1, 0, false, act1x1,
-                    1, 1, kernels1x1->m_kernelDepth,
+                    1, 1, kernels1x1->m_depth,
                     kernels1x1->m_numKernels, kernels1x1->m_cpu_data, (kernels1x1Bias) ? kernels1x1Bias->m_cpu_data : NULL, it_bias1x1,
                     outMaps->m_rows, outMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA
                 );
                 do_accum( // prev1x1Map accum
                     act1x1, it_act1x1,
                     prev1x1Maps->m_cpu_data,
-                    prev1x1Maps->m_partialMapDepth, prev1x1Maps->m_rows, prev1x1Maps->m_cols,
+                    prev1x1Maps->m_depth, prev1x1Maps->m_rows, prev1x1Maps->m_cols,
                     intmStrgA,
                     depth, MAX_INPUT_ROWS, MAX_INPUT_COLS,
                     intmStrgB,
@@ -1225,10 +1225,10 @@ void Layer_Job::process(float* layOut)
             else if(opcode == OPCODE_14)
             {
                 do_conv( // 1x1 conv
-                    inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
+                    partMaps->m_rows, partMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     1, 0, it_act1x1, act1x1,
-                    1, 1, kernels1x1->m_kernelDepth,
-                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, (kernels1x1Bias) ? kernels1x1Bias->m_cpu_data : NULL,, it_bias1x1,
+                    1, 1, kernels1x1->m_depth,
+                    kernels1x1->m_numKernels, kernels1x1->m_cpu_data, (kernels1x1Bias) ? kernels1x1Bias->m_cpu_data : NULL, it_bias1x1,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 esp_copy_2Buf(
@@ -1246,12 +1246,12 @@ void Layer_Job::process(float* layOut)
                 do_conv( // 3x3 conv
                     inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
                     stride, padding, false, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
+                    3, 3, kernels3x3->m_depth,
                     kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
                 
-                // printMaps(prefix + "partialMaps_" + to_string(k) + "_" + to_string(d) + ".txt", partMaps->m_cpu_data, partMaps->m_partialMapDepth, partMaps->m_rows, partMaps->m_cols, false);
+                // printMaps(prefix + "partialMaps_" + to_string(k) + "_" + to_string(d) + ".txt", partMaps->m_cpu_data, partMaps->m_depth, partMaps->m_rows, partMaps->m_cols, false);
 
                 do_accum( // partMaps accum
                     act3x3, it_act3x3,
@@ -1280,8 +1280,8 @@ void Layer_Job::process(float* layOut)
             {
                 do_conv( // 3x3 conv
                     inMaps->m_rows, inMaps->m_cols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgA,
-                    stride, padding, false, act3x3,
-                    3, 3, kernels3x3->m_kernelDepth,
+                    stride, padding, it_act3x3, act3x3,
+                    3, 3, kernels3x3->m_depth,
                     kernels3x3->m_numKernels, kernels3x3->m_cpu_data, (kernels3x3Bias) ? kernels3x3Bias->m_cpu_data : NULL, it_bias3x3,
                     qd_nOutRows, qd_nOutCols, MAX_INPUT_ROWS, MAX_INPUT_COLS, intmStrgB
                 );
@@ -1335,7 +1335,7 @@ void Layer_Job::process(float* layOut)
                     outMaps->m_rows,
                     outMaps->m_cols,
                     m_lay_it_arr[k][d + 1]->m_partialMaps->m_cpu_data,
-                    m_lay_it_arr[k][d + 1]->m_partialMaps->m_partialMapDepth,
+                    m_lay_it_arr[k][d + 1]->m_partialMaps->m_depth,
                     m_lay_it_arr[k][d + 1]->m_partialMaps->m_rows,
                     m_lay_it_arr[k][d + 1]->m_partialMaps->m_cols
                 );
@@ -1452,8 +1452,8 @@ void Layer_Job::do_conv(
     int num_kernels, krnl_data_t filters, float* bias, bool doBias,
     int num_output_rows, int num_output_cols, int num_outBuf_rows, int num_outBuf_cols, float* outMap)
 {
-    // int nthreads = std::thread::hardware_concurrency();
-    int nthreads = 1;
+    int nthreads = std::thread::hardware_concurrency();
+    // int nthreads = 1;
     std::vector<std::thread> threads(nthreads);
     for (int t = 0; t < nthreads; t++)
 	{
@@ -1508,8 +1508,8 @@ void Layer_Job::do_accum(
     int o_depth, int o_rows, int o_cols,
     int depth, int rows, int cols)
 {
-    // int nthreads = std::thread::hardware_concurrency();
-    int nthreads = 1;
+    int nthreads = std::thread::hardware_concurrency();
+    // int nthreads = 1;
     std::vector<std::thread> threads(nthreads);
     for(int t = 0; t < nthreads; t++)
 	{

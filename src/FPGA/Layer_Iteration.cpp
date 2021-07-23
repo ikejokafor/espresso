@@ -136,7 +136,7 @@ Layer_Iteration::Layer_Iteration(
 						j,
 						k,
 						true,
-						m_inputMaps->m_numInputMapRows,
+						m_inputMaps->m_rows,
 						m_inputMaps->m_cols,
 						(m_kernels3x3) ? m_kernels3x3->m_numKernels : 0,
 						(m_kernels3x3) ? m_kernels3x3->m_depth : 0,
