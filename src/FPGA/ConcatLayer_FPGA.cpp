@@ -20,14 +20,23 @@ void ConcatLayer_FPGA::ComputeLayer()
 			fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
 		}
 	}
-	cout << m_layerName << " Merged" <<  endl;
+	
+    ComputeLayer_FxPt();
 }
 
 
 void ConcatLayer_FPGA::ComputeLayer_FlPt() { }
 
 
-void ConcatLayer_FPGA::ComputeLayer_FxPt() { }
+void ConcatLayer_FPGA::ComputeLayer_FxPt() 
+{ 
+    // output
+    float *dataout = m_topLayers[0]->m_blob.flData;
+    for (uint32_t i = 0; i < m_bottomLayers.size(); i++) {
+        memcpy(dataout, m_bottomLayers[i]->m_blob.flData, m_bottomLayers[i]->m_blob.depth * m_bottomLayers[i]->m_blob.numRows * m_bottomLayers[i]->m_blob.numCols * sizeof(float));
+        dataout += (m_bottomLayers[i]->m_blob.depth * m_bottomLayers[i]->m_blob.numRows * m_bottomLayers[i]->m_blob.numCols);
+    }
+}
 
 
 void ConcatLayer_FPGA::ComputeLayerParam()

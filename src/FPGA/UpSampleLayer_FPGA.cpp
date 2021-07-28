@@ -19,14 +19,39 @@ void UpSampleLayer_FPGA::ComputeLayer() {
 			fxData[i] = fixedPoint::create(m_dinFxPtLength, m_dinNumFracBits, flData[i]);
 		}
 	}
-	cout << m_layerName << " Merged" << endl;
+	ComputeLayer_FxPt();
 }
 
 
 void UpSampleLayer_FPGA::ComputeLayer_FlPt() { }
 
 
-void UpSampleLayer_FPGA::ComputeLayer_FxPt() { }
+void UpSampleLayer_FPGA::ComputeLayer_FxPt() 
+{ 
+    // get input
+    float *datain = m_bottomLayers[0]->m_blob.flData;
+    int numInputBlobRows = m_bottomLayers[0]->m_blob.numRows;
+    int numInputBlobCols = m_bottomLayers[0]->m_blob.numCols;
+    int inputBlobDepth = m_bottomLayers[0]->m_blob.depth;
+
+
+    // output
+    float *dataout = m_topLayers[0]->m_blob.flData;
+
+
+	for(int k = 0; k < inputBlobDepth; ++k)
+    {
+		for(int j = 0; j < numInputBlobRows * m_stride; ++j)
+        {
+			for(int i = 0; i < numInputBlobCols * m_stride; ++i)
+            {
+				int in_index = k * numInputBlobCols * numInputBlobRows + (j / m_stride) * numInputBlobCols + i/m_stride;
+				int out_index = k * numInputBlobCols * numInputBlobRows * m_stride * m_stride + j * numInputBlobCols * m_stride + i;
+				dataout[out_index] = 1.0f * datain[in_index];
+			}
+		}
+	}
+}
 
 
 void UpSampleLayer_FPGA::ComputeLayerParam()
