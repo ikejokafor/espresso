@@ -32,6 +32,7 @@ void ResidualLayer_FPGA::ComputeLayer_FxPt()
     if(m_fpga_merged)
 	{
 		cout << "[ESPRESSO]: " << m_layerName << " Merged" << endl;
+        cout << endl << endl;
 		return;
 	}
     
@@ -63,9 +64,9 @@ void ResidualLayer_FPGA::ComputeLayer_FxPt()
 		m_numKernelRows,
 		m_numKernelCols,
 		m_flFilterData,
-		m_outputDepth,
-		m_numOutputRows,
-		m_numOutputCols,
+        m_fpga_outDepth,
+        m_fpga_numOutRows,
+        m_fpga_numOutCols,
 		m_residualMapDepth,
 		m_numResidualMapRows,
 		m_numResidualMapsCols,

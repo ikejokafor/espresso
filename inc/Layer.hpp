@@ -329,5 +329,8 @@ namespace espresso
             double m_avg_FAS_time1;         
             activation_t m_fpgaAct3x3;
             activation_t m_fpgaAct1x1; 
+            int m_fpga_outDepth;
+            int m_fpga_numOutRows;
+            int m_fpga_numOutCols;
 	};
 }
