@@ -62,6 +62,16 @@ class StatPayload : public Accel_Payload
         void deserialize() { }
 };
 
+
+class SysC_FPGAconfig : public Accel_Payload
+{
+    public:
+        SysC_FPGAconfig() { m_buffer = NULL; m_size = 0; m_remAddress = -1; }
+        ~SysC_FPGAconfig() { }
+		void serialize() { }
+        void deserialize() { }
+};
+
 class DummyPayload : public Accel_Payload
 {
     public:
@@ -205,6 +215,7 @@ class Layer_Job
 #ifdef SYSTEMC
 		DummyPayload* m_Dpyld;
 		StatPayload* m_Spyld;
+        SysC_FPGAconfig* m_sysC_FPGAcfg;
 		SYSC_FPGA_hndl* m_sysc_fpga_hndl;
         int m_pseudo_addr;
 #else

@@ -122,6 +122,9 @@ Layer_Job::Layer_Job(
     m_Spyld = new StatPayload();
 	m_Spyld->m_size = ACCL_META_OUTPUT_SIZE;
     m_Spyld->m_buffer = (void*)malloc(m_Spyld->m_size);
+    m_sysC_FPGAcfg = new SysC_FPGAconfig();
+    m_sysC_FPGAcfg->m_size = 4;   // TODO: hardcoding
+    m_sysC_FPGAcfg->m_buffer = (void*)malloc(m_sysC_FPGAcfg->m_size);
 #else
 
 #endif
@@ -421,13 +424,18 @@ layAclPrm_t* Layer_Job::createAccelParams(
 }
 
 
+#ifdef SYSTEMC
 void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPower, double& avg_QUAD_time0, double& avg_FAS_time0, double& avg_QUAD_time1, double& avg_FAS_time1)
 {
     cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
     cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
 	cout << endl << endl;
 	m_Dpyld = new DummyPayload();
-
+    int* ptr = (int*)m_sysC_FPGAcfg->m_buffer;
+    // ptr* = m_max_sys_trans;
+    *ptr = 27;
+    m_sysc_fpga_hndl->wr_sysC_FPGAconfig(m_sysC_FPGAcfg);
+    cout << endl << endl;
     for(int k = 0; k < m_lay_it_arr.size(); k++)
     {
         for(int d = 0; d < m_lay_it_arr[k].size(); d++)
@@ -441,6 +449,7 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
             cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;
 			cout << endl << endl;
+
             m_sysc_fpga_hndl->wrConfig(m_lay_it_arr[k][d]->m_accelCfg);
             (m_lay_it_arr[k][d]->m_inputMaps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_inputMaps)
 				: m_sysc_fpga_hndl->wrParam(m_Dpyld);
@@ -486,7 +495,7 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
 	cout << endl << endl;
 	delete(m_Dpyld);
 }
-
+#endif
 
 
 

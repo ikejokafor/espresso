@@ -137,7 +137,7 @@ SET_TARGET_PROPERTIES(${TARGET_NAME} PROPERTIES
 # BEGIN Build dependencies --------------------------------------------------------------------------------------------------------------------------
 ADD_DEPENDENCIES(${TARGET_NAME} sysc_fpga_shim)
 ADD_DEPENDENCIES(${TARGET_NAME} network)
-ADD_DEPENDENCIES(${TARGET_NAME} myNetProto)
+ADD_DEPENDENCIES(${TARGET_NAME} syscNetProto)
 # END Build dependencies ----------------------------------------------------------------------------------------------------------------------------
 
 
@@ -195,7 +195,7 @@ ELSE()
         ${PROJECT_SOURCE_DIR}/../FPGA_shim/inc/
         ${PROJECT_SOURCE_DIR}/../SYSC_FPGA_shim/inc/
         ${PROJECT_SOURCE_DIR}/../network/inc/
-        ${PROJECT_SOURCE_DIR}/../myNetProto/inc/
+        ${PROJECT_SOURCE_DIR}/../syscNetProto/inc/
     )
 ENDIF()
 # END Include directories ---------------------------------------------------------------------------------------------------------------------------
