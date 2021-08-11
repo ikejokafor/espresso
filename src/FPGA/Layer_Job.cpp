@@ -141,7 +141,6 @@ Layer_Job::~Layer_Job()
     (m_kernels1x1) ? delete m_kernels1x1 : void();
     (m_kernels1x1Bias) ? delete m_kernels1x1Bias : void();
 	(m_Spyld) ? delete m_Spyld : void();
-	(m_Dpyld) ? delete m_Dpyld : void();
     m_inputMaps = NULL;
 	m_kernels3x3 = NULL;
 	m_residualMaps = NULL;
@@ -150,7 +149,6 @@ Layer_Job::~Layer_Job()
     m_kernels1x1 = NULL;
     m_kernels1x1Bias = NULL;
 	m_Spyld = NULL;
-	m_Dpyld = NULL;
 
     int i_end = m_lay_it_arr.size();
     for(int i = 0; i < i_end; i++)
@@ -451,25 +449,25 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
 			cout << endl << endl;
 
             m_sysc_fpga_hndl->wrConfig(m_lay_it_arr[k][d]->m_accelCfg);
-            (m_lay_it_arr[k][d]->m_inputMaps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_inputMaps)
-				: m_sysc_fpga_hndl->wrParam(m_Dpyld);
-            (m_lay_it_arr[k][d]->m_kernels3x3) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels3x3)
-				: m_sysc_fpga_hndl->wrParam(m_Dpyld);
-            (m_lay_it_arr[k][d]->m_kernels3x3Bias) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels3x3Bias)
-				: m_sysc_fpga_hndl->wrParam(m_Dpyld);
-            (m_lay_it_arr[k][d]->m_kernels1x1) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels1x1)
-				: m_sysc_fpga_hndl->wrParam(m_Dpyld);
-            (m_lay_it_arr[k][d]->m_kernels1x1Bias) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels1x1Bias)
-				: m_sysc_fpga_hndl->wrParam(m_Dpyld);
-            (m_lay_it_arr[k][d]->m_partialMaps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_partialMaps)
-				: m_sysc_fpga_hndl->wrParam(m_Dpyld);
-            (m_lay_it_arr[k][d]->m_residualMaps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_residualMaps)
-                : m_sysc_fpga_hndl->wrParam(m_Dpyld);
-            (m_lay_it_arr[k][d]->m_prev1x1Maps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_prev1x1Maps)
-                : m_sysc_fpga_hndl->wrParam(m_Dpyld);
+            // (m_lay_it_arr[k][d]->m_inputMaps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_inputMaps)
+			// 	: m_sysc_fpga_hndl->wrParam(m_Dpyld);
+            // (m_lay_it_arr[k][d]->m_kernels3x3) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels3x3)
+			// 	: m_sysc_fpga_hndl->wrParam(m_Dpyld);
+            // (m_lay_it_arr[k][d]->m_kernels3x3Bias) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels3x3Bias)
+			// 	: m_sysc_fpga_hndl->wrParam(m_Dpyld);
+            // (m_lay_it_arr[k][d]->m_kernels1x1) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels1x1)
+			// 	: m_sysc_fpga_hndl->wrParam(m_Dpyld);
+            // (m_lay_it_arr[k][d]->m_kernels1x1Bias) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_kernels1x1Bias)
+			// 	: m_sysc_fpga_hndl->wrParam(m_Dpyld);
+            // (m_lay_it_arr[k][d]->m_partialMaps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_partialMaps)
+			// 	: m_sysc_fpga_hndl->wrParam(m_Dpyld);
+            // (m_lay_it_arr[k][d]->m_residualMaps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_residualMaps)
+            //     : m_sysc_fpga_hndl->wrParam(m_Dpyld);
+            // (m_lay_it_arr[k][d]->m_prev1x1Maps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_prev1x1Maps)
+            //     : m_sysc_fpga_hndl->wrParam(m_Dpyld);
             m_sysc_fpga_hndl->sendStart();
             m_sysc_fpga_hndl->waitComplete();
-            m_sysc_fpga_hndl->getOutput(m_lay_it_arr[k][d]->m_outputMaps);
+            // m_sysc_fpga_hndl->getOutput(m_lay_it_arr[k][d]->m_outputMaps);
 			m_sysc_fpga_hndl->getOutput(m_Spyld);
             double* ptr = (double*)m_Spyld->m_buffer;
             elapsed_time += (ptr[0]);
@@ -494,6 +492,7 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
     cout << "[ESPRESSO]: Total Power Consumed - " << memPower << " mW " << endl;
 	cout << endl << endl;
 	delete(m_Dpyld);
+    m_Dpyld = NULL;
 }
 #endif
 

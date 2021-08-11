@@ -31,6 +31,8 @@ void OutputMaps::serialize()
     m_size          = m_depth * m_rows * m_cols * PIXEL_SIZE;
     printf("[ESPRESSO]: Allocating Space for Output Maps\n");
     m_buffer        = (void*)_hndl->allocate(this, m_size);
+#else
+    m_size = m_depth * m_rows * m_cols * PIXEL_SIZE;
 #endif
 }
 

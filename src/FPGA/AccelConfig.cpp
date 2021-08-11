@@ -5,7 +5,7 @@ using namespace espresso;
 
 AccelConfig::AccelConfig(FPGA_hndl* fpga_hndl) : Accel_Payload()
 {
-	m_fpga_hndl = fpga_hndl;
+	m_fpga_hndl       = fpga_hndl;
     m_buffer          = NULL;
     m_size            = 0;
     m_remAddress      = -1;

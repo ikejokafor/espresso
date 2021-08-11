@@ -32,6 +32,8 @@ void Prev1x1Maps::serialize()
     printf("[ESPRESSO]: Allocating Space for Previous Maps\n");
     m_buffer                        = (void*)_hndl->allocate(this, m_size);
     memcpy(m_buffer, m_prevOutdata, m_size);
+#else
+    m_size = m_depth * m_rows * m_cols * PIXEL_SIZE;
 #endif
 }
 

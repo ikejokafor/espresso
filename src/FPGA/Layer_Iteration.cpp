@@ -55,7 +55,7 @@ Layer_Iteration::Layer_Iteration(
 	m_del_res = del_res;
 	m_del_1x1 = del_1x1;
 
-#ifndef SYSTEMC
+
 	(m_inputMaps) ? m_inputMaps->serialize() : void();
 	(m_kernels3x3) ? m_kernels3x3->serialize() : void();
 	(m_kernels3x3Bias) ? m_kernels3x3Bias->serialize() : void();
@@ -65,7 +65,7 @@ Layer_Iteration::Layer_Iteration(
 	(m_partialMaps) ? m_partialMaps->serialize() : void();
 	(m_residualMaps) ? m_residualMaps->serialize() : void();
 	(m_prev1x1Maps) ? m_prev1x1Maps->serialize() : void();
-#endif
+
 
     int inputMapDepth = (m_inputMaps) ? m_inputMaps->m_depth : 0;
 	int remDepth = (m_inputMaps) ? m_inputMaps->m_depth : 0;

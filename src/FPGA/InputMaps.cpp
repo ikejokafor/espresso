@@ -47,6 +47,8 @@ void InputMaps::serialize()
             }
         }
     }
+#else
+    m_size = m_depth * m_rows * m_cols * PIXEL_SIZE;
 #endif
 }
 

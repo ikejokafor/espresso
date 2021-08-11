@@ -83,6 +83,8 @@ void Kernels::serialize()
             }
         }
     }
+#else
+    m_size = m_numKernels * m_depth * m_rows * m_cols * PIXEL_SIZE;
 #endif
 }
 

@@ -40,6 +40,8 @@ void KernelBias::serialize()
     {
         rmt_data[n] = fixedPoint::create(16, 14, m_cpu_data[n]);    // FIXME: remove hardcoding
     }
+#else
+    m_size = m_numKernels * PIXEL_SIZE;
 #endif
 }
 

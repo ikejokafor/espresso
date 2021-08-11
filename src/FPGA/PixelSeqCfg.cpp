@@ -29,7 +29,7 @@ void PixelSeqCfg::serialize()
 		stride2_config();
 	}
 #else
-	
+	m_size = MAX_NUM_INPUT_COLS * NUM_CE_PER_QUAD * PIX_SEQ_CONFIG_SIZE;
 #endif	
 }
 
