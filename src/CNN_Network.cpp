@@ -397,7 +397,10 @@ void espresso::CNN_Network::Forward(string start, string end)
             cout << ", " << m_cnn[mli]->m_layerName;
         }
         cout << endl << endl << endl;
-		m_cnn[i]->ComputeLayer();
+        if(m_cnn[i]->m_layerType == espresso::CONVOLUTION || m_cnn[i]->m_layerType == espresso::RESIDUAL)
+        {
+            m_cnn[i]->ComputeLayer();
+        }
         cout << "[ESPRESSO]: Finished Layer Processing " << endl;
         cout << endl << endl;
         

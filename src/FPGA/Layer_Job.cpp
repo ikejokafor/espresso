@@ -429,11 +429,9 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
     cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
 	cout << endl << endl;
 	m_Dpyld = new DummyPayload();
-    int* ptr = (int*)m_sysC_FPGAcfg->m_buffer;
-    // ptr* = m_max_sys_trans;
-    *ptr = 27;
-    m_sysc_fpga_hndl->wr_sysC_FPGAconfig(m_sysC_FPGAcfg);
-    cout << endl << endl;
+    
+
+
     for(int k = 0; k < m_lay_it_arr.size(); k++)
     {
         for(int d = 0; d < m_lay_it_arr[k].size(); d++)
@@ -447,7 +445,11 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
             cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;
 			cout << endl << endl;
-
+            
+            // SystemC Config
+            (*(int*)m_sysC_FPGAcfg->m_buffer) = 1;
+            // (*(int*)m_sysC_FPGAcfg->m_buffer) = m_max_sys_trans;
+            m_sysc_fpga_hndl->wr_sysC_FPGAconfig(m_sysC_FPGAcfg);
             m_sysc_fpga_hndl->wrConfig(m_lay_it_arr[k][d]->m_accelCfg);
             // (m_lay_it_arr[k][d]->m_inputMaps) ? m_sysc_fpga_hndl->wrParam(m_lay_it_arr[k][d]->m_inputMaps)
 			// 	: m_sysc_fpga_hndl->wrParam(m_Dpyld);
@@ -468,6 +470,8 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             m_sysc_fpga_hndl->sendStart();
             m_sysc_fpga_hndl->waitComplete();
             // m_sysc_fpga_hndl->getOutput(m_lay_it_arr[k][d]->m_outputMaps);
+            cout << endl << endl;
+            // get output stats
 			m_sysc_fpga_hndl->getOutput(m_Spyld);
             double* ptr = (double*)m_Spyld->m_buffer;
             elapsed_time += (ptr[0]);
@@ -491,8 +495,10 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
     cout << "[ESPRESSO]: Avgerage Layer Iteration Time - " << avgIterTime << " ns " << endl;
     cout << "[ESPRESSO]: Total Power Consumed - " << memPower << " mW " << endl;
 	cout << endl << endl;
-	delete(m_Dpyld);
+	delete m_Dpyld;
     m_Dpyld = NULL;
+    delete m_sysC_FPGAcfg;
+    m_sysC_FPGAcfg = NULL;
 }
 #endif
 
