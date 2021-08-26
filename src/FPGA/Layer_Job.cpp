@@ -423,6 +423,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
 
 
 #ifdef SYSTEMC
+typedef std::numeric_limits< double > dbl;
 void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPower, double& avg_QUAD_time0, double& avg_FAS_time0, double& avg_QUAD_time1, double& avg_FAS_time1)
 {
     cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
@@ -447,7 +448,7 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
 			cout << endl << endl;
             
             // SystemC Config
-            (*(int*)m_sysC_FPGAcfg->m_buffer) = 1;
+            (*(int*)m_sysC_FPGAcfg->m_buffer) = (int)1;
             // (*(int*)m_sysC_FPGAcfg->m_buffer) = m_max_sys_trans;
             m_sysc_fpga_hndl->wr_sysC_FPGAconfig(m_sysC_FPGAcfg);
             m_sysc_fpga_hndl->wrConfig(m_lay_it_arr[k][d]->m_accelCfg);
@@ -491,7 +492,9 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
     }
 	double numTotalIter = m_num_krnl_iter * m_num_depth_iter;
 	avgIterTime = elapsed_time / numTotalIter;
+    cout.precision(dbl::max_digits10);
 	cout << "[ESPRESSO]: Total Layer Processing Time - " << elapsed_time << " ns " << endl;
+    cout.precision(dbl::max_digits10);
     cout << "[ESPRESSO]: Avgerage Layer Iteration Time - " << avgIterTime << " ns " << endl;
     cout << "[ESPRESSO]: Total Power Consumed - " << memPower << " mW " << endl;
 	cout << endl << endl;

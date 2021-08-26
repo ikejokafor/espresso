@@ -120,4 +120,5 @@ class FAS_cfg
 		int m_output_depth;
         std::vector<AWP_cfg*> m_AWP_cfg_arr;
         std::vector<bool> m_AWP_en_arr;
+        int m_FGPA_VEC_ADD_SIMD;    // read from FPGA cfg
 };

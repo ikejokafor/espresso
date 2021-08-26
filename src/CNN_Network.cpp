@@ -387,7 +387,7 @@ void espresso::CNN_Network::Forward(string start, string end)
     // Forward Propagation
     if(startIdx == endIdx) endIdx++;
     for(int i = startIdx; i < endIdx; i++)
-    {
+    {        
         printLayerStats(i);
         //////
         cout << "[ESPRESSO]: Processing Layer(s) " << i << " " << m_cnn[i]->m_layerName;

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <stack>
+#include <csignal>
 #include <algorithm>
 #include <functional>
 
