@@ -43,7 +43,7 @@ static int RE_TRAN_AMT                 = 8;
 #define PM_LOW_WATERMARK_FACTOR     1
 #define PV_LOW_WATERMARK_FACTOR     1
 #define RM_FETCH_FACTOR             10
-#define PM_FETCH_FACTOR             10
+#define PM_FETCH_FACTOR             5
 #define PV_FETCH_FACTOR             10
 #define OB_STORE_FACTOR             10
 #define SYSC_MAX_KRNL_DEPTH         max(QUAD_MAX_DEPTH, QUAD_MAX_KERNELS)

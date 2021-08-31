@@ -82,9 +82,9 @@ FAS_cfg::FAS_cfg(
     m_rm_low_watermark = rm_low_watermark;
     m_pm_low_watermark = pm_low_watermark;
     m_pv_low_watermark = pv_low_watermark;
-	m_rm_fetch_amount = rm_fetch_amount * PIXEL_SIZE;
-	m_pm_fetch_amount = pm_fetch_amount * PIXEL_SIZE;
-	m_pv_fetch_amount = pv_fetch_amount * PIXEL_SIZE;
+	m_rm_fetch_amount = rm_fetch_amount;
+	m_pm_fetch_amount = pm_fetch_amount;
+	m_pv_fetch_amount = pv_fetch_amount;
 	m_krnl1x1_pding = krnl1x1_pding;
 	m_krnl1x1_pad_bgn = krnl1x1_pad_bgn;
 	m_krnl1x1_pad_end = krnl1x1_pad_end;
