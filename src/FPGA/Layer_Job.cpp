@@ -437,7 +437,6 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
     {
         for(int d = 0; d < m_lay_it_arr[k].size(); d++)
         {
-            printConfig(m_lay_it_arr[k][d]);
             if(k == 0 && d == 0)
             {
                 calcAccelPerfAnalyStats(m_lay_it_arr[k][d], avg_QUAD_time0, avg_FAS_time0);
@@ -446,6 +445,7 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
             cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;
 			cout << endl << endl;
+            printConfig(m_lay_it_arr[k][d]);
             
             // SystemC Config
             (*(int*)m_sysC_FPGAcfg->m_buffer) = (int)1;
@@ -472,7 +472,7 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             m_sysc_fpga_hndl->waitComplete();
             // m_sysc_fpga_hndl->getOutput(m_lay_it_arr[k][d]->m_outputMaps);
             cout << endl << endl;
-            // get output stats
+            // get output stats           
 			m_sysc_fpga_hndl->getOutput(m_Spyld);
             double* ptr = (double*)m_Spyld->m_buffer;
             elapsed_time += (ptr[0]);
@@ -482,6 +482,7 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
 				avg_QUAD_time1 = (ptr[2]);
 				avg_FAS_time1 = (ptr[3]);
 			}
+            
             cout << "[ESPRESSO]: " << m_layerName                    << endl;
             cout << "[ESPRESSO]:\tFinished Kernel Iteration - " << (k + 1) << endl;
             cout << "[ESPRESSO]:\tFinished Depth Iteration - "  << (d + 1) << endl;

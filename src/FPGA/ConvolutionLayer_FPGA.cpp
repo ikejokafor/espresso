@@ -135,6 +135,6 @@ void ConvolutionLayer_FPGA::ComputeLayerParam()
 	m_blob.numRows = m_numOutputRows;
 	m_blob.numCols = m_numOutputCols;
 	m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
-	m_blob.flData =  new float[m_outputDepth * m_numOutputRows * m_numOutputCols];
+	m_blob.flData = new float[m_outputDepth * m_numOutputRows * m_numOutputCols];
 	m_blob.fxData = new fixedPoint_t[m_outputDepth * m_numOutputRows * m_numOutputCols];
 }
