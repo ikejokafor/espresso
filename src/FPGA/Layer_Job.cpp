@@ -54,8 +54,6 @@ Layer_Job::Layer_Job(
     m_kernels3x3Bias        = NULL;
     m_kernels1x1            = NULL;
     m_kernels1x1Bias        = NULL;
-	m_Spyld					= NULL;
-	m_Dpyld					= NULL;
     m_layerName             = layerName         ;
     m_inputMapDepth         = inputMapDepth     ;
     m_numInputMapRows       = numInputMapRows   ;
@@ -125,8 +123,6 @@ Layer_Job::Layer_Job(
     m_sysC_FPGAcfg = new SysC_FPGAconfig();
     m_sysC_FPGAcfg->m_size = 4;   // TODO: hardcoding
     m_sysC_FPGAcfg->m_buffer = (void*)malloc(m_sysC_FPGAcfg->m_size);
-#else
-
 #endif
 }
 
@@ -140,7 +136,6 @@ Layer_Job::~Layer_Job()
 	(m_kernels3x3Bias) ? delete m_kernels3x3Bias : void();
     (m_kernels1x1) ? delete m_kernels1x1 : void();
     (m_kernels1x1Bias) ? delete m_kernels1x1Bias : void();
-	(m_Spyld) ? delete m_Spyld : void();
     m_inputMaps = NULL;
 	m_kernels3x3 = NULL;
 	m_residualMaps = NULL;
@@ -148,7 +143,7 @@ Layer_Job::~Layer_Job()
 	m_kernels3x3Bias = NULL;
     m_kernels1x1 = NULL;
     m_kernels1x1Bias = NULL;
-	m_Spyld = NULL;
+
 
     int i_end = m_lay_it_arr.size();
     for(int i = 0; i < i_end; i++)
@@ -159,6 +154,11 @@ Layer_Job::~Layer_Job()
             delete m_lay_it_arr[i][j];
         }
     }
+
+#ifdef SYSTEMC
+    (m_Spyld) ? delete m_Spyld : void();
+	m_Spyld = NULL;
+#endif
 }
 
 
