@@ -14,6 +14,7 @@ static int RE_TRAN_AMT                 = 8;
 // int CM_FIFO_DEPTH               = 512;   
 // int PM_FIFO_DEPTH               = 256;
 // int PV_FIFO_DEPTH               = 256;
+#define AXI_MX_BT_SZ                64
 
 #define MAX_AWP_PER_FAS             1
 #define MAX_QUAD_PER_AWP            8
@@ -48,3 +49,9 @@ static int RE_TRAN_AMT                 = 8;
 #define PV_FETCH_FACTOR             10
 #define OB_STORE_FACTOR             10
 #define SYSC_MAX_KRNL_DEPTH         max(QUAD_MAX_DEPTH, QUAD_MAX_KERNELS)
+
+
+int AXI_ceil(float fth_amt, float bus_size)
+{
+    return (int)(ceil(fth_amt / bus_size) * bus_size);
+}

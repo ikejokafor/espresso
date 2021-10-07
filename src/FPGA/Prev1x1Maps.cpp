@@ -33,7 +33,7 @@ void Prev1x1Maps::serialize()
     m_buffer                        = (void*)_hndl->allocate(this, m_size);
     memcpy(m_buffer, m_prevOutdata, m_size);
 #else
-    m_size = m_depth * m_rows * m_cols * PIXEL_SIZE;
+    m_size = AXI_ceil((m_depth * m_rows * m_cols * PIXEL_SIZE), AXI_MX_BT_SZ);
 #endif
 }
 

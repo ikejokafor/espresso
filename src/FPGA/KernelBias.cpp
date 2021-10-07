@@ -41,7 +41,7 @@ void KernelBias::serialize()
         rmt_data[n] = fixedPoint::create(16, 14, m_cpu_data[n]);    // FIXME: remove hardcoding
     }
 #else
-    m_size = m_numKernels * PIXEL_SIZE;
+    m_size = AXI_ceil((m_numKernels * PIXEL_SIZE), AXI_MX_BT_SZ);
 #endif
 }
 

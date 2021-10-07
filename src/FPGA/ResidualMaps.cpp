@@ -48,7 +48,7 @@ void ResidualMaps::serialize()
         }
     }
 #else
-    m_size = m_depth * m_rows * m_cols * PIXEL_SIZE;
+    m_size = AXI_ceil((m_depth * m_rows * m_cols * PIXEL_SIZE), AXI_MX_BT_SZ);
 #endif
 
 }

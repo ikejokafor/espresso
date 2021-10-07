@@ -25,5 +25,5 @@ when using partial maps, may not need to send data back, deserialize output maps
     may be bale to keep data on accel, or if you send it back, may not need to deserialize, instead just set partial map buffer to outputMaps
     
     
-Fix espresso seg fault 
-    run from 0_Data 6_Convolution for yolov3, segfault on freeing blob data for conv layer
+The start address of all axi transactions must be multiples of 512 bits (ie 64 bytes, ie the lower 6 bits must be zero)
+    During the transaction they must not cross 4KB boundaries
