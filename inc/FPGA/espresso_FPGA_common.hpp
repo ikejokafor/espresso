@@ -1,6 +1,9 @@
 #pragma once
 
 
+#include <math.h>
+
+
 static int RE_HIGH_WATERMARK           = 8;
 static int RE_TRAN_AMT                 = 8;
 // int CM_HIGH_WATERMARK_FACTOR    = 3;
@@ -51,7 +54,4 @@ static int RE_TRAN_AMT                 = 8;
 #define SYSC_MAX_KRNL_DEPTH         max(QUAD_MAX_DEPTH, QUAD_MAX_KERNELS)
 
 
-int AXI_ceil(float fth_amt, float bus_size)
-{
-    return (int)(ceil(fth_amt / bus_size) * bus_size);
-}
+int AXI_ceil(float fth_amt, float bus_size);
