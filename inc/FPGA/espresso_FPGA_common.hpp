@@ -21,6 +21,8 @@ static int RE_TRAN_AMT                 = 8;
 
 #define MAX_AWP_PER_FAS             1
 #define MAX_QUAD_PER_AWP            8
+#define MAX_FAS_1X1_IT              4
+#define MAX_FAS_1X1_IT_KRNLS        64   
 
 #define FAS_MAX_1X1_KRNLS           1024
 #define WINDOW_3x3_NUM_CYCLES		5

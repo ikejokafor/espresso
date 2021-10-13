@@ -8,6 +8,7 @@ InputMaps::InputMaps(FPGA_hndl* fpga_hndl, int depth, int rows, int cols, float*
 	m_depth     = depth;
 	m_rows      = rows;
 	m_cols      = cols;
+    m_cols_algn = AXI_ceil(m_cols, AXI_MX_BT_SZ);
 	m_cpu_data  = new float[depth * rows * cols];
     memcpy(m_cpu_data, data, sizeof(float) * depth * rows * cols);
 	m_buffer			= NULL;
@@ -48,7 +49,7 @@ void InputMaps::serialize()
         }
     }
 #else
-    m_size = AXI_ceil((m_depth * m_rows * m_cols * PIXEL_SIZE), AXI_MX_BT_SZ);
+    m_size = m_depth * m_rows * m_cols_algn * PIXEL_SIZE;
 #endif
 }
 

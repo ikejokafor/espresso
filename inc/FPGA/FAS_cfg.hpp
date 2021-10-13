@@ -85,10 +85,13 @@ class FAS_cfg
         uint64_t m_resMapAddr;
         uint64_t m_outMapAddr;
 		uint64_t m_prevMapAddr;
+        uint64_t m_inMapAddr;
+        uint64_t m_krnl3x3Addr;
+        uint64_t m_krnl3x3BiasAddr;
+        std::vector<uint64_t> m_itNKrnl1x1BiasAddrArr;        
+        std::vector<uint64_t> m_itNKrnl1x1AddrArr;
+        std::vector<uint64_t> m_itNKrnl1x1No;
         int m_pixSeqCfgFetchTotal;
-        std::vector<std::vector<uint64_t>> m_inMapAddrArr;
-        std::vector<std::vector<uint64_t>> m_krnl3x3AddrArr;
-        std::vector<std::vector<uint64_t>> m_krnl3x3BiasAddrArr;
         int m_inMapFetchTotal;
         int m_krnl3x3FetchTotal;
         int m_krnl3x3BiasFetchTotal;
@@ -99,7 +102,7 @@ class FAS_cfg
         int m_partMapFetchTotal;
         int m_resMapFetchTotal;
         int m_outMapStoreTotal;
-        int m_inMapFetchFactor;
+        int m_inMapFetchAmt;
         int m_outMapStoreFactor;
         int m_prevMapFetchTotal;
         int m_co_high_watermark;

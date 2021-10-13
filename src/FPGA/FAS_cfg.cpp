@@ -4,9 +4,9 @@ using namespace espresso;
 
 
 FAS_cfg::FAS_cfg() :
-   	m_inMapAddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
-	m_krnl3x3AddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
-	m_krnl3x3BiasAddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP))
+   	m_itNKrnl1x1BiasAddrArr(MAX_FAS_1X1_IT),
+	m_itNKrnl1x1AddrArr(MAX_FAS_1X1_IT),
+    m_itNKrnl1x1No(MAX_FAS_1X1_IT)
 { }
 
 
@@ -49,9 +49,9 @@ FAS_cfg::FAS_cfg(
 	int num_output_cols,
 	int output_depth
 ) :
-   	m_inMapAddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
-	m_krnl3x3AddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP)),
-	m_krnl3x3BiasAddrArr(MAX_AWP_PER_FAS, vector<uint64_t>(MAX_QUAD_PER_AWP))
+   	m_itNKrnl1x1BiasAddrArr(MAX_FAS_1X1_IT),
+	m_itNKrnl1x1AddrArr(MAX_FAS_1X1_IT),
+    m_itNKrnl1x1No(MAX_FAS_1X1_IT)
 {
 	m_opcode = opcode;
 	m_FAS_id = FAS_id;

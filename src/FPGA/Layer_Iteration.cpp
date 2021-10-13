@@ -113,13 +113,14 @@ Layer_Iteration::Layer_Iteration(
 		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (m_partialMaps) ? m_partialMaps->m_remAddress : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (m_residualMaps) ? m_residualMaps->m_remAddress : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapAddr = m_outputMaps->m_remAddress;
-		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapFetchFactor = (m_inputMaps) ? m_inputMaps->m_cols: 0;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapStoreFactor = AXI_ceil(m_outputMaps->m_depth * OB_STORE_FACTOR, AXI_MX_BT_SZ);
-		auto& imAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_inMapAddrArr;
-		auto& krnl3x3AddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3AddrArr;
-		auto& krnl3x3BiasAddrArr = m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3BiasAddrArr;
-		
-        
+		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapAddr = (m_inputMaps) ? m_inputMaps->m_remAddress : 0;
+		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapFetchAmt = (m_inputMaps) ? m_inputMaps->m_cols_algn * m_inputMaps->m_depth * PIXEL_SIZE : 0;
+        m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3Addr = (m_kernels3x3) ? m_kernels3x3->m_remAddress : 0;
+        m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3BiasAddr = (m_kernels1x1Bias) ? m_kernels3x3Bias->m_remAddress : 0;
+        // m_accelCfg->m_FAS_cfg_arr[i]->m_itNKrnl1x1BiasAddrArr =         
+        // m_accelCfg->m_FAS_cfg_arr[i]->m_itNKrnl1x1AddrArr = 
+        // m_accelCfg->m_FAS_cfg_arr[i]->m_itNKrnl1x1No = 
         for(int j = 0; j < MAX_AWP_PER_FAS; j++)
 		{
 			m_accelCfg->m_FAS_cfg_arr[i]->m_AWP_cfg_arr.push_back(new AWP_cfg(i ,j));
@@ -131,6 +132,7 @@ Layer_Iteration::Layer_Iteration(
 				{
 					bool cascade = (remDepth > 0 && inputMapDepth > QUAD_MAX_DEPTH) ? true : false;
 					bool master_QUAD = ((remDepth - QUAD_MAX_DEPTH) <= 0) ? true : false;
+                    int quad_proc_depth = (remDepth > QUAD_MAX_DEPTH) ? QUAD_MAX_DEPTH : remDepth;
 					QUAD_cfg* quad_cfg = new QUAD_cfg(
 						i,
 						j,
@@ -150,16 +152,11 @@ Layer_Iteration::Layer_Iteration(
                         (master_QUAD) ? it_bias3x3 : false,
 						master_QUAD,
 						cascade,
-						(remDepth > QUAD_MAX_DEPTH) ? QUAD_MAX_DEPTH : remDepth,
+						quad_proc_depth,
                         RE_HIGH_WATERMARK
 					);
 					QUAD_cfg_arr.push_back(quad_cfg);
 					QUAD_en_arr.push_back(true);
-					int imDepthStep = QUAD_MAX_DEPTH * m_inputMaps->m_rows * m_inputMaps->m_cols;
-					int krn3x3DepthStep = QUAD_MAX_DEPTH * 3 * 3;
-					imAddrArr[j][k] = m_inputMaps->m_remAddress + (k * imDepthStep);
-					krnl3x3AddrArr[j][k] = (kernels3x3) ? m_kernels3x3->m_remAddress + (k * krn3x3DepthStep) : 0;
-					krnl3x3BiasAddrArr[j][k] = (kernels3x3Bias) ? m_kernels3x3Bias->m_remAddress : 0;
 				}
 				else
 				{

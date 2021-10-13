@@ -57,11 +57,10 @@ class AccelConfig : public Accel_Payload
 			uint64_t krnl1x1_pding				;
 			uint64_t krnl1x1_pad_bgn			;
 			uint64_t krnl1x1_pad_end			;
-			uint64_t imAddrArr	                ;
+			uint64_t inMapAddr	                ;
+            uint64_t inMapFetchAmt              ;
 			uint64_t krnl3x3Addr	            ;
 			uint64_t krnl3x3BiasAddr	        ;
-			uint64_t krnl1x1Addr				;
-			uint64_t krnl1x1BiasAddr            ;
 			uint64_t num_1x1_kernels			;
 			uint64_t krnl1x1Depth				;
 			uint64_t partMapAddr				;
@@ -103,7 +102,7 @@ class AccelConfig : public Accel_Payload
 			
 		} cfg_t;
 
-
+        
 		std::vector<FAS_cfg*> m_FAS_cfg_arr;
         FPGA_hndl* m_fpga_hndl;
 };

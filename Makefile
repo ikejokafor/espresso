@@ -6,9 +6,6 @@ CWD_A = $(shell pwd)
 SRC := $(wildcard ./src/*.cpp) $(wildcard ./src/Darknet/*.cpp) $(wildcard ./src/FPGA/*.cpp) $(wildcard ./src/CPU/*.cpp)
 
 
-$(info $(SRC))
-
-
 OBJ = $(SRC:.cpp=.o)
  
 

@@ -27,3 +27,6 @@ when using partial maps, may not need to send data back, deserialize output maps
     
 The start address of all axi transactions must be multiples of 512 bits (ie 64 bytes, ie the lower 6 bits must be zero)
     During the transaction they must not cross 4KB boundaries
+
+Fix code for generating 3x3 kernel addresses. 3x3 Kernels are loaded only once, so need an array of addresses for each quad where each element
+of the array is an address for 3x3 kernels for each QUAD. Same goes for the bias

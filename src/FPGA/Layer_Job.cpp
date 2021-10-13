@@ -1581,7 +1581,8 @@ void Layer_Job::printConfig(Layer_Iteration* lay_it)
     cout << "[ESPRESSO]:\tKernel 1x1 Depth:                            " << fas_cfg->m_krnl1x1Depth             << endl;
     cout << "[ESPRESSO]:\tPixel Sequence Configuration Fetch Total:    " << fas_cfg->m_pixSeqCfgFetchTotal      << endl;
     cout << "[ESPRESSO]:\tInput Map Fetch Total:                       " << fas_cfg->m_inMapFetchTotal          << endl;
-    cout << "[ESPRESSO]:\tInput Map Fetch Factor:                      " << fas_cfg->m_inMapFetchFactor         << endl;
+    cout << "[ESPRESSO]:\tInput Map Fetch Address:                     " << fas_cfg->m_inMapAddr                << endl;
+    cout << "[ESPRESSO]:\tInput Map Fetch Amt:                         " << fas_cfg->m_inMapFetchAmt            << endl;
     cout << "[ESPRESSO]:\tKernel 3x3 Fetch Total:                      " << fas_cfg->m_krnl3x3FetchTotal        << endl;
     cout << "[ESPRESSO]:\tKernel 3x3 Bias Fetch Total:                 " << fas_cfg->m_krnl3x3BiasFetchTotal    << endl;
     cout << "[ESPRESSO]:\tPartial Map Fetch Total:                     " << fas_cfg->m_partMapFetchTotal        << endl;
