@@ -117,7 +117,7 @@ Layer_Iteration::Layer_Iteration(
 		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapAddr = (m_inputMaps) ? m_inputMaps->m_remAddress : 0;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapFetchAmt = (m_inputMaps) ? m_inputMaps->m_cols_algn * m_inputMaps->m_depth * PIXEL_SIZE : 0;
         m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3Addr = (m_kernels3x3) ? m_kernels3x3->m_remAddress : 0;
-        m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3BiasAddr = (m_kernels1x1Bias) ? m_kernels3x3Bias->m_remAddress : 0;
+        m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3BiasAddr = (m_kernels3x3Bias) ? m_kernels3x3Bias->m_remAddress : 0;
         // m_accelCfg->m_FAS_cfg_arr[i]->m_itNKrnl1x1BiasAddrArr =         
         // m_accelCfg->m_FAS_cfg_arr[i]->m_itNKrnl1x1AddrArr = 
         // m_accelCfg->m_FAS_cfg_arr[i]->m_itNKrnl1x1No = 
