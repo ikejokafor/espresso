@@ -84,7 +84,12 @@ void Kernels::serialize()
         }
     }
 #else
-    m_size = AXI_ceil((m_numKernels * m_depth * m_rows * m_cols * PIXEL_SIZE), AXI_MX_BT_SZ);
+    SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
+    m_size                          = AXI_ceil((m_numKernels * m_depth * m_rows * m_cols * PIXEL_SIZE), AXI_MX_BT_SZ);
+    uint64_t AXI_aligned_sz         = ALGN_PYLD_SZ(m_size, AXI_BUFFER_ALIGNMENT);
+    m_size                          = AXI_aligned_sz;
+    m_remAddress                    = (uint64_t)sysc_fpga_hndl->m_remAddrOfst;
+    sysc_fpga_hndl->m_remAddrOfst   += AXI_aligned_sz;
 #endif
 }
 

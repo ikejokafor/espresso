@@ -22,6 +22,7 @@ class OutputMaps : public Accel_Payload
         void deserialize();
 
 		int m_depth;
+        int m_depth_algnd;
 		int m_rows;
 		int m_cols;
 		float* m_cpu_data;

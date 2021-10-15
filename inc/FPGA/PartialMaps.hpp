@@ -22,6 +22,7 @@ class PartialMaps : public Accel_Payload
 
 
 		int m_depth;
+        int m_depth_algnd;        
 		int m_rows;
 		int m_cols;
 		bool m_no_permute;

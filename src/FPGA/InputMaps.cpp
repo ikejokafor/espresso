@@ -8,7 +8,7 @@ InputMaps::InputMaps(FPGA_hndl* fpga_hndl, int depth, int rows, int cols, float*
 	m_depth     = depth;
 	m_rows      = rows;
 	m_cols      = cols;
-    m_cols_algn = AXI_ceil(m_cols, AXI_MX_BT_SZ);
+    m_cols_algnd = AXI_ceil(m_cols * PIXEL_SIZE, AXI_MX_BT_SZ) / PIXEL_SIZE;
 	m_cpu_data  = new float[depth * rows * cols];
     memcpy(m_cpu_data, data, sizeof(float) * depth * rows * cols);
 	m_buffer			= NULL;
@@ -30,7 +30,7 @@ InputMaps::~InputMaps()
 void InputMaps::serialize()
 {
 #ifdef ALPHA_DATA
-    _hndl* _hndl                = reinterpret_cast< hndl*>(m_fpga_hndl);
+    _hndl* _hndl                = reinterpret_cast<hndl*>(m_fpga_hndl);
     m_size                      = m_depth * m_rows * m_cols * PIXEL_SIZE;
     printf("[ESPRESSO]: Allocating Space for InputMaps\n");
     m_buffer                    = (void*)_hndl->allocate(this, m_size);
@@ -49,7 +49,12 @@ void InputMaps::serialize()
         }
     }
 #else
-    m_size = m_depth * m_rows * m_cols_algn * PIXEL_SIZE;
+    SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
+    m_size                          = m_depth * m_rows * m_cols_algnd * PIXEL_SIZE;
+    uint64_t AXI_aligned_sz         = ALGN_PYLD_SZ(m_size, AXI_BUFFER_ALIGNMENT);
+    m_size                          = AXI_aligned_sz;
+    m_remAddress                    = (uint64_t)sysc_fpga_hndl->m_remAddrOfst;
+    sysc_fpga_hndl->m_remAddrOfst   += AXI_aligned_sz;
 #endif
 }
 

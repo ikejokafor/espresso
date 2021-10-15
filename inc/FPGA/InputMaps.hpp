@@ -25,7 +25,7 @@ class InputMaps : public Accel_Payload
 		int m_depth;
 		int m_rows;
 		int m_cols;
-        int m_cols_algn;
+        int m_cols_algnd;
 		float* m_cpu_data;
         FPGA_hndl* m_fpga_hndl;
 };

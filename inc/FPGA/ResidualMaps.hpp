@@ -24,6 +24,7 @@ class ResidualMaps : public Accel_Payload
 		ResidualMaps* GetVolume(int depthBgn, int depthSize);
 
 		int m_depth;
+        int m_depth_algnd;
 		int m_rows;
 		int m_cols;
 		float* m_cpu_data;
