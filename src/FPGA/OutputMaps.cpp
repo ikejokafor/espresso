@@ -33,20 +33,21 @@ void OutputMaps::serialize()
     printf("[ESPRESSO]: Allocating Space for Output Maps\n");
     m_buffer        = (void*)_hndl->allocate(this, m_size);
 #else
-    m_size = m_depth * m_rows * m_cols * PIXEL_SIZE;
-#endif
-}
-
-void OutputMaps::deserialize()
-{
-#ifdef ALPHA_DATA
-
-#else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
     m_size                          = m_depth * m_rows * m_depth_algnd * PIXEL_SIZE;
     uint64_t AXI_aligned_sz         = ALGN_PYLD_SZ(m_size, AXI_BUFFER_ALIGNMENT);
     m_size                          = AXI_aligned_sz;
     m_remAddress                    = (uint64_t)sysc_fpga_hndl->m_remAddrOfst;
     sysc_fpga_hndl->m_remAddrOfst   += AXI_aligned_sz;
+#endif
+}
+
+
+void OutputMaps::deserialize()
+{
+#ifdef ALPHA_DATA
+
+#else
+
 #endif
 }
