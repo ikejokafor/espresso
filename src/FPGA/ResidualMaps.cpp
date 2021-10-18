@@ -6,7 +6,6 @@ ResidualMaps::ResidualMaps(FPGA_hndl* fpga_hndl, int depth, int rows, int cols, 
 {
 	m_fpga_hndl             = fpga_hndl;
 	m_depth                 = depth;
-    m_depth_algnd           = AXI_ceil(m_depth * PIXEL_SIZE, AXI_MX_BT_SZ) / PIXEL_SIZE;      
 	m_rows                  = rows;
 	m_cols                  = cols;
     m_cpu_data              = new float[m_depth * m_rows * m_cols];
@@ -31,7 +30,7 @@ void ResidualMaps::serialize()
 {
 #ifdef ALPHA_DATA
     _hndl*  _hndl                   = reinterpret_cast<_hndl*>(m_fpga_hndl);
-    m_size                          = m_depth_algnd * m_rows * m_cols * PIXEL_SIZE;
+    m_size                          = m_depth * m_rows * m_cols * PIXEL_SIZE;
     printf("[ESPRESSO]: Allocating Space for Residual Maps\n");
     m_buffer                        = (void*)_hndl->allocate(this, m_size);
     fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
@@ -50,7 +49,7 @@ void ResidualMaps::serialize()
     }
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    m_size                          = m_depth_algnd * m_rows * m_cols * PIXEL_SIZE;
+    m_size                          = m_depth * m_rows * m_cols * PIXEL_SIZE;
     uint64_t AXI_aligned_sz         = ALGN_PYLD_SZ(m_size, AXI_BUFFER_ALIGNMENT);
     m_size                          = AXI_aligned_sz;
     m_remAddress                    = (uint64_t)sysc_fpga_hndl->m_remAddrOfst;

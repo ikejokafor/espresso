@@ -6,7 +6,6 @@ PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, int depth, int rows, int cols, fl
 {
     m_fpga_hndl         = fpga_hndl;
 	m_depth             = depth;
-    m_depth_algnd       = AXI_ceil(m_depth * PIXEL_SIZE, AXI_MX_BT_SZ) / PIXEL_SIZE;    
 	m_rows              = rows;
 	m_cols              = cols;
     m_cpu_data          = new float[depth * rows * cols];
@@ -22,7 +21,6 @@ PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, InputMaps* inputMaps)
 {
     m_fpga_hndl         = fpga_hndl;
 	m_depth             = inputMaps->m_depth;
-    m_depth_algnd       = AXI_ceil(m_depth * PIXEL_SIZE, AXI_MX_BT_SZ) / PIXEL_SIZE;   
 	m_rows              = inputMaps->m_rows;
 	m_cols              = inputMaps->m_cols; 
     m_cpu_data          = new float[m_depth * m_rows * m_cols];
@@ -35,7 +33,6 @@ PartialMaps::PartialMaps(FPGA_hndl* fpga_hndl, OutputMaps* outputMaps)
 {
     m_fpga_hndl         = fpga_hndl;
 	m_depth             = outputMaps->m_depth;
-    m_depth_algnd       = AXI_ceil(m_depth * PIXEL_SIZE, AXI_MX_BT_SZ) / PIXEL_SIZE;    
 	m_rows              = outputMaps->m_rows;
 	m_cols              = outputMaps->m_cols;
     m_cpu_data          = new float[m_depth * m_rows * m_cols];
@@ -57,7 +54,7 @@ void PartialMaps::serialize()
 {
 #ifdef ALPHA_DATA
     _hndl* _fpga_hndl  		    	= reinterpret_cast<_hndl*>(m_fpga_hndl);
-    m_size                          = m_depth_algnd * m_rows * m_cols * PIXEL_SIZE;
+    m_size                          = m_depth * m_rows * m_cols * PIXEL_SIZE;
     printf("[ESPRESSO]: Allocating Space for Partial Maps\n");
     m_buffer                        = (void*)_hndl->allocate(this, m_size);
     fixedPoint_t* rmt_data          = (fixedPoint_t*)m_buffer;
@@ -81,7 +78,7 @@ void PartialMaps::serialize()
     }
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    m_size                          = m_depth_algnd * m_rows * m_cols * PIXEL_SIZE;
+    m_size                          = m_depth * m_rows * m_cols * PIXEL_SIZE;
     uint64_t AXI_aligned_sz         = ALGN_PYLD_SZ(m_size, AXI_BUFFER_ALIGNMENT);
     m_size                          = AXI_aligned_sz;
     m_remAddress                    = (uint64_t)sysc_fpga_hndl->m_remAddrOfst;

@@ -5,7 +5,6 @@ OutputMaps::OutputMaps(FPGA_hndl* fpga_hndl, int depth, int rows, int cols) : Ac
 {
     m_fpga_hndl         = fpga_hndl;
 	m_depth             = depth;
-    m_depth_algnd       = AXI_ceil(m_depth * PIXEL_SIZE, AXI_MX_BT_SZ) / PIXEL_SIZE;  
 	m_rows              = rows;
 	m_cols              = cols;
     m_cpu_data          = new float[depth * rows * cols];
@@ -34,7 +33,7 @@ void OutputMaps::serialize()
     m_buffer        = (void*)_hndl->allocate(this, m_size);
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    m_size                          = m_depth * m_rows * m_depth_algnd * PIXEL_SIZE;
+    m_size                          = m_depth * m_rows * m_cols * PIXEL_SIZE;
     uint64_t AXI_aligned_sz         = ALGN_PYLD_SZ(m_size, AXI_BUFFER_ALIGNMENT);
     m_size                          = AXI_aligned_sz;
     m_remAddress                    = (uint64_t)sysc_fpga_hndl->m_remAddrOfst;

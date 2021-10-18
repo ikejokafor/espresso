@@ -94,12 +94,12 @@ Layer_Iteration::Layer_Iteration(
 			m_outputMaps->m_size,
             (m_prev1x1Maps) ? m_prev1x1Maps->m_size : 0,
 			(m_kernels1x1) ? (m_kernels1x1->m_depth * CO_HIGH_WATERMARK_FACTOR) : (m_outputMaps->m_depth * CO_HIGH_WATERMARK_FACTOR),
-			(m_residualMaps) ? (m_residualMaps->m_depth_algnd * RM_LOW_WATERMARK_FACTOR) >> (int)log2(AXI_MX_BT_SZ) : 0,
-			(m_partialMaps) ? (m_partialMaps->m_depth_algnd * PM_LOW_WATERMARK_FACTOR) >> (int)log2(AXI_MX_BT_SZ): 0,
-            (m_prev1x1Maps) ? (m_prev1x1Maps->m_depth_algnd * PV_LOW_WATERMARK_FACTOR) >> (int)log2(AXI_MX_BT_SZ): 0,
-			(m_residualMaps) ? AXI_ceil((m_residualMaps->m_depth * RM_FETCH_FACTOR * PIXEL_SIZE), AXI_MX_BT_SZ)  : 0,
-			(m_partialMaps) ? AXI_ceil((m_partialMaps->m_depth * PM_FETCH_FACTOR * PIXEL_SIZE), AXI_MX_BT_SZ) : 0,
-            (m_prev1x1Maps) ? AXI_ceil((m_prev1x1Maps->m_depth * PV_FETCH_FACTOR * PIXEL_SIZE), AXI_MX_BT_SZ) : 0,
+			(m_residualMaps) ? AXI_ceil((m_residualMaps->m_depth * RM_LOW_WATERMARK_FACTOR * PIXEL_SIZE), AXI_MX_BT_SZ) / PIXEL_SIZE : 0,
+			(m_partialMaps) ? AXI_ceil((m_partialMaps->m_depth * PM_LOW_WATERMARK_FACTOR * PIXEL_SIZE), AXI_MX_BT_SZ) / PIXEL_SIZE : 0,
+            (m_prev1x1Maps) ? AXI_ceil((m_prev1x1Maps->m_depth * PV_LOW_WATERMARK_FACTOR * PIXEL_SIZE), AXI_MX_BT_SZ) / PIXEL_SIZE : 0,
+			(m_residualMaps) ? AXI_ceil((m_residualMaps->m_depth * RM_LOW_WATERMARK_FACTOR * PIXEL_SIZE), AXI_MX_BT_SZ)  : 0,
+			(m_partialMaps) ? AXI_ceil((m_partialMaps->m_depth * PM_LOW_WATERMARK_FACTOR * PIXEL_SIZE), AXI_MX_BT_SZ) : 0,
+            (m_prev1x1Maps) ? AXI_ceil((m_prev1x1Maps->m_depth * PV_LOW_WATERMARK_FACTOR * PIXEL_SIZE), AXI_MX_BT_SZ) : 0,
 			krnl1x1_pding,
 			krnl1x1_pad_bgn,
 			krnl1x1_pad_end,
@@ -113,7 +113,7 @@ Layer_Iteration::Layer_Iteration(
 		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (m_partialMaps) ? m_partialMaps->m_remAddress : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (m_residualMaps) ? m_residualMaps->m_remAddress : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapAddr = m_outputMaps->m_remAddress;
-		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapStoreFactor = m_outputMaps->m_depth_algnd * OB_STORE_FACTOR >> (int)log2(AXI_MX_BT_SZ);
+		m_accelCfg->m_FAS_cfg_arr[i]->m_outMapStoreFactor = AXI_ceil((m_outputMaps->m_depth * OB_STORE_FACTOR * PIXEL_SIZE), AXI_MX_BT_SZ) / PIXEL_SIZE;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapAddr = (m_inputMaps) ? m_inputMaps->m_remAddress : 0;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_inMapFetchAmt = (m_inputMaps) ? (m_inputMaps->m_cols_algnd * m_inputMaps->m_depth * PIXEL_SIZE) >> (int)log2(AXI_MX_BT_SZ) : 0;
         m_accelCfg->m_FAS_cfg_arr[i]->m_krnl3x3Addr = (m_kernels3x3) ? m_kernels3x3->m_remAddress : 0;
