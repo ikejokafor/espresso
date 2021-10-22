@@ -650,7 +650,7 @@ void espresso::CNN_Network::printAccelPerfAnalyStats()
         {
             continue;
         }
-        fd << "Layer" << i << "," << m_cnn[i]->m_layerName << "," << to_string(m_cnn[i]->m_layerType) << ",";
+        fd <<  i << "," << m_cnn[i]->m_layerName << "," << to_string(m_cnn[i]->m_layerType) << ",";
         if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 3 && m_cnn[i]->m_dilation == -1) 
         {
 			// fd << "Layer" << i << ",";

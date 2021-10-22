@@ -518,6 +518,7 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
     m_Dpyld = NULL;
     delete m_sysC_FPGAcfg;
     m_sysC_FPGAcfg = NULL;
+    m_sysc_fpga_hndl->resetMemSpace();
 }
 #endif
 
