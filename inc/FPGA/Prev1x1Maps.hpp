@@ -20,7 +20,10 @@ class Prev1x1Maps : public Accel_Payload
 
 		int m_depth;
 		int m_rows;
-		int m_cols;   
+		int m_cols;
+        int m_ftchAmt;
+        int m_ftchFctr;
+        int m_vld_sz;
         float* m_cpu_data;
         bool ref;
         FPGA_hndl* m_fpga_hndl;

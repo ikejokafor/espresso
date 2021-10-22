@@ -22,9 +22,10 @@ class OutputMaps : public Accel_Payload
         void deserialize();
 
 		int m_depth;
-        int m_depth_algnd;
 		int m_rows;
 		int m_cols;
+        int m_strFctr;
+        int m_vld_sz;
 		float* m_cpu_data;
         FPGA_hndl* m_fpga_hndl;
 };

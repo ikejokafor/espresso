@@ -422,6 +422,20 @@ layAclPrm_t* Layer_Job::createAccelParams(
 }
 
 
+void Layer_Job::process(double& elapsed_time, double& QUAD_time, double& FAS_time)
+{
+    elapsed_time = 0.0f;
+    for(int k = 0; k < m_lay_it_arr.size(); k++)
+    {
+        for(int d = 0; d < m_lay_it_arr[k].size(); d++)
+        {
+            calcAccelPerfAnalyStats(m_lay_it_arr[k][d], QUAD_time, FAS_time);
+            elapsed_time += max(QUAD_time, FAS_time);
+        }
+    }
+}
+
+
 #ifdef SYSTEMC
 typedef std::numeric_limits< double > dbl;
 void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPower, double& avg_QUAD_time0, double& avg_FAS_time0, double& avg_QUAD_time1, double& avg_FAS_time1)
@@ -474,6 +488,7 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
             cout << endl << endl;
             // get output stats           
 			m_sysc_fpga_hndl->getOutput(m_Spyld);
+            cout << endl << endl;
             double* ptr = (double*)m_Spyld->m_buffer;
             elapsed_time += (ptr[0]);
             memPower += (ptr[1]);
@@ -656,7 +671,6 @@ void Layer_Job::process(float* layOut)
             float* intmStrgB = new float[depth * MAX_INPUT_ROWS * MAX_INPUT_COLS];
             int qd_nOutRows = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_num_output_rows;
             int qd_nOutCols = m_lay_it_arr[k][d]->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_num_output_cols;
-            int qd_outDpth = (kernels3x3) ? kernels3x3->m_numKernels : -1;
 
 
             if(upsample)
@@ -1593,15 +1607,16 @@ void Layer_Job::printConfig(Layer_Iteration* lay_it)
 	cout << "[ESPRESSO]:\tNum Output Rows:                             " << fas_cfg->m_num_output_rows			<< endl;
 	cout << "[ESPRESSO]:\tNum Output Cols:                             " << fas_cfg->m_num_output_cols			<< endl;
 	cout << "[ESPRESSO]:\tOutput Depth:                                " << fas_cfg->m_output_depth				<< endl;
+    cout << "[ESPRESSO]:\tOutput Map Store Vld Total                   " << fas_cfg->m_om_store_vld_total       << endl;
     cout << "[ESPRESSO]:\tPrev1x1 Map Fetch Total                      " << fas_cfg->m_prevMapFetchTotal        << endl;
     cout << "[ESPRESSO]:\tOutput Map Store Factor:                     " << fas_cfg->m_outMapStoreFactor        << endl;
     cout << "[ESPRESSO]:\tConvOut High Watermark:                      " << fas_cfg->m_co_high_watermark        << endl;
     cout << "[ESPRESSO]:\tResdMap Low Watermark:                       " << fas_cfg->m_rm_low_watermark         << endl;
     cout << "[ESPRESSO]:\tPartMap Low Watermark:                       " << fas_cfg->m_pm_low_watermark         << endl;
     cout << "[ESPRESSO]:\tPrev1x1 Low Watermark:                       " << fas_cfg->m_pv_low_watermark         << endl;
-    cout << "[ESPRESSO]:\tResdMap Fetch Amount:                        " << fas_cfg->m_rm_fetch_amount          << endl;
-    cout << "[ESPRESSO]:\tPartMap Fetch Amount:                        " << fas_cfg->m_pm_fetch_amount          << endl;
-    cout << "[ESPRESSO]:\tPrev1x1 Fetch Amount:                        " << fas_cfg->m_pv_fetch_amount          << endl;
+    cout << "[ESPRESSO]:\tResdMap Fetch Vld Total:                     " << fas_cfg->m_rm_ftch_vld_total        << endl;
+    cout << "[ESPRESSO]:\tPartMap Fetch Vld Total:                     " << fas_cfg->m_pm_ftch_vld_total        << endl;
+    cout << "[ESPRESSO]:\tPrev1x1 Fetch Vld Total:                     " << fas_cfg->m_pv_ftch_vld_total        << endl;
     cout << "[ESPRESSO]:\tKernel 1x1 padding:                          " << fas_cfg->m_krnl1x1_pding            << endl;
     cout << "[ESPRESSO]:\tKernel 1x1 Padding begin:                    " << fas_cfg->m_krnl1x1_pad_bgn          << endl;
     cout << "[ESPRESSO]:\tKernel 1x1 Padding end:                      " << fas_cfg->m_krnl1x1_pad_end          << endl;
@@ -1653,18 +1668,18 @@ void Layer_Job::calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& QUAD_ti
     // only works properly for unmerged layers
     if(lay_it->m_kernels3x3)
     {
-        QUAD_time = ((3 * lay_it->m_inputMaps-> m_cols)
-                    + ((lay_it->m_inputMaps->m_rows - 3) * lay_it->m_inputMaps->m_cols)
-                    + ((lay_it->m_kernels3x3->m_numKernels / K_3_S) * (lay_it->m_outputMaps->m_rows / R_S) * lay_it->m_outputMaps->m_cols)) * CLK_PRD_NS;
+        QUAD_time = ((3 * lay_it->m_inputMaps->m_cols)
+                    + ((lay_it->m_inputMaps->m_rows - 3) * lay_it->m_inputMaps->m_cols) // bc we dont overlap PFB loading and execution
+                    + ((lay_it->m_kernels3x3->m_numKernels / K_3_S) * (lay_it->m_outputMaps->m_rows / R_S) * (lay_it->m_outputMaps->m_cols / MX_3X3_S))) * CLK_PRD_NS;
     }
     else if(lay_it->m_kernels1x1)
     {
-        FAS_time  = ((lay_it->m_outputMaps->m_rows * lay_it->m_outputMaps->m_cols)
+        FAS_time  = ((lay_it->m_outputMaps->m_rows * (lay_it->m_outputMaps->m_cols / MX_1X1_S))
                     * (lay_it->m_kernels1x1->m_depth / K_1_D_S)
                     * (lay_it->m_kernels1x1->m_numKernels / K_1_S)) * CLK_PRD_NS;
     }
     else
     {
-        FAS_time = (lay_it->m_outputMaps->m_rows * lay_it->m_outputMaps->m_cols * (lay_it->m_outputMaps->m_depth / A_S)) * CLK_PRD_NS;
+        FAS_time = (lay_it->m_outputMaps->m_rows * (lay_it->m_outputMaps->m_cols / MX_1X1_S) * (lay_it->m_outputMaps->m_depth / A_S)) * CLK_PRD_NS;
     }
 }

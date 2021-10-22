@@ -2,7 +2,16 @@
 
 
 #include <math.h>
+#include <cmath>
 
+extern double K_3_S;            // 3x3 KERNEL SIMD
+extern double K_1_D_S;         // 1x1 Kernel Depth SIMD
+extern double K_1_S;            // 1x1 Kernel SIMD
+extern double R_S;              // Row SIMD
+extern double A_S;             // Accumulation SIMD
+extern double CLK_PRD_NS;
+extern double MX_3X3_S;           // Multiply SIMD for 3x3 processing ie 32 bit compute unit can do 4 8-bit mults
+extern double MX_1X1_S;          // Multiply SIMD for 3x3 processing ie 32 bit compute unit can do 4 8-bit mults
 
 static int RE_HIGH_WATERMARK           = 8;
 static int RE_TRAN_AMT                 = 8;
@@ -20,7 +29,8 @@ static int RE_TRAN_AMT                 = 8;
 #define AXI_MX_BT_SZ                64
 
 #define MAX_AWP_PER_FAS             1
-#define MAX_QUAD_PER_AWP            8
+extern int MAX_QUAD_PER_AWP;
+// #define MAX_QUAD_PER_AWP            8
 #define MAX_FAS_1X1_IT              4
 #define MAX_FAS_1X1_IT_KRNLS        64   
 
@@ -56,4 +66,4 @@ static int RE_TRAN_AMT                 = 8;
 #define SYSC_MAX_KRNL_DEPTH         max(QUAD_MAX_DEPTH, QUAD_MAX_KERNELS)
 
 
-int AXI_ceil(float fth_amt, float bus_size);
+int AXI_sz_algn(float fth_amt, float bus_size);

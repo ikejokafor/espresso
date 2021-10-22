@@ -41,31 +41,31 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
 		return;
 	}
     
-    FILE *fd = fopen("./kernels.txt", "w");
-    for(int n = 0; n < m_numKernels; n++) 
-    {
-        for(int d = 0; d < m_kernelDepth; d++)
-        {
-            for(int r = 0; r < m_numKernelRows; r++)
-            {
-                for(int c = 0; c < m_numKernelRows; c++)
-                {
-                    int idx = index4D(m_kernelDepth, m_numKernelRows, m_numKernelCols, n, d, r, c);
-                    fprintf(fd, "%f ", m_flFilterData[idx]);
-                }
-                fprintf(fd, "\n");
-            }
-            fprintf(fd, "\n\n\n");
-        }
-    }
-    fclose(fd);
-    
-    fd = fopen("./kernel_bias.txt", "w");
-    for(int n = 0; n < m_numKernels; n++) 
-    {
-        fprintf(fd, "%f\n", m_flBiasData[n]);
-    }
-    fclose(fd);
+    // FILE *fd = fopen("./kernels.txt", "w");
+    // for(int n = 0; n < m_numKernels; n++) 
+    // {
+    //     for(int d = 0; d < m_kernelDepth; d++)
+    //     {
+    //         for(int r = 0; r < m_numKernelRows; r++)
+    //         {
+    //             for(int c = 0; c < m_numKernelRows; c++)
+    //             {
+    //                 int idx = index4D(m_kernelDepth, m_numKernelRows, m_numKernelCols, n, d, r, c);
+    //                 fprintf(fd, "%f ", m_flFilterData[idx]);
+    //             }
+    //             fprintf(fd, "\n");
+    //         }
+    //         fprintf(fd, "\n\n\n");
+    //     }
+    // }
+    // fclose(fd);
+    // 
+    // fd = fopen("./kernel_bias.txt", "w");
+    // for(int n = 0; n < m_numKernels; n++) 
+    // {
+    //     fprintf(fd, "%f\n", m_flBiasData[n]);
+    // }
+    // fclose(fd);
     
 
 	Layer_Job* m_layer_job = new Layer_Job(
@@ -111,7 +111,7 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
     m_peakBW = 0.0f;
 	m_layer_job->process(m_fpga_elapsed_time, m_fpga_avgIterTime, m_fpga_memPower, m_avg_QUAD_time0, m_avg_FAS_time0, m_avg_QUAD_time1, m_avg_FAS_time1);
     // m_layer_job->process(m_topLayers[0]->m_blob.flData);
-
+    // m_layer_job->process(m_fpga_elapsed_time, m_avg_QUAD_time0, m_avg_FAS_time0);
     delete m_layer_job;
 }
 

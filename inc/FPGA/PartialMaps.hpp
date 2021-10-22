@@ -24,6 +24,9 @@ class PartialMaps : public Accel_Payload
 		int m_depth;
 		int m_rows;
 		int m_cols;
+        int m_ftchAmt;
+        int m_ftchFctr;
+        int m_vld_sz;
 		bool m_no_permute;
 		float* m_cpu_data;
         FPGA_hndl* m_fpga_hndl;

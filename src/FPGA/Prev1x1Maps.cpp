@@ -2,7 +2,6 @@
 using namespace std;
 
 
-
 Prev1x1Maps::Prev1x1Maps(FPGA_hndl* fpga_hndl, OutputMaps* outputMaps)
 {
     m_fpga_hndl     = fpga_hndl;
@@ -26,6 +25,10 @@ Prev1x1Maps::~Prev1x1Maps()
 
 void Prev1x1Maps::serialize()
 {
+    m_ftchAmt = AXI_sz_algn((m_depth * PV_LOW_WATERMARK_FACTOR * PIXEL_SIZE), AXI_MX_BT_SZ);
+    m_ftchFctr = m_ftchAmt / PIXEL_SIZE;
+    m_size = (int)ceil((float)(m_depth * m_rows * m_cols) / (float)m_ftchFctr) * m_ftchFctr * PIXEL_SIZE;
+    m_vld_sz = m_depth * m_rows * m_cols * PIXEL_SIZE;
 #ifdef ALPHA_DATA 
     _hndl* _hndl  					= reinterpret_cast<_hndl*>(m_fpga_hndl);
     m_size                          = m_depth * m_rows * m_cols * sizeof(fixedPoint_t);
@@ -34,11 +37,8 @@ void Prev1x1Maps::serialize()
     memcpy(m_buffer, m_prevOutdata, m_size);
 #else
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    m_size                          = m_depth * m_rows * m_cols * PIXEL_SIZE;
-    uint64_t AXI_aligned_sz         = ALGN_PYLD_SZ(m_size, AXI_BUFFER_ALIGNMENT);
-    m_size                          = AXI_aligned_sz;
     m_remAddress                    = (uint64_t)sysc_fpga_hndl->m_remAddrOfst;
-    sysc_fpga_hndl->m_remAddrOfst   += AXI_aligned_sz;
+    sysc_fpga_hndl->m_remAddrOfst   += m_size;
 #endif
 }
 

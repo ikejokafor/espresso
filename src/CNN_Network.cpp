@@ -397,6 +397,7 @@ void espresso::CNN_Network::Forward(string start, string end)
             cout << ", " << m_cnn[mli]->m_layerName;
         }
         cout << endl << endl << endl;
+        //////
         if(m_cnn[i]->m_layerType == espresso::CONVOLUTION || m_cnn[i]->m_layerType == espresso::RESIDUAL)
         {
             m_cnn[i]->ComputeLayer();
@@ -633,38 +634,59 @@ void espresso::CNN_Network::printExecutionStats()
 }
 
 
+static int this_idx = 0;
 void espresso::CNN_Network::printAccelPerfAnalyStats()
 {
     ofstream fd;
 	string WSpath = string(getenv("WORKSPACE_PATH"));
-	fd.open(WSpath + "/espressoTester/build/debug/accelPerfAnalyStats.csv");
-    fd << ",calc_QUAD_TIME,sim_QUAD_time,calc_FAS_TIME,sim_FAS_TIME" << endl;
+    string fname = WSpath + "/espressoTester/build/debug/accelPerfAnalyStats_" + std::to_string(this_idx) + ".csv";
+	fd.open(fname.c_str());
+    // fd << ",calc_QUAD_TIME,sim_QUAD_time,calc_FAS_TIME,sim_FAS_TIME" << endl;
+    fd << "IDX,NAME,TYPE,QUAD_TIME,FAS_TIME" << endl;
     double totalTime = 0;
     for(int i = 0; i < m_cnn.size(); i++)
     {
+        if(m_cnn[i]->m_layerType != CONVOLUTION && m_cnn[i]->m_layerType != RESIDUAL)
+        {
+            continue;
+        }
+        fd << "Layer" << i << "," << m_cnn[i]->m_layerName << "," << to_string(m_cnn[i]->m_layerType) << ",";
         if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 3 && m_cnn[i]->m_dilation == -1) 
         {
-			fd << "Layer" << i << ",";
-            fd << m_cnn[i]->m_avg_QUAD_time0 << "," << m_cnn[i]->m_avg_QUAD_time1 << ",," << endl;
-            totalTime += m_cnn[i]->m_avg_QUAD_time0;
+			// fd << "Layer" << i << ",";
+            // fd << m_cnn[i]->m_avg_QUAD_time0 << "," << m_cnn[i]->m_avg_QUAD_time1 << ",," << endl;
+            // totalTime += m_cnn[i]->m_avg_QUAD_time0;
+
+            fd << m_cnn[i]->m_avg_QUAD_time0 << "," << endl;           
+            totalTime += m_cnn[i]->m_fpga_elapsed_time;
         }
         else if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1 && m_cnn[i]->m_stride == 1)
         {
-			fd << "Layer" << i << ",";
-            fd << ",," << m_cnn[i]->m_avg_FAS_time0 << "," << m_cnn[i]->m_avg_FAS_time1 << endl;
-            totalTime += m_cnn[i]->m_avg_FAS_time0;
+            // fd << ",," << m_cnn[i]->m_avg_FAS_time0 << "," << m_cnn[i]->m_avg_FAS_time1 << endl;
+            // totalTime += m_cnn[i]->m_avg_FAS_time0;
+            
+            fd << "," << m_cnn[i]->m_avg_FAS_time0 << endl;
+            totalTime += m_cnn[i]->m_fpga_elapsed_time;
         }
 		else if(m_cnn[i]->m_layerType == RESIDUAL)
 		{
-			fd << "Layer" << i << ",";
-            fd << ",," << m_cnn[i]->m_avg_FAS_time0 << "," << m_cnn[i]->m_avg_FAS_time1 << endl;
-            totalTime += m_cnn[i]->m_avg_FAS_time0;			
-		}
+            // fd << ",," << m_cnn[i]->m_avg_FAS_time0 << "," << m_cnn[i]->m_avg_FAS_time1 << endl;
+            // totalTime += m_cnn[i]->m_avg_FAS_time0;
+            
+            fd << "," << m_cnn[i]->m_avg_FAS_time0 << endl;
+            totalTime += m_cnn[i]->m_fpga_elapsed_time;            
+		} 
     }
     fd << endl;
-    fd << "Total Time: ," << totalTime << endl;
-    fd << "FPS: ," << 1.0 / (totalTime * pow(10.0, -9.0)) << endl;
-    fd << "DSPs: ," << NUM_DSPS_PER_QUAD * K_3_S + NUM_DSPS_PER_FAS * K_1_S << ", 9024" << endl;
-    fd << "BRAMs:, " << NUM_BRAMS_PER_QUAD << ", 340" << endl;
+    fd << "Total Time:, "   << totalTime          << endl;
+    fd << "K_3_S:, "        << K_3_S              << endl; 
+    fd << "K_1_S:, "        << K_1_S              << endl; 
+    fd << "MX_3X3_S:, "     << MX_3X3_S           << endl;
+    fd << "MX_1X1_S:, "     << MX_1X1_S           << endl;
+    fd << "NUM_QUADS:, "    << MAX_QUAD_PER_AWP   << endl;
+    fd << "FPS:, "          << 1.0 / (totalTime * pow(10.0, -9.0)) << endl;
+    fd << "DSPs:, "         << NUM_DSPS_PER_QUAD * K_3_S + NUM_DSPS_PER_FAS * K_1_S << " / 9024" << endl;
+    fd << "BRAMs:, "        << NUM_BRAMS_PER_QUAD << " / 340" << endl;
     fd.close();
+    this_idx++;
 }

@@ -28,6 +28,10 @@ ResidualMaps::~ResidualMaps()
 
 void ResidualMaps::serialize()
 {
+    m_ftchAmt = AXI_sz_algn((m_depth * RM_LOW_WATERMARK_FACTOR * PIXEL_SIZE), AXI_MX_BT_SZ);
+    m_ftchFctr = m_ftchAmt / PIXEL_SIZE;
+    m_size = (int)ceil((float)(m_depth * m_rows * m_cols) / (float)m_ftchFctr) * m_ftchFctr * PIXEL_SIZE;
+    m_vld_sz = m_depth * m_rows * m_cols * PIXEL_SIZE;
 #ifdef ALPHA_DATA
     _hndl*  _hndl                   = reinterpret_cast<_hndl*>(m_fpga_hndl);
     m_size                          = m_depth * m_rows * m_cols * PIXEL_SIZE;
@@ -48,12 +52,9 @@ void ResidualMaps::serialize()
         }
     }
 #else
-    SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    m_size                          = m_depth * m_rows * m_cols * PIXEL_SIZE;
-    uint64_t AXI_aligned_sz         = ALGN_PYLD_SZ(m_size, AXI_BUFFER_ALIGNMENT);
-    m_size                          = AXI_aligned_sz;
+    SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);  
     m_remAddress                    = (uint64_t)sysc_fpga_hndl->m_remAddrOfst;
-    sysc_fpga_hndl->m_remAddrOfst   += AXI_aligned_sz;
+    sysc_fpga_hndl->m_remAddrOfst   += m_size;
 #endif
 
 }

@@ -36,9 +36,9 @@ FAS_cfg::FAS_cfg(
 	int rm_low_watermark,
 	int pm_low_watermark,
     int pv_low_watermark,
-	int rm_fetch_amount,
-	int pm_fetch_amount,
-	int pv_fetch_amount,
+	int rm_ftch_vld_total,
+	int pm_ftch_vld_total,
+	int pv_ftch_vld_total,
 	bool krnl1x1_pding,
 	int krnl1x1_pad_bgn,
 	int krnl1x1_pad_end,
@@ -47,7 +47,8 @@ FAS_cfg::FAS_cfg(
     bool it_bias1x1,
 	int num_output_rows,
 	int num_output_cols,
-	int output_depth
+	int output_depth,
+    int om_store_vld_total
 ) :
    	m_itNKrnl1x1BiasAddrArr(MAX_FAS_1X1_IT),
 	m_itNKrnl1x1AddrArr(MAX_FAS_1X1_IT),
@@ -82,9 +83,9 @@ FAS_cfg::FAS_cfg(
     m_rm_low_watermark = rm_low_watermark;
     m_pm_low_watermark = pm_low_watermark;
     m_pv_low_watermark = pv_low_watermark;
-	m_rm_fetch_amount = rm_fetch_amount;
-	m_pm_fetch_amount = pm_fetch_amount;
-	m_pv_fetch_amount = pv_fetch_amount;
+	m_rm_ftch_vld_total = rm_ftch_vld_total;
+	m_pm_ftch_vld_total = pm_ftch_vld_total;
+	m_pv_ftch_vld_total = pv_ftch_vld_total;
 	m_krnl1x1_pding = krnl1x1_pding;
 	m_krnl1x1_pad_bgn = krnl1x1_pad_bgn;
 	m_krnl1x1_pad_end = krnl1x1_pad_end;
@@ -94,6 +95,7 @@ FAS_cfg::FAS_cfg(
 	m_num_output_rows = num_output_rows;
 	m_num_output_cols = num_output_cols;
 	m_output_depth = output_depth;
+    m_om_store_vld_total = om_store_vld_total;
 }
 
 

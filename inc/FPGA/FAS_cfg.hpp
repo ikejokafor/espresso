@@ -72,7 +72,8 @@ class FAS_cfg
             bool it_bias1x1,
 			int num_output_rows,
 			int num_output_cols,
-			int output_depth_cfg
+			int output_depth,
+            int om_store_vld_total
         );
         ~FAS_cfg();
 
@@ -109,9 +110,9 @@ class FAS_cfg
         int m_rm_low_watermark;
         int m_pm_low_watermark;
         int m_pv_low_watermark;
-        int m_rm_fetch_amount;
-        int m_pm_fetch_amount;
-        int m_pv_fetch_amount;
+        int m_rm_ftch_vld_total;
+        int m_pm_ftch_vld_total;
+        int m_pv_ftch_vld_total;
         bool m_krnl1x1_pding;
         int m_krnl1x1_pad_bgn;
         int m_krnl1x1_pad_end;
@@ -121,6 +122,7 @@ class FAS_cfg
 		int m_num_output_rows;
 		int m_num_output_cols;
 		int m_output_depth;
+        int m_om_store_vld_total;
         std::vector<AWP_cfg*> m_AWP_cfg_arr;
         std::vector<bool> m_AWP_en_arr;
         int m_FGPA_VEC_ADD_SIMD;    // read from FPGA cfg

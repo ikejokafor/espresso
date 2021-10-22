@@ -8,7 +8,7 @@ InputMaps::InputMaps(FPGA_hndl* fpga_hndl, int depth, int rows, int cols, float*
 	m_depth     = depth;
 	m_rows      = rows;
 	m_cols      = cols;
-    m_cols_algnd = AXI_ceil(m_cols * PIXEL_SIZE, AXI_MX_BT_SZ) / PIXEL_SIZE;
+    m_cols_algnd = AXI_sz_algn(m_cols * PIXEL_SIZE, AXI_MX_BT_SZ) / PIXEL_SIZE;
 	m_cpu_data  = new float[depth * rows * cols];
     memcpy(m_cpu_data, data, sizeof(float) * depth * rows * cols);
 	m_buffer			= NULL;

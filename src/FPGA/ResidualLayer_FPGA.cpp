@@ -37,21 +37,21 @@ void ResidualLayer_FPGA::ComputeLayer_FxPt()
 	}
     
     
-    FILE *fd = fopen("./residualMaps.txt", "w");
-    for(int d = 0; d < m_residualMapDepth; d++)
-    {
-        for(int r = 0; r < m_numResidualMapRows; r++)
-        {
-            for(int c = 0; c < m_numResidualMapsCols; c++)
-            {
-                int idx = index3D(m_numResidualMapRows, m_numResidualMapsCols, d, r, c);
-                fprintf(fd, "%f ", m_residualMapData[idx]);
-            }
-            fprintf(fd, "\n");
-        }
-        fprintf(fd, "\n\n\n");
-    }
-    fclose(fd);
+    // FILE *fd = fopen("./residualMaps.txt", "w");
+    // for(int d = 0; d < m_residualMapDepth; d++)
+    // {
+    //     for(int r = 0; r < m_numResidualMapRows; r++)
+    //     {
+    //         for(int c = 0; c < m_numResidualMapsCols; c++)
+    //         {
+    //             int idx = index3D(m_numResidualMapRows, m_numResidualMapsCols, d, r, c);
+    //             fprintf(fd, "%f ", m_residualMapData[idx]);
+    //         }
+    //         fprintf(fd, "\n");
+    //     }
+    //     fprintf(fd, "\n\n\n");
+    // }
+    // fclose(fd);
 
     Layer_Job* m_layer_job = new Layer_Job(
 		m_layerName,
@@ -96,6 +96,7 @@ void ResidualLayer_FPGA::ComputeLayer_FxPt()
     m_peakBW = 0.0f;
 	m_layer_job->process(m_fpga_elapsed_time, m_fpga_avgIterTime, m_fpga_memPower, m_avg_QUAD_time0, m_avg_FAS_time0, m_avg_QUAD_time1, m_avg_FAS_time1);
 	// m_layer_job->process(m_topLayers[0]->m_blob.flData);
+    // m_layer_job->process(m_fpga_elapsed_time, m_avg_QUAD_time0, m_avg_FAS_time0);
     delete m_layer_job;
 }
 

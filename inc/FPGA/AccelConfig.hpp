@@ -50,9 +50,9 @@ class AccelConfig : public Accel_Payload
 			uint64_t rm_low_watermark			;
 			uint64_t pm_low_watermark			;
             uint64_t pv_low_watermark           ;
-			uint64_t rm_fetch_amount			;
-			uint64_t pm_fetch_amount			;
-			uint64_t pv_fetch_amount			;
+			uint64_t rm_ftch_vld_total			;
+			uint64_t pv_ftch_vld_total			;
+			uint64_t pm_ftch_vld_total			;
             uint64_t res_high_watermark         ;
 			uint64_t krnl1x1_pding				;
 			uint64_t krnl1x1_pad_bgn			;
@@ -97,6 +97,8 @@ class AccelConfig : public Accel_Payload
 			uint64_t crpd_input_col_end         ;
 			uint64_t fas_num_output_rows    	;
 			uint64_t fas_num_output_cols	    ;
+            uint64_t fas_outputh_depth          ;
+            uint64_t om_store_vld_total         ;
 			uint64_t quad_num_output_rows	    ;
 			uint64_t quad_num_output_cols	    ;	
 			

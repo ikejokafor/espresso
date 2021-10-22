@@ -24,14 +24,6 @@
 
 
 
-static double K_3_S = 1;
-static double K_1_D_S = 32;
-static double K_1_S = 1;
-static double R_S = 1;
-static double A_S = 32;
-static double CLK_PRD_NS = 10.0f;
-
-
 typedef struct
 {
 	InputMaps* inputMaps;
@@ -137,6 +129,7 @@ class Layer_Job
 		);
 		void printConfig(Layer_Iteration* lay_it);
         void process(double& elapsed_time, double& avgIterTime, double& memPower, double& avg_QUAD_time0, double& avg_FAS_time0, double& avg_QUAD_time1, double& avg_FAS_time1);
+        void process(double& elapsed_time, double& QUAD_time, double& FAS_time);
         void calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& avg_QUAD_time, double& avg_FAS_time);
 
         int lasQD(Layer_Iteration* lay_it);
