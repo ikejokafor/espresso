@@ -427,6 +427,12 @@ void espresso::CNN_Network::Forward(string start, string end)
         
         // if(i == 6)
         //     exit(0);
+#ifdef MODEL_TECH    
+        FILE* fd = fopen("/export/home/izo5011/WorkSpace/SYSC_FPGA/simulation/last_fin_layer.txt", "w");
+        fprintf(fd, "%s\n", m_cnn[i]->m_layerName.c_str());
+        fflush(fd);
+        fclose(fd);
+#endif
     }
 }
 
