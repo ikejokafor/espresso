@@ -74,6 +74,13 @@ class FAS_cfg
 			int num_output_cols,
 			int output_depth,
             int om_store_vld_total
+#ifdef SYSTEMC
+            ,
+            std::string layerName,
+            int kernel_i,
+            int depth_i,
+            bool last
+#endif
         );
         ~FAS_cfg();
 
@@ -123,6 +130,12 @@ class FAS_cfg
 		int m_num_output_cols;
 		int m_output_depth;
         int m_om_store_vld_total;
+#ifdef SYSTEMC
+        std::string m_layerName;
+        int m_kernel_i;
+        int m_depth_i;
+        bool m_last;
+#endif
         std::vector<AWP_cfg*> m_AWP_cfg_arr;
         std::vector<bool> m_AWP_en_arr;
         int m_FGPA_VEC_ADD_SIMD;    // read from FPGA cfg

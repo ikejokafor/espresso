@@ -28,7 +28,15 @@ Layer_Iteration::Layer_Iteration(
 	int krnl1x1_pad_bgn,
 	int krnl1x1_pad_end,
 	bool del_res,
-	bool del_1x1)
+	bool del_1x1
+#ifdef SYSTEMC
+    ,      
+    string layerName,
+    int kernel_i,
+    int depth_i,
+    bool last
+#endif  
+    )
 {
 	m_opcode			= opcode;
 	m_pxSeqCfg			= NULL;
@@ -110,6 +118,13 @@ Layer_Iteration::Layer_Iteration(
 			m_outputMaps->m_cols,
 			m_outputMaps->m_depth,
             m_outputMaps->m_vld_sz
+#ifdef SYSTEMC          
+            ,
+            layerName,
+            kernel_i,
+            depth_i,
+            last
+#endif           
 		));
 		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (m_partialMaps) ? m_partialMaps->m_remAddress : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (m_residualMaps) ? m_residualMaps->m_remAddress : -1;

@@ -49,6 +49,13 @@ FAS_cfg::FAS_cfg(
 	int num_output_cols,
 	int output_depth,
     int om_store_vld_total
+#ifdef SYSTEMC
+    ,
+    string layerName,
+    int kernel_i,
+    int depth_i,
+    bool last
+#endif
 ) :
    	m_itNKrnl1x1BiasAddrArr(MAX_FAS_1X1_IT),
 	m_itNKrnl1x1AddrArr(MAX_FAS_1X1_IT),
@@ -70,11 +77,6 @@ FAS_cfg::FAS_cfg(
 	m_krnl3x3BiasFetchTotal = krnl3x3BiasFetchTotal;
 	m_krnl1x1BiasFetchTotal = krnl1x1BiasFetchTotal;
 	m_num_1x1_kernels = num_1x1_kernels;
-#ifdef SYSTEMC
-	m_krnl1x1Depth = krnl1x1Depth;
-#else
-    m_krnl1x1Depth = krnl1x1Depth / m_FGPA_VEC_ADD_SIMD;
-#endif
 	m_partMapFetchTotal = partMapFetchTotal;
 	m_resMapFetchTotal = resMapFetchTotal;
 	m_outMapStoreTotal = outMapStoreTotal;
@@ -96,6 +98,15 @@ FAS_cfg::FAS_cfg(
 	m_num_output_cols = num_output_cols;
 	m_output_depth = output_depth;
     m_om_store_vld_total = om_store_vld_total;
+#ifdef SYSTEMC
+	m_krnl1x1Depth = krnl1x1Depth;
+    m_layerName = layerName;
+    m_kernel_i = kernel_i;
+    m_depth_i = depth_i;
+    m_last = last;
+#else
+    m_krnl1x1Depth = krnl1x1Depth / m_FGPA_VEC_ADD_SIMD;
+#endif
 }
 
 

@@ -222,6 +222,13 @@ void Layer_Job::createLayerIters()
                 m_krnl1x1_pad_end,
 				del_res,
 				del_1x1
+#ifdef SYSTEMC                
+                ,
+                m_layerName,
+                i,
+                j,
+                (i == (m_num_krnl_iter - 1) && j == (m_num_depth_iter - 1)) ? true : false
+#endif             
             ));
             remDepth -= depth;
         }

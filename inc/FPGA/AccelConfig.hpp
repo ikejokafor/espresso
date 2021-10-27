@@ -100,7 +100,13 @@ class AccelConfig : public Accel_Payload
             uint64_t fas_outputh_depth          ;
             uint64_t om_store_vld_total         ;
 			uint64_t quad_num_output_rows	    ;
-			uint64_t quad_num_output_cols	    ;	
+			uint64_t quad_num_output_cols	    ;
+#ifdef SYSTEMC
+            uint64_t kernel_i                   ;
+            uint64_t depth_i                    ;
+            char layerName[32]                  ;
+            bool last                           ;
+#endif
 			
 		} cfg_t;
 

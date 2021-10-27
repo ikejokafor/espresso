@@ -48,6 +48,13 @@ class Layer_Iteration
 			int krnl1x1_pad_end,
 			bool del_res,
 			bool del_1x1
+#ifdef SYSTEMC
+            ,      
+            std::string layerName,
+            int kernel_i,
+            int depth_i,
+            bool last
+#endif
 		);
 		~Layer_Iteration();
 
