@@ -227,7 +227,7 @@ void Layer_Job::createLayerIters()
                 m_layerName,
                 i,
                 j,
-                (i == (m_num_krnl_iter - 1) && j == (m_num_depth_iter - 1)) ? true : false
+                (m_layerName == "106_Convolution") ? true : false   // FIXME: hardcoded
 #endif             
             ));
             remDepth -= depth;

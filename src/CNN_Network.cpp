@@ -386,10 +386,12 @@ void espresso::CNN_Network::Forward(string start, string end)
     getBgnEndLayer(startIdx, start, endIdx, end);
     // Forward Propagation
     if(startIdx == endIdx) endIdx++;
+#ifdef MODEL_TECH
     if(remove("/export/home/izo5011/WorkSpace/SYSC_FPGA/simulation/last_fin_layer.txt"))
     {
         perror("Error deleting file");
-    }   
+    }
+#endif    
     for(int i = startIdx; i < endIdx; i++)
     {        
         printLayerStats(i);
