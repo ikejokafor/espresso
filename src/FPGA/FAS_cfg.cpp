@@ -54,6 +54,7 @@ FAS_cfg::FAS_cfg(
     string layerName,
     int kernel_i,
     int depth_i,
+    bool first,
     bool last
 #endif
 ) :
@@ -103,6 +104,7 @@ FAS_cfg::FAS_cfg(
     m_layerName = layerName;
     m_kernel_i = kernel_i;
     m_depth_i = depth_i;
+    m_first = first;
     m_last = last;
 #else
     m_krnl1x1Depth = krnl1x1Depth / m_FGPA_VEC_ADD_SIMD;

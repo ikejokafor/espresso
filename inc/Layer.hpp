@@ -166,6 +166,8 @@ namespace espresso
 				net_idx = -1;
                 yolo_net = nullptr;
                 dilation = -1;
+                first = false;
+                last = false;
 			}
 			~layerInfo_obj() {};
 
@@ -218,6 +220,8 @@ namespace espresso
 			int net_idx;
 			network *yolo_net;
             int dilation;
+            bool first;
+            bool last;
 	};
 
 
@@ -333,5 +337,7 @@ namespace espresso
             int m_fpga_outDepth;
             int m_fpga_numOutRows;
             int m_fpga_numOutCols;
+            bool m_first;
+            bool m_last;
 	};
 }

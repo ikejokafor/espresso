@@ -34,6 +34,7 @@ Layer_Iteration::Layer_Iteration(
     string layerName,
     int kernel_i,
     int depth_i,
+    bool first,
     bool last
 #endif  
     )
@@ -123,6 +124,7 @@ Layer_Iteration::Layer_Iteration(
             layerName,
             kernel_i,
             depth_i,
+            first,
             last
 #endif           
 		));

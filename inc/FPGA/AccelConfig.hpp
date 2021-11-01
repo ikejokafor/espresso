@@ -106,6 +106,7 @@ class AccelConfig : public Accel_Payload
             uint64_t depth_i                    ;
             char layerName[32]                  ;
             bool last                           ;
+            bool first                          ;
 #endif
 			
 		} cfg_t;

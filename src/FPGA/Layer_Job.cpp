@@ -44,6 +44,8 @@ Layer_Job::Layer_Job(
     bool krnl_1x1_layer,
     bool do_1x1_res,
     bool do_res_1x1,
+    bool first,
+    bool last,
     int fxPtLength,
     int numFracBits
 ) {
@@ -114,7 +116,9 @@ Layer_Job::Layer_Job(
         m_kernels1x1Bias    = new KernelBias(fpga_hndl, num1x1Kernels, 1, kernel1x1Bias);
     }
     m_krnl_1x1_layer = krnl_1x1_layer;
-	m_fpga_hndl		 = fpga_hndl;
+	m_fpga_hndl		 = fpga_hndl;   
+    m_first          = first;
+    m_last           = last;
 #ifdef SYSTEMC
     m_sysc_fpga_hndl    = reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
     m_Spyld = new StatPayload();
@@ -227,7 +231,8 @@ void Layer_Job::createLayerIters()
                 m_layerName,
                 i,
                 j,
-                (m_layerName == "106_Convolution") ? true : false   // FIXME: hardcoded
+                m_first,
+                m_last
 #endif             
             ));
             remDepth -= depth;

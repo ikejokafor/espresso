@@ -53,6 +53,7 @@ class Layer_Iteration
             std::string layerName,
             int kernel_i,
             int depth_i,
+            bool first,
             bool last
 #endif
 		);

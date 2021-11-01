@@ -87,7 +87,9 @@ void ResidualLayer_FPGA::ComputeLayer_FxPt()
 		m_fpga_hndl,
 		m_fpga_krnl_1x1_layer,
         m_fpga_do_1x1_res,
-        m_fpga_do_res_1x1
+        m_fpga_do_res_1x1,
+        m_first,
+        m_last
 	);
 	m_layer_job->createLayerIters();
     m_fpga_elapsed_time = 0.0f;

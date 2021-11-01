@@ -79,6 +79,7 @@ class FAS_cfg
             std::string layerName,
             int kernel_i,
             int depth_i,
+            bool first,
             bool last
 #endif
         );
@@ -134,6 +135,7 @@ class FAS_cfg
         std::string m_layerName;
         int m_kernel_i;
         int m_depth_i;
+        bool m_first;
         bool m_last;
 #endif
         std::vector<AWP_cfg*> m_AWP_cfg_arr;

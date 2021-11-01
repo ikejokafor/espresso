@@ -112,6 +112,8 @@ class Layer_Job
 			bool krnl_1x1_layer,
             bool do_1x1_res,
             bool do_res_1x1,
+            bool first,
+            bool last,
 			int fxPtLength = 16,
 			int numFracBits = 14
 	    );
@@ -205,6 +207,8 @@ class Layer_Job
         bool m_do_1x1_res;
         bool m_do_res_1x1;
 		FPGA_hndl* m_fpga_hndl;
+        bool m_first;
+        bool m_last;
 #ifdef SYSTEMC
 		DummyPayload* m_Dpyld;
 		StatPayload* m_Spyld;

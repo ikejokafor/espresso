@@ -102,6 +102,7 @@ void AccelConfig::serialize()
                 cfg[idx].depth_i                    = m_FAS_cfg_arr[f]->m_depth_i;
                 strcpy(cfg[idx].layerName, m_FAS_cfg_arr[f]->m_layerName.c_str());
                 cfg[idx].last                       = m_FAS_cfg_arr[f]->m_last;
+                cfg[idx].first                      = m_FAS_cfg_arr[f]->m_first; 
                 // Serialize
                 // m_FAS_cfg_arr[i]->m_itNKrnl1x1BiasAddrArr =         
                 // m_FAS_cfg_arr[i]->m_itNKrnl1x1AddrArr =
@@ -202,6 +203,7 @@ void AccelConfig::deserialize()
                 m_FAS_cfg_arr[f]->m_depth_i                 = cfg[idx].depth_i;                         
                 m_FAS_cfg_arr[f]->m_layerName               = cfg[idx].layerName;
                 m_FAS_cfg_arr[f]->m_last                    = cfg[idx].last;
+                m_FAS_cfg_arr[f]->m_first                   = cfg[idx].first;
                 // Deserialize
                 // m_FAS_cfg_arr[i]->m_itNKrnl1x1BiasAddrArr =         
                 // m_FAS_cfg_arr[i]->m_itNKrnl1x1AddrArr =
