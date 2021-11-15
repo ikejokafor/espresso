@@ -4,7 +4,7 @@ using namespace std;
 ConvolutionLayer_FPGA::ConvolutionLayer_FPGA(espresso::layerInfo_obj* layerInfo) : Layer(layerInfo) { }
 
 
-ConvolutionLayer_FPGA::~ConvolutionLayer_FPGA() { }
+ConvolutionLayer_FPGA::~ConvolutionLayer_FPGA() { delete m_layer_job; }
 
 
 void ConvolutionLayer_FPGA::ComputeLayer()
@@ -66,10 +66,46 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
     //     fprintf(fd, "%f\n", m_flBiasData[n]);
     // }
     // fclose(fd);
-    
+    m_fpga_elapsed_time = 0.0f;
+    m_fpga_memPower = 0.0f;
+	m_fpga_avgIterTime = 0.0f;
+    m_peakBW = 0.0f;
+	m_layer_job->process(m_fpga_elapsed_time, m_fpga_avgIterTime, m_fpga_memPower, m_avg_QUAD_time0, m_avg_FAS_time0, m_avg_QUAD_time1, m_avg_FAS_time1);
+    // m_layer_job->process(m_topLayers[0]->m_blob.flData);
+    // m_layer_job->process(m_fpga_elapsed_time, m_avg_QUAD_time0, m_avg_FAS_time0);
+}
 
-	Layer_Job* m_layer_job = new Layer_Job(
+
+void ConvolutionLayer_FPGA::ComputeLayerParam()
+{
+	m_inputDepth = m_bottomLayers[0]->m_outputDepth;
+	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;
+	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
+	m_numOutputRows = (int)((m_numInputRows - m_numKernelRows + 2 * m_padding) / m_stride) + 1;
+	m_numOutputCols = (int)((m_numInputCols - m_numKernelCols + 2 * m_padding) / m_stride) + 1;
+	m_outputDepth = m_numKernels;
+    // FIXME: create FPGA support for this
+	m_kernelDepth = m_inputDepth / m_group;
+    if(m_group > 1)
+    {
+        cout << "FIXME - " << __FILE__ << ":" << __LINE__ << endl;
+        exit(0);
+    }
+	m_blob.depth = m_outputDepth;
+	m_blob.numRows = m_numOutputRows;
+	m_blob.numCols = m_numOutputCols;
+	m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
+	m_blob.flData = new float[m_outputDepth * m_numOutputRows * m_numOutputCols];
+	m_blob.fxData = new fixedPoint_t[m_outputDepth * m_numOutputRows * m_numOutputCols];
+}
+
+
+void ConvolutionLayer_FPGA::makeLayerJob()
+{
+	m_layer_job = new Layer_Job(
 		m_layerName,
+        espresso::to_string(m_layerType),
+        m_group,
 		m_inputDepth,
 		m_numInputRows,
 		m_numInputCols,
@@ -105,38 +141,5 @@ void ConvolutionLayer_FPGA::ComputeLayer_FxPt()
         m_fpga_do_res_1x1,
         m_first,
         m_last
-	);
-	m_layer_job->createLayerIters();
-    m_fpga_elapsed_time = 0.0f;
-    m_fpga_memPower = 0.0f;
-	m_fpga_avgIterTime = 0.0f;
-    m_peakBW = 0.0f;
-	m_layer_job->process(m_fpga_elapsed_time, m_fpga_avgIterTime, m_fpga_memPower, m_avg_QUAD_time0, m_avg_FAS_time0, m_avg_QUAD_time1, m_avg_FAS_time1);
-    // m_layer_job->process(m_topLayers[0]->m_blob.flData);
-    // m_layer_job->process(m_fpga_elapsed_time, m_avg_QUAD_time0, m_avg_FAS_time0);
-    delete m_layer_job;
-}
-
-
-void ConvolutionLayer_FPGA::ComputeLayerParam()
-{
-	m_inputDepth = m_bottomLayers[0]->m_outputDepth;
-	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;
-	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
-	m_numOutputRows = (int)((m_numInputRows - m_numKernelRows + 2 * m_padding) / m_stride) + 1;
-	m_numOutputCols = (int)((m_numInputCols - m_numKernelCols + 2 * m_padding) / m_stride) + 1;
-	m_outputDepth = m_numKernels;
-    // FIXME: create FPGA support for this
-	m_kernelDepth = m_inputDepth / m_group;
-    if(m_group > 1)
-    {
-        cout << "FIXME - " << __FILE__ << ":" << __LINE__ << endl;
-        exit(0);
-    }
-	m_blob.depth = m_outputDepth;
-	m_blob.numRows = m_numOutputRows;
-	m_blob.numCols = m_numOutputCols;
-	m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
-	m_blob.flData = new float[m_outputDepth * m_numOutputRows * m_numOutputCols];
-	m_blob.fxData = new fixedPoint_t[m_outputDepth * m_numOutputRows * m_numOutputCols];
+	);    
 }

@@ -2,8 +2,9 @@
 using namespace std;
 
 
-espresso::CNN_Network::CNN_Network(vector<espresso::layerInfo_obj*>& layerInfoArr, vector<int>& outputLayers) {
-
+espresso::CNN_Network::CNN_Network(string netName, vector<espresso::layerInfo_obj*>& layerInfoArr, vector<int>& outputLayers) 
+{
+    m_netName = netName;
     for(int i = 0; i < layerInfoArr.size(); i++)
     {
         if(layerInfoArr[i]->layerType == espresso::INPUT)
@@ -116,6 +117,26 @@ espresso::CNN_Network::CNN_Network(vector<espresso::layerInfo_obj*>& layerInfoAr
     for (int i = 0; i < m_cnn.size(); i++)
     {
         m_cnn[i]->ComputeLayerParam();
+    }
+    cfgFPGALayers();
+    for (int i = 0; i < m_cnn.size(); i++)
+    {
+        ResidualLayer_FPGA* residuallayer_FPGA;
+        ConvolutionLayer_FPGA* convolutionLayer_FPGA;
+        if(m_cnn[i]->m_layerType == espresso::CONVOLUTION)
+        {
+            convolutionLayer_FPGA = reinterpret_cast<ConvolutionLayer_FPGA*>(m_cnn[i]);
+            convolutionLayer_FPGA->makeLayerJob();
+        }
+        else if(m_cnn[i]->m_layerType == espresso::RESIDUAL)
+        {
+            residuallayer_FPGA = reinterpret_cast<ResidualLayer_FPGA*>(m_cnn[i]);
+            residuallayer_FPGA->makeLayerJob();        
+        }
+        if(m_cnn[i]->m_layerType == espresso::CONVOLUTION || m_cnn[i]->m_layerType == espresso::RESIDUAL)
+        {
+            m_cnn[i]->m_layer_job->createLayerIters();
+        }
     }
 }
 
@@ -324,6 +345,41 @@ void espresso::CNN_Network::cfgFPGALayers()
 
 void espresso::CNN_Network::cfgFPGALayers(string mrgFmt_fn)
 {
+    for(int i = 0; i < m_cnn.size(); i++)
+    {
+        if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 1)
+        {
+            m_cnn[i]->m_fpgaAct1x1              = (espresso::activation_t)0;
+            m_cnn[i]->m_kernel1x1Data           = NULL;
+            m_cnn[i]->m_bias1x1Data             = NULL;
+            m_cnn[i]->m_num1x1Kernels           = 0;
+            m_cnn[i]->m_kernel1x1Depth          = 0;
+            m_cnn[i]->m_fpga_do_kernels1x1      = false;
+            m_cnn[i]->m_fpga_krnl_1x1_layer     = false;
+            m_cnn[i]->m_fpga_outDepth           = 0;
+            m_cnn[i]->m_fpga_numOutRows         = 0;
+            m_cnn[i]->m_fpga_numOutCols         = 0;
+        }
+        else if(m_cnn[i]->m_layerType == CONVOLUTION && m_cnn[i]->m_numKernelRows == 3)
+        {
+            m_cnn[i]->m_fpgaAct3x3              = (espresso::activation_t)0;
+            m_cnn[i]->m_fpga_outDepth           = 0;
+            m_cnn[i]->m_fpga_numOutRows         = 0;
+            m_cnn[i]->m_fpga_numOutCols         = 0;            
+        }
+        else if(m_cnn[i]->m_layerType == RESIDUAL)
+        {
+            m_cnn[i]->m_fpga_do_res_layer_only  = false;
+            m_cnn[i]->m_residualMapDepth        = 0;
+            m_cnn[i]->m_numResidualMapRows      = 0;
+            m_cnn[i]->m_numResidualMapsCols     = 0;
+            m_cnn[i]->m_residualMapData         = 0;
+            m_cnn[i]->m_fpga_outDepth           = 0;
+            m_cnn[i]->m_fpga_numOutRows         = 0;
+            m_cnn[i]->m_fpga_numOutCols         = 0;
+        }
+    }
+
     ifstream infile(mrgFmt_fn);
     string line;
     while(getline(infile, line))
@@ -453,30 +509,6 @@ int espresso::CNN_Network::ReturnLayerIdx(string name)
         }
     }
     return -1;
-}
-
-
-string espresso::CNN_Network::to_string(espresso::layerType_t layerType)
-{   
-    switch(layerType)
-    {
-        case INPUT: return "INPUT";      
-        case CONVOLUTION: return "CONVOLUTION"; 
-        case POOLING_MAX: return "POOLING_MAX";        
-        case POOLING_AVG: return "POOLING_AVG";        
-        case PERMUTE: return "PERMUTE";          
-        case FLATTEN: return "FLATTEN";       
-        case RESIDUAL: return "RESIDUAL";          
-        case DETECTION_OUTPUT: return "DETECTION_OUTPUT";    
-        case PRIOR_BOX: return "PRIOR_BOX";         
-        case RESHAPE: return "RESHAPE";            
-        case INNERPRODUCT: return "INNERPRODUCT";      
-        case SOFTMAX:  return "SOFTMAX";           
-        case CONCAT: return "CONCAT";             
-        case YOLO: return "YOLO";               
-        case UPSAMPLE: return "UPSAMPLE";          
-        case PSROIPoolingLayer: return "PSROIPoolingLayer"; 
-    }
 }
 
 
@@ -646,12 +678,12 @@ void espresso::CNN_Network::printExecutionStats()
 }
 
 
-static int this_idx = 0;
+
 void espresso::CNN_Network::printAccelPerfAnalyStats()
 {
     ofstream fd;
 	string WSpath = string(getenv("WORKSPACE_PATH"));
-    string fname = WSpath + "/espressoTester/build/debug/accelPerfAnalyStats_" + std::to_string(this_idx) + ".csv";
+    string fname = WSpath + "/espressoTester/build/debug/accelPerfAnalyStats_" + m_netName + ".csv";
 	fd.open(fname.c_str());
     // fd << ",calc_QUAD_TIME,sim_QUAD_time,calc_FAS_TIME,sim_FAS_TIME" << endl;
     fd << "IDX,NAME,TYPE,QUAD_TIME,FAS_TIME" << endl;
@@ -700,5 +732,58 @@ void espresso::CNN_Network::printAccelPerfAnalyStats()
     fd << "DSPs:, "         << NUM_DSPS_PER_QUAD * K_3_S + NUM_DSPS_PER_FAS * K_1_S << " / 9024" << endl;
     fd << "BRAMs:, "        << NUM_BRAMS_PER_QUAD << " / 340" << endl;
     fd.close();
-    this_idx++;
+}
+
+
+void espresso::CNN_Network::printNetStats()
+{
+    FILE *fd = fopen(m_netName.c_str(), "w");
+    fprintf(fd , ",Name,Type,input channels,input dimensions,output channels,output dimensions,Kernel dimensions,Padding,Stride,group,activation\n");
+    int maccCout = 0;
+    int paramTot = 0;
+    for(int i = 0; i < m_cnn.size(); i++)
+    {
+        if(m_cnn[i]->m_layerType == espresso::CONVOLUTION)
+        {
+            string act_str = (m_cnn[i]->m_activation == espresso::LINEAR) ? "linear" : 
+            (m_cnn[i]->m_activation == espresso::LEAKY) ? "leaky" : "None";
+            fprintf(fd , ",%s,convolution,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s\n",
+                m_cnn[i]->m_layerName.c_str(), 
+                m_cnn[i]->m_inputDepth, m_cnn[i]->m_numInputRows, m_cnn[i]->m_numInputCols,
+                m_cnn[i]->m_outputDepth, m_cnn[i]->m_numOutputRows, m_cnn[i]->m_numOutputCols,
+                m_cnn[i]->m_numKernelRows, m_cnn[i]->m_numKernelCols,
+                m_cnn[i]->m_padding, m_cnn[i]->m_stride,m_cnn[i]->m_group, act_str.c_str()
+            );
+            maccCout += (m_cnn[i]->m_outputDepth * m_cnn[i]->m_numOutputRows * m_cnn[i]->m_numOutputCols);
+            paramTot += (m_cnn[i]->m_outputDepth * m_cnn[i]->m_inputDepth * m_cnn[i]->m_numKernelRows * m_cnn[i]->m_numKernelCols);
+            
+        }
+        if(m_cnn[i]->m_layerType == espresso::RESIDUAL)
+        {
+            fprintf(fd , ",%s,shortcut,%d,%dx%d,%d,%dx%d,-,-,-,-,-\n",
+                m_cnn[i]->m_layerName.c_str(), 
+                m_cnn[i]->m_inputDepth, m_cnn[i]->m_numInputRows, m_cnn[i]->m_numInputCols,
+                m_cnn[i]->m_outputDepth, m_cnn[i]->m_numOutputRows, m_cnn[i]->m_numOutputCols
+            );
+        }
+    }
+    printf("MACC: %d, PARAM: %d\n", maccCout, paramTot);
+    fclose(fd);
+}
+
+
+void espresso::CNN_Network::writeLayIt()
+{
+    // FIXME: proper way is to access data structures from here and print
+    string fn = "lay_it_data_" + m_netName + ".csv";
+    FILE *fd = fopen(fn.c_str(), "w");
+    fprintf(fd , "Name,Type,input channels,input dimensions,output channels,output dimensions,Kernel dimensions,Padding,Stride,group,activation\n");
+    fclose(fd);
+    for(int i = 1; i < m_cnn.size(); i++)
+    {
+        if(m_cnn[i]->m_layerType == espresso::CONVOLUTION || m_cnn[i]->m_layerType == espresso::RESIDUAL)
+        {
+            m_cnn[i]->m_layer_job->writeLayIt(fn, "a");
+        }
+    }
 }

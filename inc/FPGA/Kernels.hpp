@@ -22,7 +22,9 @@ class Kernels : public Accel_Payload
 	public:
 		Kernels(FPGA_hndl* fpga_hndl, int numKernels, int depth, int rows, int cols, float* data);
 		Kernels(FPGA_hndl* fpga_hndl, int numKernels, int depth, int rows, int cols, krnl_data_t& data);
-		~Kernels();
+        Kernels(Kernels* kernels);
+        
+        ~Kernels();
 		void serialize();
         void deserialize();
 		Kernels* GetVolume(int krnlBgn, int numKrnl, int depthBgn, int depthSize);

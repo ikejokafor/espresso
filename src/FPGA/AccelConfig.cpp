@@ -16,7 +16,7 @@ AccelConfig::~AccelConfig()
 {
 #ifdef SYSTEMC
     SYSC_FPGA_hndl* sysc_fpga_hndl  = reinterpret_cast<SYSC_FPGA_hndl*>(m_fpga_hndl);
-    sysc_fpga_hndl->deallocate(this);
+    (m_buffer) ? sysc_fpga_hndl->deallocate(this) : void();
     int i_end = m_FAS_cfg_arr.size();
     for(int i = 0; i < i_end; i++)
     {

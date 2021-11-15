@@ -13,5 +13,6 @@ class ConvolutionLayer_FPGA : public espresso::Layer
 		void ComputeLayer_FlPt();
 		void ComputeLayer_FxPt();
 		void ComputeLayerParam();
+        void makeLayerJob();
 };
 

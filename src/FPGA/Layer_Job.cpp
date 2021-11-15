@@ -11,6 +11,8 @@ bool isPowerOfTwo(ulong x)
 
 Layer_Job::Layer_Job(
     string layerName,
+    string layerType,
+    int group,
     int inputMapDepth,
     int numInputMapRows,
     int numInputMapCols,
@@ -83,8 +85,8 @@ Layer_Job::Layer_Job(
     m_do_1x1_res            = do_1x1_res        ;
     m_do_res_1x1            = do_res_1x1        ;
     m_inputMaps             = new InputMaps(fpga_hndl, inputMapDepth, numInputMapRows, numInputMapCols, inputMapData);
-
-
+    m_layerType             = layerType;
+    m_group                 = group;
     // delete m_inputMaps;
     // FILE* buf_fd = fopen("/export/home/izo5011/workSpace/espressoTester/12_Residual.bin", "r");
     // float* buf = new float[inputMapDepth * numInputMapRows * numInputMapCols];
@@ -166,15 +168,31 @@ Layer_Job::~Layer_Job()
 }
 
 
+void Layer_Job::getFabric(int& maxKernels, int& maxDepth, string fabric)
+{
+    if(fabric == "FPGA")
+    {
+        maxKernels = ACCL_MAX_KRNLS;
+        maxDepth = ACCL_MAX_DEPTH_SIMD;
+    }
+    else if(fabric == "SSD")
+    {
+        // maxKernels = ACCL_MAX_KRNLS;
+        // maxDepth = ACCL_MAX_DEPTH_SIMD;
+    }
+}
+
+
+
 void Layer_Job::createLayerIters()
 {
     m_num_krnl_iter = (m_krnl_1x1_layer || m_do_resLayer_only) ? 1 : ceil((double)m_num3x3Kernels / (double)ACCL_MAX_KRNLS);
     m_num_depth_iter = (m_krnl_1x1_layer|| m_do_resLayer_only) ? 1 : ceil((double)m_inputMapDepth / (double)ACCL_MAX_DEPTH_SIMD);
 
-    cout << "[ESPRESSO]: Creating Layer Iterations... " << endl;
-    cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
-    cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
-	cout << endl << endl;
+    // cout << "[ESPRESSO]: Creating Layer Iterations... " << endl;
+    // cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
+    // cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
+	// cout << endl << endl;
 
     int remNumKrnl = m_num3x3Kernels;
     int numKrnl;
@@ -187,8 +205,6 @@ void Layer_Job::createLayerIters()
         int depth;
         for(int j = 0, depthBgn = 0; j < m_num_depth_iter; j++, depthBgn += depth)
         {
-			bool del_res;
-			bool del_1x1;
             depth = min(ACCL_MAX_DEPTH_SIMD, remDepth);
             layAclPrm = createAccelParams(
                 i,
@@ -196,9 +212,7 @@ void Layer_Job::createLayerIters()
                 depthBgn,
                 depth,
                 krnlBgn,
-                numKrnl,
-				del_res,
-				del_1x1
+                numKrnl
             );
             m_lay_it_arr[i].push_back(new Layer_Iteration(
 				m_fpga_hndl,
@@ -224,22 +238,68 @@ void Layer_Job::createLayerIters()
                 m_krnl1x1_pding,
                 m_krnl1x1_pad_bgn,
                 m_krnl1x1_pad_end,
-				del_res,
-				del_1x1
-#ifdef SYSTEMC                
-                ,
                 m_layerName,
                 i,
                 j,
                 m_first,
-                m_last
-#endif             
+                m_last           
             ));
             remDepth -= depth;
         }
         remNumKrnl -= numKrnl;
     }
-    cout << endl << endl;
+    // cout << endl << endl;
+}
+
+
+void Layer_Job::writeLayIt(string outFN, string mode)
+{
+    FILE* fd = NULL;
+    fd = fopen(outFN.c_str(), mode.c_str());
+    for(int k = 0; k < m_lay_it_arr.size(); k++)
+    {
+        for(int d = 0; d < m_lay_it_arr[k].size(); d++)
+        {
+            InputMaps* inMaps = m_lay_it_arr[k][d]->m_inputMaps;
+            PartialMaps* partMaps = m_lay_it_arr[k][d]->m_partialMaps;
+            Kernels* kernels = (m_lay_it_arr[k][d]->m_kernels3x3) ? m_lay_it_arr[k][d]->m_kernels3x3 : m_lay_it_arr[k][d]->m_kernels1x1;
+            activation_t act = (m_lay_it_arr[k][d]->m_kernels3x3) ? m_act3x3 : m_act1x1;
+            ResidualMaps* resdMaps = m_lay_it_arr[k][d]->m_residualMaps;
+            OutputMaps* outMaps = m_lay_it_arr[k][d]->m_outputMaps;
+            
+            if(m_layerType == "CONVOLUTION" && m_lay_it_arr[k][d]->m_kernels3x3 != NULL)
+            {
+                fprintf(fd , "%s,%s,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s\n",
+                    (m_layerName + "_" + to_string(k) + "_" + to_string(d)).c_str(),
+                    m_layerType.c_str(),
+                    inMaps->m_depth, inMaps->m_rows, inMaps->m_cols,
+                    outMaps->m_depth, outMaps->m_rows, outMaps->m_cols,
+                    kernels->m_rows, kernels->m_cols,
+                    m_padding, m_stride, m_group, espresso::to_string(act).c_str()
+                );
+            }
+            else if(m_layerType == "CONVOLUTION" && m_lay_it_arr[k][d]->m_kernels1x1 != NULL)
+            {
+                fprintf(fd , "%s,%s,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s\n",
+                    (m_layerName + "_" + to_string(k) + "_" + to_string(d)).c_str(),
+                    m_layerType.c_str(),
+                    partMaps->m_depth, partMaps->m_rows, partMaps->m_cols,
+                    outMaps->m_depth, outMaps->m_rows, outMaps->m_cols,
+                    kernels->m_rows, kernels->m_cols,
+                    m_padding, m_stride, m_group, espresso::to_string(act).c_str()
+                );                
+            }
+            else if(m_layerType == "RESIDUAL")
+            {
+                fprintf(fd , "%s,SHORTCUT,%d,%dx%d,%d,%dx%d,-,-,-,-,-\n",
+                    m_layerName.c_str(), 
+                    partMaps->m_depth, partMaps->m_rows, partMaps->m_cols,
+                    outMaps->m_depth, outMaps->m_rows, outMaps->m_cols
+                );
+            }
+        }
+    }
+    fclose(fd);
 }
 
 
@@ -249,9 +309,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
     int depthBgn,
     int depth,
     int krnl3x3Bgn,
-    int numKrnl3x3,
-    bool& del_res,
-    bool& del_1x1)
+    int numKrnl3x3)
 {
     layAclPrm_t* layAclPrm = new layAclPrm_t;
     memset(layAclPrm, 0x0, sizeof(layAclPrm_t));
@@ -375,20 +433,17 @@ layAclPrm_t* Layer_Job::createAccelParams(
     if(last_depth_iter && m_do_resLayer && !m_do_1x1_res)
     {
         layAclPrm->residualMaps = m_residualMaps->GetVolume(krnl3x3Bgn, numKrnl3x3);
-		del_res = true;
     }
     else if((last_depth_iter && m_do_resLayer && m_do_1x1_res && first_krnl_iter) || m_do_resLayer_only)
     {
-        layAclPrm->residualMaps = m_residualMaps;
-		del_res = false;
+        layAclPrm->residualMaps =  new ResidualMaps(m_residualMaps);
     }
     //////
     layAclPrm->kernels3x3Bias = (m_krnl_1x1_layer || m_do_resLayer_only || !layAclPrm->it_bias3x3) ? NULL : m_kernels3x3Bias->GetVolume(krnl3x3Bgn, numKrnl3x3);
     //////
     if(m_do_kernels1x1 && last_depth_iter)
     {
-        layAclPrm->kernels1x1 = (m_krnl_1x1_layer) ? m_kernels1x1 : m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
-		del_1x1 = (m_krnl_1x1_layer) ? false : true;
+        layAclPrm->kernels1x1 = (m_krnl_1x1_layer) ? new Kernels(m_kernels1x1) : m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
         layAclPrm->kernels1x1Bias = (!layAclPrm->it_bias1x1) ? NULL : m_kernels1x1Bias;
         if(!m_krnl1x1_pding)
         {
@@ -463,6 +518,7 @@ void Layer_Job::process(double& elapsed_time, double& avgIterTime, double& memPo
     {
         for(int d = 0; d < m_lay_it_arr[k].size(); d++)
         {
+            m_lay_it_arr[k][d]->prepFPGAData();
             if(k == 0 && d == 0)
             {
                 calcAccelPerfAnalyStats(m_lay_it_arr[k][d], avg_QUAD_time0, avg_FAS_time0);
@@ -652,7 +708,7 @@ void Layer_Job::process(float* layOut)
     {
         for(int d = 0; d < m_lay_it_arr[k].size(); d++)
         {
-
+            m_lay_it_arr[k][d]->prepFPGAData();
             cout << "[ESPRESSO]: " << m_layerName                    << endl;
             cout << "[ESPRESSO]:\tProcessing Kernel Iteration - " << (k + 1) << "/" << m_num_krnl_iter << endl;
             cout << "[ESPRESSO]:\tProcessing Depth Iteration - " << (d + 1)  << "/" << m_num_depth_iter << endl;

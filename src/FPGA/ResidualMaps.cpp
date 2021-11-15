@@ -16,6 +16,20 @@ ResidualMaps::ResidualMaps(FPGA_hndl* fpga_hndl, int depth, int rows, int cols, 
 }
 
 
+ResidualMaps::ResidualMaps(ResidualMaps* residualMaps)
+{
+	m_fpga_hndl             = residualMaps->m_fpga_hndl;
+	m_depth                 = residualMaps->m_depth;
+	m_rows                  = residualMaps->m_rows;
+	m_cols                  = residualMaps->m_cols;
+    m_cpu_data              = new float[m_depth * m_rows * m_cols];
+    memcpy(m_cpu_data, residualMaps->m_cpu_data, sizeof(float) * m_depth * m_rows * m_cols);
+	m_buffer				= NULL;
+	m_size              	= 0;
+	m_remAddress        	= -1;
+}
+
+
 ResidualMaps::~ResidualMaps()
 {
     free(m_cpu_data);

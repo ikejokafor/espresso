@@ -97,27 +97,6 @@ namespace espresso
 	} backend_t;
 
 
-	typedef enum
-	{
-        INPUT               = 0,
-        CONVOLUTION         = 1,
-        POOLING_MAX         = 2,
-        POOLING_AVG         = 3,
-        PERMUTE             = 4,
-        FLATTEN             = 5,
-        RESIDUAL            = 6,
-        DETECTION_OUTPUT    = 7,
-        PRIOR_BOX           = 8,
-        RESHAPE             = 9,
-        INNERPRODUCT        = 10,
-        SOFTMAX             = 11,
-        CONCAT              = 12,
-        YOLO                = 13,
-        UPSAMPLE            = 14,
-        PSROIPoolingLayer   = 15
-	} layerType_t;
-
-
     class layerInfo_obj
 	{
 		public:
@@ -246,6 +225,7 @@ namespace espresso
 			virtual void ComputeLayer_FxPt() = 0;
 			virtual void ComputeLayerParam() = 0;
 
+
 			espresso::precision_t m_precision;
 			std::string m_layerName;
 			std::vector<std::string> m_topLayerNames;
@@ -339,5 +319,6 @@ namespace espresso
             int m_fpga_numOutCols;
             bool m_first;
             bool m_last;
+            Layer_Job* m_layer_job;
 	};
 }

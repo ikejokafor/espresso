@@ -37,7 +37,38 @@ Kernels::Kernels(FPGA_hndl* fpga_hndl, int numKernels, int depth, int rows, int 
 	m_depth         = depth;
 	m_rows          = rows;
 	m_cols          = cols;
-    m_cpu_data      = data;
+    m_cpu_data.resize(numKernels);
+    for (int i = 0; i < numKernels; i++)
+	{
+		m_cpu_data[i].resize(m_depth);
+		for (int j = 0; j < m_depth; j++)
+		{
+			int size = m_rows * m_cols * sizeof(float);
+			m_cpu_data[i][j] = (float*)malloc(size);
+			memcpy((void*)m_cpu_data[i][j], (void*)data[i][j], size);
+		}
+	}
+}
+
+
+Kernels::Kernels(Kernels* kernels) : Accel_Payload()
+{
+    m_fpga_hndl     = kernels->m_fpga_hndl;
+	m_numKernels    = kernels->m_numKernels;
+	m_depth         = kernels->m_depth;
+	m_rows          = kernels->m_rows;
+	m_cols          = kernels->m_cols;
+    m_cpu_data.resize(m_numKernels);
+    for (int i = 0; i < m_numKernels; i++)
+	{
+		m_cpu_data[i].resize(m_depth);
+		for (int j = 0; j < m_depth; j++)
+		{
+			int size = m_rows * m_cols * sizeof(float);
+			m_cpu_data[i][j] = (float*)malloc(size);
+			memcpy((void*)m_cpu_data[i][j], (void*)kernels->m_cpu_data[i][j], size);
+		}
+	}
 }
 
 

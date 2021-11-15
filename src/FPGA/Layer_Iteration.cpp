@@ -26,19 +26,15 @@ Layer_Iteration::Layer_Iteration(
     bool it_bias1x1,
 	bool krnl1x1_pding,
 	int krnl1x1_pad_bgn,
-	int krnl1x1_pad_end,
-	bool del_res,
-	bool del_1x1
-#ifdef SYSTEMC
-    ,      
+	int krnl1x1_pad_end,   
     string layerName,
     int kernel_i,
     int depth_i,
     bool first,
     bool last
-#endif  
     )
 {
+    m_layerName         = layerName;
 	m_opcode			= opcode;
 	m_pxSeqCfg			= NULL;
 	m_inputMaps 		= NULL;
@@ -61,10 +57,53 @@ Layer_Iteration::Layer_Iteration(
 	m_residualMaps = residualMaps;
 	m_outputMaps = outputMaps;
 	m_prev1x1Maps = prev1x1Maps;
-	m_del_res = del_res;
-	m_del_1x1 = del_1x1;
+    m_krnl1x1_pding = krnl1x1_pding;
+    m_krnl1x1_pad_bgn = krnl1x1_pad_bgn;
+    m_krnl1x1_pad_end = krnl1x1_pad_end;
+    m_act1x1 = act1x1;
+    m_act3x3 = act3x3;
+    m_it_act1x1 = it_act1x1;
+    m_it_act3x3 = it_act3x3;
+    m_it_bias1x1 = it_bias1x1;
+    m_it_bias3x3 = it_bias3x3;
+    m_upsample = upsample;      
+    m_kernel_i = kernel_i;
+    m_depth_i = depth_i;
+    m_first = first;
+    m_last = last;
+    m_stride = stride; 
+    m_padding = padding;
+}
 
 
+Layer_Iteration::~Layer_Iteration()
+{
+	(m_prev1x1Maps) ? delete m_prev1x1Maps : void();
+	(m_pxSeqCfg) ? delete m_pxSeqCfg : void();
+	(m_accelCfg) ? delete m_accelCfg : void();
+	(m_inputMaps) ? delete m_inputMaps : void();
+	(m_kernels3x3) ? delete m_kernels3x3 : void();
+	(m_residualMaps) ? delete m_residualMaps : void();
+	(m_outputMaps) ? delete m_outputMaps : void();
+	(m_kernels3x3Bias) ? delete m_kernels3x3Bias : void();
+    (m_kernels1x1) ? delete m_kernels1x1 : void();
+	(m_partialMaps) ? delete m_partialMaps : void();	
+	m_prev1x1Maps = NULL;
+    m_pxSeqCfg = NULL;
+	m_accelCfg = NULL;
+	m_inputMaps = NULL;
+	m_kernels3x3 = NULL;
+	m_residualMaps = NULL;
+	m_outputMaps = NULL;
+	m_kernels3x3Bias = NULL;
+    m_kernels1x1 = NULL;
+    m_kernels1x1Bias = NULL;
+	m_partialMaps = NULL;
+}
+
+
+void Layer_Iteration::prepFPGAData()
+{
 	(m_inputMaps) ? m_inputMaps->serialize() : void();
 	(m_kernels3x3) ? m_kernels3x3->serialize() : void();
 	(m_kernels3x3Bias) ? m_kernels3x3Bias->serialize() : void();
@@ -82,14 +121,14 @@ Layer_Iteration::Layer_Iteration(
 	{
 		m_accelCfg->m_FAS_cfg_arr.push_back(new FAS_cfg(
 			i,
-			opcode,
+			m_opcode,
 			m_pxSeqCfg->m_remAddress,
 			(m_kernels1x1) ? m_kernels1x1->m_remAddress : -1,
 			(m_kernels1x1Bias) ? m_kernels1x1Bias->m_remAddress : -1,
 			(m_partialMaps) ? m_partialMaps->m_remAddress : -1,
 			(m_residualMaps) ? m_residualMaps->m_remAddress : -1,
             (m_prev1x1Maps) ? m_prev1x1Maps->m_remAddress : -1,
-			outputMaps->m_remAddress,
+			m_outputMaps->m_remAddress,
 			m_pxSeqCfg->m_size,
 			(m_inputMaps) ? m_inputMaps->m_size : 0,
 			(m_kernels3x3) ? m_kernels3x3->m_size : 0,
@@ -109,24 +148,21 @@ Layer_Iteration::Layer_Iteration(
 			(m_residualMaps) ? m_residualMaps->m_vld_sz : 0,
 			(m_partialMaps) ? m_partialMaps->m_vld_sz : 0,
             (m_prev1x1Maps) ? m_prev1x1Maps->m_vld_sz : 0,
-			krnl1x1_pding,
-			krnl1x1_pad_bgn,
-			krnl1x1_pad_end,
-            act1x1,
-            it_act1x1,
-            it_bias1x1,
+			m_krnl1x1_pding,
+			m_krnl1x1_pad_bgn,
+			m_krnl1x1_pad_end,
+            m_act1x1,
+            m_it_act1x1,
+            m_it_bias1x1,
 			m_outputMaps->m_rows,
 			m_outputMaps->m_cols,
 			m_outputMaps->m_depth,
-            m_outputMaps->m_vld_sz
-#ifdef SYSTEMC          
-            ,
-            layerName,
-            kernel_i,
-            depth_i,
-            first,
-            last
-#endif           
+            m_outputMaps->m_vld_sz,
+            m_layerName,
+            m_kernel_i,
+            m_depth_i,
+            m_first,
+            m_last      
 		));
 		m_accelCfg->m_FAS_cfg_arr[i]->m_partMapAddr = (m_partialMaps) ? m_partialMaps->m_remAddress : -1;
 		m_accelCfg->m_FAS_cfg_arr[i]->m_resMapAddr = (m_residualMaps) ? m_residualMaps->m_remAddress : -1;
@@ -162,12 +198,12 @@ Layer_Iteration::Layer_Iteration(
 						(m_kernels3x3) ? m_kernels3x3->m_depth : 0,
 						(m_kernels3x3) ? m_kernels3x3->m_rows : 0,
 						(m_kernels3x3) ? m_kernels3x3->m_cols : 0,
-						stride,
-						upsample,
-						padding,
-						act3x3,
-                        (master_QUAD) ? it_act3x3 : false,
-                        (master_QUAD) ? it_bias3x3 : false,
+						m_stride,
+						m_upsample,
+						m_padding,
+						m_act3x3,
+                        (master_QUAD) ? m_it_act3x3 : false,
+                        (master_QUAD) ? m_it_bias3x3 : false,
 						master_QUAD,
 						cascade,
 						quad_proc_depth,
@@ -188,30 +224,4 @@ Layer_Iteration::Layer_Iteration(
 	}
 	m_accelCfg->serialize();
     // cout << "FIXME " << __FILE__ << ":" << __LINE__ << endl;
-}
-
-
-Layer_Iteration::~Layer_Iteration()
-{
-	(m_prev1x1Maps) ? delete m_prev1x1Maps : void();
-	(m_pxSeqCfg) ? delete m_pxSeqCfg : void();
-	(m_accelCfg) ? delete m_accelCfg : void();
-	(m_inputMaps) ? delete m_inputMaps : void();
-	(m_kernels3x3) ? delete m_kernels3x3 : void();
-	(m_residualMaps && m_del_res) ? delete m_residualMaps : void();
-	(m_outputMaps) ? delete m_outputMaps : void();
-	(m_kernels3x3Bias) ? delete m_kernels3x3Bias : void();
-    (m_kernels1x1 && m_del_1x1) ? delete m_kernels1x1 : void();
-	(m_partialMaps) ? delete m_partialMaps : void();	
-	m_prev1x1Maps = NULL;
-    m_pxSeqCfg = NULL;
-	m_accelCfg = NULL;
-	m_inputMaps = NULL;
-	m_kernels3x3 = NULL;
-	m_residualMaps = NULL;
-	m_outputMaps = NULL;
-	m_kernels3x3Bias = NULL;
-    m_kernels1x1 = NULL;
-    m_kernels1x1Bias = NULL;
-	m_partialMaps = NULL;
 }

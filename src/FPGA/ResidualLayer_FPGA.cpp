@@ -5,7 +5,7 @@ using namespace std;
 ResidualLayer_FPGA::ResidualLayer_FPGA(espresso::layerInfo_obj* layerInfo) : Layer(layerInfo) { }
 
 
-ResidualLayer_FPGA::~ResidualLayer_FPGA() { }
+ResidualLayer_FPGA::~ResidualLayer_FPGA() { delete m_layer_job; }
 
 
 void ResidualLayer_FPGA::ComputeLayer()
@@ -52,9 +52,45 @@ void ResidualLayer_FPGA::ComputeLayer_FxPt()
     //     fprintf(fd, "\n\n\n");
     // }
     // fclose(fd);
+    m_fpga_elapsed_time = 0.0f;
+    m_fpga_memPower = 0.0f;
+	m_fpga_avgIterTime = 0.0f;
+    m_peakBW = 0.0f;
+	m_layer_job->process(m_fpga_elapsed_time, m_fpga_avgIterTime, m_fpga_memPower, m_avg_QUAD_time0, m_avg_FAS_time0, m_avg_QUAD_time1, m_avg_FAS_time1);
+	// m_layer_job->process(m_topLayers[0]->m_blob.flData);
+    // m_layer_job->process(m_fpga_elapsed_time, m_avg_QUAD_time0, m_avg_FAS_time0);
+}
 
-    Layer_Job* m_layer_job = new Layer_Job(
+
+
+void ResidualLayer_FPGA::ComputeLayerParam()
+{
+	// input size
+	m_inputDepth = m_bottomLayers.size() * m_bottomLayers[0]->m_outputDepth;
+	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;
+	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
+
+	// output size
+	m_outputDepth = m_bottomLayers[0]->m_outputDepth;
+	m_numOutputRows = m_numInputRows;
+	m_numOutputCols = m_numInputCols;
+
+	// create output blob
+	m_blob.depth = m_outputDepth;
+	m_blob.numRows = m_numOutputRows;
+	m_blob.numCols = m_numOutputCols;
+	m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
+	m_blob.flData = new float[m_outputDepth * m_numOutputRows * m_numOutputCols];
+	m_blob.fxData = new fixedPoint_t[m_outputDepth * m_numOutputRows * m_numOutputCols];
+}
+
+
+void ResidualLayer_FPGA::makeLayerJob()
+{
+    m_layer_job = new Layer_Job(
 		m_layerName,
+        espresso::to_string(m_layerType),
+        m_group,
 		m_inputDepth,
 		m_numInputRows,
 		m_numInputCols,
@@ -90,37 +126,5 @@ void ResidualLayer_FPGA::ComputeLayer_FxPt()
         m_fpga_do_res_1x1,
         m_first,
         m_last
-	);
-	m_layer_job->createLayerIters();
-    m_fpga_elapsed_time = 0.0f;
-    m_fpga_memPower = 0.0f;
-	m_fpga_avgIterTime = 0.0f;
-    m_peakBW = 0.0f;
-	m_layer_job->process(m_fpga_elapsed_time, m_fpga_avgIterTime, m_fpga_memPower, m_avg_QUAD_time0, m_avg_FAS_time0, m_avg_QUAD_time1, m_avg_FAS_time1);
-	// m_layer_job->process(m_topLayers[0]->m_blob.flData);
-    // m_layer_job->process(m_fpga_elapsed_time, m_avg_QUAD_time0, m_avg_FAS_time0);
-    delete m_layer_job;
-}
-
-
-
-void ResidualLayer_FPGA::ComputeLayerParam()
-{
-	// input size
-	m_inputDepth = m_bottomLayers.size() * m_bottomLayers[0]->m_outputDepth;
-	m_numInputRows = m_bottomLayers[0]->m_numOutputRows;
-	m_numInputCols = m_bottomLayers[0]->m_numOutputCols;
-
-	// output size
-	m_outputDepth = m_bottomLayers[0]->m_outputDepth;
-	m_numOutputRows = m_numInputRows;
-	m_numOutputCols = m_numInputCols;
-
-	// create output blob
-	m_blob.depth = m_outputDepth;
-	m_blob.numRows = m_numOutputRows;
-	m_blob.numCols = m_numOutputCols;
-	m_blob.blobSize = m_outputDepth * m_numOutputRows * m_numOutputCols;
-	m_blob.flData = new float[m_outputDepth * m_numOutputRows * m_numOutputCols];
-	m_blob.fxData = new fixedPoint_t[m_outputDepth * m_numOutputRows * m_numOutputCols];
+	);    
 }

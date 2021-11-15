@@ -17,7 +17,8 @@ class ResidualMaps : public Accel_Payload
 {
 	public:
 		ResidualMaps(FPGA_hndl* fpga_hndl, int depth, int rows, int cols, float* data);
-		~ResidualMaps();
+		ResidualMaps(ResidualMaps* residualMaps);
+        ~ResidualMaps();
         void serialize();
         void deserialize();
 		void permuteData();

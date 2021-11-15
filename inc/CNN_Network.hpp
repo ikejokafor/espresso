@@ -40,7 +40,7 @@ namespace espresso
 	class CNN_Network
     {
 		public:
-			CNN_Network(std::vector<espresso::layerInfo_obj*>& layerInfoArr, std::vector<int> &outputLayers);
+			CNN_Network(std::string netName, std::vector<espresso::layerInfo_obj*>& layerInfoArr, std::vector<int> &outputLayers);
 			~CNN_Network();
 
 			void GetTopAndBottomLayers();
@@ -57,13 +57,14 @@ namespace espresso
             void printMemBWStats();
             void printExecutionStats();
             void printAccelPerfAnalyStats();
-			std::string to_string(layerType_t layerType);
-
+            void printNetStats();
+            void writeLayIt();
 
             std::vector<int> seqBgnIdxArr;
 			std::vector<espresso::Layer*> m_cnn;
 			std::vector<espresso::Layer*> m_outputLayers;
 			FPGA_hndl* m_fpga_hndl;
+            std::string m_netName;
 		protected:
 
 

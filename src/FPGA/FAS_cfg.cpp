@@ -48,15 +48,12 @@ FAS_cfg::FAS_cfg(
 	int num_output_rows,
 	int num_output_cols,
 	int output_depth,
-    int om_store_vld_total
-#ifdef SYSTEMC
-    ,
+    int om_store_vld_total,
     string layerName,
     int kernel_i,
     int depth_i,
     bool first,
     bool last
-#endif
 ) :
    	m_itNKrnl1x1BiasAddrArr(MAX_FAS_1X1_IT),
 	m_itNKrnl1x1AddrArr(MAX_FAS_1X1_IT),

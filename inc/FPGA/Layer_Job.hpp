@@ -79,6 +79,8 @@ class Layer_Job
     public:
         Layer_Job(
 			std::string layerName,
+            std::string layerType,
+            int group,
 			int inputMapDepth,
 			int numInputMapRows,
 			int numInputMapCols,
@@ -117,6 +119,9 @@ class Layer_Job
 			int fxPtLength = 16,
 			int numFracBits = 14
 	    );
+        
+        void getFabric(int& maxKernels, int& maxDepth, std::string fabric);
+        
         ~Layer_Job();
         void createLayerIters();
 		layAclPrm_t* createAccelParams(
@@ -125,14 +130,13 @@ class Layer_Job
             int depthBgn,
             int depth,
             int krnl3x3Bgn,
-            int numKrnl3x3,
-			bool& del_res,
-			bool& del_1x1
+            int numKrnl3x3
 		);
 		void printConfig(Layer_Iteration* lay_it);
         void process(double& elapsed_time, double& avgIterTime, double& memPower, double& avg_QUAD_time0, double& avg_FAS_time0, double& avg_QUAD_time1, double& avg_FAS_time1);
         void process(double& elapsed_time, double& QUAD_time, double& FAS_time);
         void calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& avg_QUAD_time, double& avg_FAS_time);
+        void writeLayIt(std::string outFN, std::string mode);
 
         int lasQD(Layer_Iteration* lay_it);
         void process(float* layOut);
@@ -209,6 +213,10 @@ class Layer_Job
 		FPGA_hndl* m_fpga_hndl;
         bool m_first;
         bool m_last;
+        
+        std::string m_layerType;
+        int m_group;
+        
 #ifdef SYSTEMC
 		DummyPayload* m_Dpyld;
 		StatPayload* m_Spyld;

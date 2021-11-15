@@ -45,20 +45,17 @@ class Layer_Iteration
             bool it_bias1x1,
 			bool krnl1x1_pding,
 			int krnl1x1_pad_bgn,
-			int krnl1x1_pad_end,
-			bool del_res,
-			bool del_1x1
-#ifdef SYSTEMC
-            ,      
+			int krnl1x1_pad_end,    
             std::string layerName,
             int kernel_i,
             int depth_i,
             bool first,
             bool last
-#endif
 		);
 		~Layer_Iteration();
+        void prepFPGAData();
 
+        std::string m_layerName         ;
 		AccelConfig* m_accelCfg			;
 		PixelSeqCfg* m_pxSeqCfg			;
 		InputMaps* m_inputMaps			;
@@ -71,6 +68,21 @@ class Layer_Iteration
 		OutputMaps* m_outputMaps		;
 		Prev1x1Maps* m_prev1x1Maps		;
 		opcode_t m_opcode				;
-		bool m_del_res					;
-		bool m_del_1x1					; 
+        
+        bool m_krnl1x1_pding;
+        int m_krnl1x1_pad_bgn;
+        int m_krnl1x1_pad_end;
+        espresso::activation_t m_act1x1;
+        espresso::activation_t m_act3x3;
+        bool m_it_act1x1;
+        bool m_it_act3x3;
+        bool m_it_bias1x1;
+        bool m_it_bias3x3;
+        bool m_upsample;
+        int m_kernel_i;
+        int m_depth_i;
+        bool m_first;
+        bool m_last;
+        int m_stride;
+        bool m_padding;
 };
