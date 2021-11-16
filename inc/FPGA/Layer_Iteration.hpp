@@ -37,6 +37,7 @@ class Layer_Iteration
 			int stride,
 			bool upsample,
 			int padding,
+            int group,
             espresso::activation_t act3x3,
             espresso::activation_t act1x1,
             bool it_act3x3,
@@ -85,4 +86,5 @@ class Layer_Iteration
         bool m_last;
         int m_stride;
         bool m_padding;
+        int m_group;
 };

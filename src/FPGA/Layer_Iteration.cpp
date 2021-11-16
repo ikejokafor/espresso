@@ -18,6 +18,7 @@ Layer_Iteration::Layer_Iteration(
 	int stride,
 	bool upsample,
 	int padding,
+    int group,
     activation_t act3x3,
     activation_t act1x1,
     bool it_act3x3,
@@ -73,6 +74,7 @@ Layer_Iteration::Layer_Iteration(
     m_last = last;
     m_stride = stride; 
     m_padding = padding;
+    m_group = group;
 }
 
 
@@ -207,7 +209,8 @@ void Layer_Iteration::prepFPGAData()
 						master_QUAD,
 						cascade,
 						quad_proc_depth,
-                        RE_HIGH_WATERMARK
+                        RE_HIGH_WATERMARK,
+                        m_group
 					);
 					QUAD_cfg_arr.push_back(quad_cfg);
 					QUAD_en_arr.push_back(true);

@@ -25,7 +25,8 @@ QUAD_cfg::QUAD_cfg(
     bool master_QUAD,
     bool cascade,
     int inMapDepth,
-    int res_high_watermark
+    int res_high_watermark,
+    int group
 ) {
 	m_FAS_id = FAS_id;
 	m_AWP_id = AWP_id;
@@ -81,6 +82,7 @@ QUAD_cfg::QUAD_cfg(
 	m_crpd_input_row_end = m_num_expd_input_rows - 2;
 	m_crpd_input_col_end = m_num_expd_input_cols - 2;
     m_res_high_watermark = res_high_watermark;
+    m_group = group;
 }
 
 

@@ -245,6 +245,7 @@ void Layer_Job::createLayerIters()
                 m_stride,
                 m_upsample,
                 m_padding,
+                m_group,
                 m_act3x3,
                 m_act1x1,
                 layAclPrm->it_act3x3,
@@ -304,6 +305,7 @@ void Layer_Job::createResLayerIters()
         m_stride,
         m_upsample,
         m_padding,
+        m_group,
         m_act3x3,
         m_act1x1,
         layAclPrm->it_act3x3,
@@ -1807,6 +1809,7 @@ void Layer_Job::printConfig(Layer_Iteration* lay_it)
 void Layer_Job::calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& QUAD_time, double& FAS_time)
 {
     // only works properly for unmerged layers
+    int group  = lay_it->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_group;
     if(lay_it->m_kernels3x3)
     {
         QUAD_time = ((3 * lay_it->m_inputMaps->m_cols)
@@ -1815,6 +1818,10 @@ void Layer_Job::calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& QUAD_ti
     }
     else if(lay_it->m_kernels1x1)
     {
+        QUAD_time = ((3 * lay_it->m_inputMaps->m_cols)
+                    + ((lay_it->m_inputMaps->m_rows - 3) * lay_it->m_inputMaps->m_cols) // bc we dont overlap PFB loading and execution
+                    + ((lay_it->m_kernels3x3->m_numKernels / K_3_S) * (lay_it->m_outputMaps->m_rows / R_S) * (lay_it->m_outputMaps->m_cols / MX_3X3_S))) * CLK_PRD_NS;
+                    
         FAS_time  = ((lay_it->m_outputMaps->m_rows * (lay_it->m_outputMaps->m_cols / MX_1X1_S))
                     * (lay_it->m_kernels1x1->m_depth / K_1_D_S)
                     * (lay_it->m_kernels1x1->m_numKernels / K_1_S)) * CLK_PRD_NS;
