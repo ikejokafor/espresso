@@ -84,9 +84,10 @@ Layer_Job::Layer_Job(
     m_krnl1x1_pding         = false             ;
     m_do_1x1_res            = do_1x1_res        ;
     m_do_res_1x1            = do_res_1x1        ;
-    m_inputMaps             = new InputMaps(fpga_hndl, inputMapDepth, numInputMapRows, numInputMapCols, inputMapData);
     m_layerType             = layerType;
     m_group                 = group;
+    
+    m_inputMaps             = new InputMaps(fpga_hndl, inputMapDepth, numInputMapRows, numInputMapCols, inputMapData);
     // delete m_inputMaps;
     // FILE* buf_fd = fopen("/export/home/izo5011/workSpace/espressoTester/12_Residual.bin", "r");
     // float* buf = new float[inputMapDepth * numInputMapRows * numInputMapCols];

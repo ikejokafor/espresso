@@ -143,8 +143,7 @@ Kernels* Kernels::GetVolume(int krnlBgn, int numKrnl, int depthBgn, int depthSiz
 		for (int j = 0; j < depthSize; j++, depth_ofst++)
 		{
             int size = m_rows * m_cols * sizeof(float);
-			krnl_data[i][j] = (float*)malloc(size);
-			memcpy(krnl_data[i][j], m_cpu_data[krnl_ofst][depth_ofst], size);
+			krnl_data[i][j] = m_cpu_data[krnl_ofst][depth_ofst];
 		}
 	}
 	return new Kernels(m_fpga_hndl, numKrnl, depthSize, m_rows, m_cols, krnl_data);
