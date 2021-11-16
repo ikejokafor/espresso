@@ -120,17 +120,22 @@ class Layer_Job
 			int numFracBits = 14
 	    );
         
-        void getFabric(int& maxKernels, int& maxDepth, std::string fabric);
         
         ~Layer_Job();
         void createLayerIters();
+        void createResLayerIters();
+        void getFabric(int& maxKernels, int& maxDepth, std::string fabric);        
 		layAclPrm_t* createAccelParams(
             int krnl_iter,
             int dpth_iter,
             int depthBgn,
             int depth,
             int krnl3x3Bgn,
-            int numKrnl3x3
+            int numKrnl3x3,
+            bool first_depth_iter,
+            bool last_depth_iter,
+            bool first_krnl_iter,
+            bool last_krnl_iter
 		);
 		void printConfig(Layer_Iteration* lay_it);
         void process(double& elapsed_time, double& avgIterTime, double& memPower, double& avg_QUAD_time0, double& avg_FAS_time0, double& avg_QUAD_time1, double& avg_FAS_time1);

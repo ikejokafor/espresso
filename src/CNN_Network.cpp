@@ -112,7 +112,6 @@ espresso::CNN_Network::CNN_Network(string netName, vector<espresso::layerInfo_ob
     {
         cout << "[ESPRESSO]: Loaded Layer " << i <<  " " << m_cnn[i]->m_layerName << endl;
     }
-    cout << endl << endl;
     GetTopAndBottomLayers();
     for (int i = 0; i < m_cnn.size(); i++)
     {
@@ -436,6 +435,7 @@ void espresso::CNN_Network::cfgFPGALayers(string mrgFmt_fn)
 
 void espresso::CNN_Network::Forward(string start, string end)
 {
+    cout << endl << endl;
     // find start and end
     int startIdx = -1;
     int endIdx = -1;

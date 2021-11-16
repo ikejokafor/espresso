@@ -172,7 +172,7 @@ void Layer_Job::getFabric(int& maxKernels, int& maxDepth, string fabric)
 {
     if(fabric == "FPGA")
     {
-        maxKernels = ACCL_MAX_KRNLS;
+        maxKernels = (m_kernels1x1) ? ACCL_MAX_KRNLS * 9 : ACCL_MAX_KRNLS;
         maxDepth = ACCL_MAX_DEPTH_SIMD;
     }
     else if(fabric == "SSD")
@@ -182,37 +182,53 @@ void Layer_Job::getFabric(int& maxKernels, int& maxDepth, string fabric)
     }
 }
 
-
-
 void Layer_Job::createLayerIters()
 {
-    m_num_krnl_iter = (m_krnl_1x1_layer || m_do_resLayer_only) ? 1 : ceil((double)m_num3x3Kernels / (double)ACCL_MAX_KRNLS);
-    m_num_depth_iter = (m_krnl_1x1_layer|| m_do_resLayer_only) ? 1 : ceil((double)m_inputMapDepth / (double)ACCL_MAX_DEPTH_SIMD);
-
     // cout << "[ESPRESSO]: Creating Layer Iterations... " << endl;
     // cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
     // cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
 	// cout << endl << endl;
-
+    if(m_do_resLayer_only)
+    {
+        m_num_krnl_iter = 1;
+        m_num_depth_iter = 1;        
+        createResLayerIters();
+        return;
+    }
     int remNumKrnl = m_num3x3Kernels;
     int numKrnl;
-    layAclPrm_t* layAclPrm;
-    m_lay_it_arr.resize(m_num_krnl_iter);
-    for(int i = 0, krnlBgn = 0; i < m_num_krnl_iter; i++, krnlBgn += numKrnl)
-    {
-        numKrnl = min(remNumKrnl, QUAD_MAX_KERNELS);
+    layAclPrm_t* layAclPrm;    
+    int krnlBgn = 0, i = 0;
+    while(remNumKrnl > 0)
+    { 
+        int maxKernels;
+        int maxDepth;
+        m_lay_it_arr.resize(m_lay_it_arr.size() + 1);
+        getFabric(
+            maxKernels, 
+            maxDepth,
+            string("FPGA")
+            // (i % 2 == 0) ? string("FPGA") : string("SSD")
+        );
+        numKrnl = min(remNumKrnl, maxKernels);
         int remDepth = m_inputMapDepth;
         int depth;
-        for(int j = 0, depthBgn = 0; j < m_num_depth_iter; j++, depthBgn += depth)
+        int depthBgn = 0;
+        int j = 0;
+        while(remDepth > 0)
         {
-            depth = min(ACCL_MAX_DEPTH_SIMD, remDepth);
+            depth = min(maxDepth, remDepth);
             layAclPrm = createAccelParams(
                 i,
                 j,
                 depthBgn,
                 depth,
                 krnlBgn,
-                numKrnl
+                numKrnl,
+                (j == 0) ? true : false,
+                ((remDepth - depth) <= 0) ? true : false,
+                (i == 0) ? true : false,
+                ((remNumKrnl - numKrnl) <= 0) ? true : false
             );
             m_lay_it_arr[i].push_back(new Layer_Iteration(
 				m_fpga_hndl,
@@ -245,10 +261,66 @@ void Layer_Job::createLayerIters()
                 m_last           
             ));
             remDepth -= depth;
+            depthBgn += depth;
+            j++;
         }
         remNumKrnl -= numKrnl;
+        krnlBgn += numKrnl;
+        i++;
     }
-    // cout << endl << endl;
+    m_num_krnl_iter = m_lay_it_arr.size();
+    m_num_depth_iter = m_lay_it_arr[0].size();
+}
+
+
+void Layer_Job::createResLayerIters()
+{
+    m_lay_it_arr.resize(1);
+    layAclPrm_t* layAclPrm;
+    layAclPrm = createAccelParams(
+        0,
+        0,
+        0,
+        m_inputMapDepth,
+        0,
+        0,
+        true,
+        true,
+        true,
+        true
+    );
+    m_lay_it_arr[0].push_back(new Layer_Iteration(
+        m_fpga_hndl,
+        layAclPrm->opcode,
+        layAclPrm->inputMaps,
+        layAclPrm->kernels3x3,
+        layAclPrm->kernels1x1,
+        layAclPrm->kernels3x3Bias,
+        layAclPrm->kernels1x1Bias,
+        layAclPrm->partialMaps,
+        layAclPrm->residualMaps,
+        layAclPrm->outputMaps,
+        layAclPrm->prev1x1maps,
+        m_stride,
+        m_upsample,
+        m_padding,
+        m_act3x3,
+        m_act1x1,
+        layAclPrm->it_act3x3,
+        layAclPrm->it_act1x1,
+        layAclPrm->it_bias3x3,
+        layAclPrm->it_bias1x1,
+        m_krnl1x1_pding,
+        m_krnl1x1_pad_bgn,
+        m_krnl1x1_pad_end,
+        m_layerName,
+        0,
+        0,
+        m_first,
+        m_last           
+    ));
+    m_num_krnl_iter = m_lay_it_arr.size();
+    m_num_depth_iter = m_lay_it_arr[0].size();
 }
 
 
@@ -309,17 +381,17 @@ layAclPrm_t* Layer_Job::createAccelParams(
     int depthBgn,
     int depth,
     int krnl3x3Bgn,
-    int numKrnl3x3)
+    int numKrnl3x3,
+    bool first_depth_iter,
+    bool last_depth_iter,
+    bool first_krnl_iter,
+    bool last_krnl_iter)
 {
     layAclPrm_t* layAclPrm = new layAclPrm_t;
     memset(layAclPrm, 0x0, sizeof(layAclPrm_t));
     layAclPrm->inputMaps = (m_krnl_1x1_layer || m_do_resLayer_only) ? NULL : m_inputMaps->GetVolume(depthBgn, depth);
     layAclPrm->kernels3x3 = (m_krnl_1x1_layer || m_do_resLayer_only) ? NULL : m_kernels3x3->GetVolume(krnl3x3Bgn, numKrnl3x3, depthBgn, depth);
     layAclPrm->opcode = (opcode_t)-1;
-    bool first_depth_iter = (dpth_iter == 0);
-    bool last_depth_iter = (dpth_iter == (m_num_depth_iter - 1));
-    bool first_krnl_iter = (krnl_iter == 0);
-    bool last_krnl_iter = (krnl_iter == (m_num_krnl_iter - 1));
     //////
     if(m_do_1x1_res && last_depth_iter && m_num_depth_iter > 1 && first_krnl_iter)
     {
