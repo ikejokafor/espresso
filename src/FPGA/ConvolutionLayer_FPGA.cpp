@@ -89,7 +89,7 @@ void ConvolutionLayer_FPGA::ComputeLayerParam()
     if(m_group > 1)
     {
         cout << "FIXME - " << __FILE__ << ":" << __LINE__ << endl;
-        // exit(0);
+        exit(1);
     }
 	m_blob.depth = m_outputDepth;
 	m_blob.numRows = m_numOutputRows;
