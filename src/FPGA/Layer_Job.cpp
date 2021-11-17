@@ -178,8 +178,8 @@ void Layer_Job::getFabric(int& maxKernels, int& maxDepth, string fabric)
     }
     else if(fabric == "SSD")
     {
-        // maxKernels = ACCL_MAX_KRNLS;
-        // maxDepth = ACCL_MAX_DEPTH_SIMD;
+        maxKernels = 128;
+        maxDepth = 128;
     }
 }
 
