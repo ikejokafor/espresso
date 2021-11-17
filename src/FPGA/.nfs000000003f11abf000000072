@@ -84,10 +84,12 @@ Layer_Job::Layer_Job(
     m_krnl1x1_pding         = false             ;
     m_do_1x1_res            = do_1x1_res        ;
     m_do_res_1x1            = do_res_1x1        ;
-    m_layerType             = layerType;
-    m_group                 = group;
+    m_layerType             = layerType         ;
+    m_group                 = group             ;
+
     
     m_inputMaps             = new InputMaps(fpga_hndl, inputMapDepth, numInputMapRows, numInputMapCols, inputMapData);
+
     // delete m_inputMaps;
     // FILE* buf_fd = fopen("/export/home/izo5011/workSpace/espressoTester/12_Residual.bin", "r");
     // float* buf = new float[inputMapDepth * numInputMapRows * numInputMapCols];
@@ -122,15 +124,15 @@ Layer_Job::Layer_Job(
 	m_fpga_hndl		 = fpga_hndl;   
     m_first          = first;
     m_last           = last;
-#ifdef SYSTEMC
-    m_sysc_fpga_hndl    = reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
-    m_Spyld = new StatPayload();
-	m_Spyld->m_size = ACCL_META_OUTPUT_SIZE;
-    m_Spyld->m_buffer = (void*)malloc(m_Spyld->m_size);
-    m_sysC_FPGAcfg = new SysC_FPGAconfig();
-    m_sysC_FPGAcfg->m_size = 4;   // TODO: hardcoding
-    m_sysC_FPGAcfg->m_buffer = (void*)malloc(m_sysC_FPGAcfg->m_size);
-#endif
+// #ifdef SYSTEMC
+//     m_sysc_fpga_hndl    = reinterpret_cast<SYSC_FPGA_hndl*>(fpga_hndl);
+//     m_Spyld = new StatPayload();
+// 	m_Spyld->m_size = ACCL_META_OUTPUT_SIZE;
+//     m_Spyld->m_buffer = (void*)malloc(m_Spyld->m_size);
+//     m_sysC_FPGAcfg = new SysC_FPGAconfig();
+//     m_sysC_FPGAcfg->m_size = 4;   // TODO: hardcoding
+//     m_sysC_FPGAcfg->m_buffer = (void*)malloc(m_sysC_FPGAcfg->m_size);
+// #endif
 }
 
 
@@ -344,7 +346,7 @@ void Layer_Job::writeLayIt(string outFN, string mode)
             if(m_layerType == "CONVOLUTION" && m_lay_it_arr[k][d]->m_kernels3x3 != NULL)
             {
                 fprintf(fd , "%s,%s,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s\n",
-                    (m_layerName + "_" + to_string(k) + "_" + to_string(d)).c_str(),
+                    (m_layerName + "_k" + to_string(k) + "_d" + to_string(d)).c_str(),
                     m_layerType.c_str(),
                     inMaps->m_depth, inMaps->m_rows, inMaps->m_cols,
                     outMaps->m_depth, outMaps->m_rows, outMaps->m_cols,
@@ -355,7 +357,7 @@ void Layer_Job::writeLayIt(string outFN, string mode)
             else if(m_layerType == "CONVOLUTION" && m_lay_it_arr[k][d]->m_kernels1x1 != NULL)
             {
                 fprintf(fd , "%s,%s,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s\n",
-                    (m_layerName + "_" + to_string(k) + "_" + to_string(d)).c_str(),
+                    (m_layerName + "_k" + to_string(k) + "_d" + to_string(d)).c_str(),
                     m_layerType.c_str(),
                     partMaps->m_depth, partMaps->m_rows, partMaps->m_cols,
                     outMaps->m_depth, outMaps->m_rows, outMaps->m_cols,
@@ -393,6 +395,7 @@ layAclPrm_t* Layer_Job::createAccelParams(
     memset(layAclPrm, 0x0, sizeof(layAclPrm_t));
     layAclPrm->inputMaps = (m_krnl_1x1_layer || m_do_resLayer_only) ? NULL : m_inputMaps->GetVolume(depthBgn, depth);
     layAclPrm->kernels3x3 = (m_krnl_1x1_layer || m_do_resLayer_only) ? NULL : m_kernels3x3->GetVolume(krnl3x3Bgn, numKrnl3x3, depthBgn, depth);
+    layAclPrm->kernels1x1 = (m_krnl_1x1_layer) ? m_kernels1x1->GetVolume(krnl3x3Bgn, numKrnl3x3, depthBgn, depth) : NULL;   // should make this krnl begin, but MAX number of kernels is updated in createLayIt
     layAclPrm->opcode = (opcode_t)-1;
     //////
     if(m_do_1x1_res && last_depth_iter && m_num_depth_iter > 1 && first_krnl_iter)
@@ -514,27 +517,15 @@ layAclPrm_t* Layer_Job::createAccelParams(
     }
     //////
     layAclPrm->kernels3x3Bias = (m_krnl_1x1_layer || m_do_resLayer_only || !layAclPrm->it_bias3x3) ? NULL : m_kernels3x3Bias->GetVolume(krnl3x3Bgn, numKrnl3x3);
+    // layAclPrm->kernels1x1Bias = (m_krnl_1x1_layer || layAclPrm->it_bias1x1) ? NULL : m_kernels1x1Bias->GetVolume(krnl3x3Bgn, numKrnl3x3);
     //////
-    if(m_do_kernels1x1 && last_depth_iter)
+    if(m_do_resLayer_only)
     {
-        layAclPrm->kernels1x1 = (m_krnl_1x1_layer) ? new Kernels(m_kernels1x1) : m_kernels1x1->GetVolume(0, m_kernels1x1->m_numKernels, krnl3x3Bgn, numKrnl3x3);
-        layAclPrm->kernels1x1Bias = (!layAclPrm->it_bias1x1) ? NULL : m_kernels1x1Bias;
-        if(!m_krnl1x1_pding)
-        {
-            layAclPrm->outputMaps = new OutputMaps(m_fpga_hndl, m_kernels1x1->m_numKernels, m_numOutputMapRows, m_numOutputMapCols);
-        }
-        else
-        {
-            layAclPrm->outputMaps = new OutputMaps(m_fpga_hndl, m_kernels1x1->m_numKernels + (m_krnl1x1_pad_end - m_krnl1x1_pad_bgn), m_numOutputMapRows, m_numOutputMapCols);
-        }
+        layAclPrm->outputMaps = new OutputMaps(m_fpga_hndl, m_residualMaps->m_depth, m_residualMaps->m_rows, m_residualMaps->m_cols);
     }
     else
     {
         layAclPrm->outputMaps = new OutputMaps(m_fpga_hndl, numKrnl3x3, m_numOutputMapRows, m_numOutputMapCols);
-    }
-    if(m_do_resLayer_only)
-    {
-        layAclPrm->outputMaps = new OutputMaps(m_fpga_hndl, m_residualMaps->m_depth, m_residualMaps->m_rows, m_residualMaps->m_cols);
     }
     //////
     if((m_do_1x1_res || m_do_res_1x1 || m_do_kernels1x1) && !m_krnl_1x1_layer && last_depth_iter && !first_krnl_iter)
@@ -1809,7 +1800,6 @@ void Layer_Job::printConfig(Layer_Iteration* lay_it)
 void Layer_Job::calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& QUAD_time, double& FAS_time)
 {
     // only works properly for unmerged layers
-    int group  = lay_it->m_accelCfg->m_FAS_cfg_arr[0]->m_AWP_cfg_arr[0]->m_QUAD_cfg_arr[0]->m_group;
     if(lay_it->m_kernels3x3)
     {
         QUAD_time = ((3 * lay_it->m_inputMaps->m_cols)
@@ -1818,13 +1808,11 @@ void Layer_Job::calcAccelPerfAnalyStats(Layer_Iteration* lay_it, double& QUAD_ti
     }
     else if(lay_it->m_kernels1x1)
     {
-        QUAD_time = ((3 * lay_it->m_inputMaps->m_cols)
-                    + ((lay_it->m_inputMaps->m_rows - 3) * lay_it->m_inputMaps->m_cols) // bc we dont overlap PFB loading and execution
-                    + ((lay_it->m_kernels3x3->m_numKernels / K_3_S) * (lay_it->m_outputMaps->m_rows / R_S) * (lay_it->m_outputMaps->m_cols / MX_3X3_S))) * CLK_PRD_NS;
+        // change this to input maps
+        QUAD_time = ((3 * lay_it->m_partialMaps->m_cols)
+                    + ((lay_it->m_partialMaps->m_rows - 3) * lay_it->m_partialMaps->m_cols) // bc we dont overlap PFB loading and execution
+                    + ((lay_it->m_kernels1x1->m_numKernels / K_1_S) * (lay_it->m_outputMaps->m_rows / R_S) * (lay_it->m_outputMaps->m_cols / MX_1X1_S / 9 / m_group))) * CLK_PRD_NS;
                     
-        FAS_time  = ((lay_it->m_outputMaps->m_rows * (lay_it->m_outputMaps->m_cols / MX_1X1_S))
-                    * (lay_it->m_kernels1x1->m_depth / K_1_D_S)
-                    * (lay_it->m_kernels1x1->m_numKernels / K_1_S)) * CLK_PRD_NS;
     }
     else
     {
