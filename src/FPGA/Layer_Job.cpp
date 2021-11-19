@@ -208,7 +208,8 @@ void Layer_Job::createLayerIters()
         getFabric(
             maxKernels, 
             maxDepth,
-            (i % 2 == 0) ? string("FPGA") : string("SSD")
+            // (i % 2 == 0) ? string("FPGA") : string("SSD")
+            "FPGA"
         );
         numKrnl = min(remNumKrnl, maxKernels);
         int remDepth = m_inputMapDepth;

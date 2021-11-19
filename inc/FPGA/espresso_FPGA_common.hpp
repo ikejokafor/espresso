@@ -30,7 +30,7 @@ static int RE_TRAN_AMT                 = 8;
 
 #define MAX_AWP_PER_FAS             1
 extern int MAX_QUAD_PER_AWP;
-// #define MAX_QUAD_PER_AWP            8
+extern int QUAD_MAX_KERNELS;
 #define MAX_FAS_1X1_IT              4
 #define MAX_FAS_1X1_IT_KRNLS        64   
 
@@ -44,7 +44,6 @@ extern int MAX_QUAD_PER_AWP;
 #define NUM_CE_PER_QUAD             8
 #define NUM_FAS				        1
 #define NUM_TOTAL_QUADS             (MAX_AWP_PER_FAS * MAX_QUAD_PER_AWP)
-#define QUAD_MAX_KERNELS	        64
 #define QUAD_MAX_DEPTH		        8
 #define MAX_INPUT_ROWS              ((uint64_t)608)
 #define MAX_INPUT_COLS              ((uint64_t)608)

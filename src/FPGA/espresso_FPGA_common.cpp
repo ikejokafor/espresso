@@ -11,7 +11,7 @@ double MX_3X3_S = 1;           // Multiply SIMD for 3x3 processing ie 32 bit com
 double MX_1X1_S = 1;           // Multiply SIMD for 3x3 processing ie 32 bit compute unit can do 4 8-bit mults
 double CLK_PRD_NS = 12.0f;
 int MAX_QUAD_PER_AWP = 8;
-// int MAX_QUAD_PER_AWP = 4;
+int QUAD_MAX_KERNELS = 64;
 
 
 int AXI_sz_algn(float fth_amt, float bus_size)
