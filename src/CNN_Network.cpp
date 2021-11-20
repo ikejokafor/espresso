@@ -777,7 +777,7 @@ void espresso::CNN_Network::writeLayIt()
     // FIXME: proper way is to access data structures from here and print
     string fn = m_netName + "_partitioned_k" + std::to_string(ACCL_MAX_KRNLS) + "_d" + std::to_string(ACCL_MAX_DEPTH_SIMD) + ".csv"; 
     FILE *fd = fopen(fn.c_str(), "w");
-    fprintf(fd , "Name,Type,input channels,input dimensions,output channels,output dimensions,Kernel dimensions,Padding,Stride,group,activation\n");
+    fprintf(fd , "Name,Type,input channels,input dimensions,output channels,output dimensions,Kernel dimensions,Padding,Stride,group,activation,PoolingType\n");
     fclose(fd);
     for(int i = 1; i < m_cnn.size(); i++)
     {

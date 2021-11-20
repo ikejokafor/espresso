@@ -341,11 +341,12 @@ void Layer_Job::writeLayIt(string outFN, string mode)
             activation_t act = (m_lay_it_arr[k][d]->m_kernels3x3) ? m_act3x3 : m_act1x1;
             ResidualMaps* resdMaps = m_lay_it_arr[k][d]->m_residualMaps;
             OutputMaps* outMaps = m_lay_it_arr[k][d]->m_outputMaps;
+            string str_act = (act == espresso::LEAKY) ? "leaky" : "-";
             
             if(m_layerType == "CONVOLUTION" && m_lay_it_arr[k][d]->m_kernels3x3 != NULL)
             {
-                fprintf(fd , "%s,%s,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s\n",
-                    (m_layerName + "_" + to_string(k) + "_" + to_string(d)).c_str(),
+                fprintf(fd , "%s,%s,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s,-\n",
+                    (m_layerName + "_k" + to_string(k) + "_d" + to_string(d)).c_str(),
                     m_layerType.c_str(),
                     inMaps->m_depth, inMaps->m_rows, inMaps->m_cols,
                     outMaps->m_depth, outMaps->m_rows, outMaps->m_cols,
@@ -355,8 +356,8 @@ void Layer_Job::writeLayIt(string outFN, string mode)
             }
             else if(m_layerType == "CONVOLUTION" && m_lay_it_arr[k][d]->m_kernels1x1 != NULL)
             {
-                fprintf(fd , "%s,%s,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s\n",
-                    (m_layerName + "_" + to_string(k) + "_" + to_string(d)).c_str(),
+                fprintf(fd , "%s,%s,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s,-\n",
+                    (m_layerName + "_k" + to_string(k) + "_d" + to_string(d)).c_str(),
                     m_layerType.c_str(),
                     partMaps->m_depth, partMaps->m_rows, partMaps->m_cols,
                     outMaps->m_depth, outMaps->m_rows, outMaps->m_cols,
@@ -366,7 +367,7 @@ void Layer_Job::writeLayIt(string outFN, string mode)
             }
             else if(m_layerType == "RESIDUAL")
             {
-                fprintf(fd , "%s,SHORTCUT,%d,%dx%d,%d,%dx%d,-,-,-,-,-\n",
+                fprintf(fd , "%s,SHORTCUT,%d,%dx%d,%d,%dx%d,-,-,-,-,-,-\n",
                     m_layerName.c_str(), 
                     partMaps->m_depth, partMaps->m_rows, partMaps->m_cols,
                     outMaps->m_depth, outMaps->m_rows, outMaps->m_cols
