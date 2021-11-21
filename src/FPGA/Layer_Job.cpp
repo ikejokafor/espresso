@@ -331,6 +331,10 @@ void Layer_Job::writeLayIt(string outFN, string mode)
 {
     FILE* fd = NULL;
     fd = fopen(outFN.c_str(), mode.c_str());
+    
+
+
+
     for(int k = 0; k < m_lay_it_arr.size(); k++)
     {
         for(int d = 0; d < m_lay_it_arr[k].size(); d++)
@@ -342,6 +346,19 @@ void Layer_Job::writeLayIt(string outFN, string mode)
             ResidualMaps* resdMaps = m_lay_it_arr[k][d]->m_residualMaps;
             OutputMaps* outMaps = m_lay_it_arr[k][d]->m_outputMaps;
             string str_act = (act == espresso::LEAKY) ? "leaky" : "-";
+            
+            // for dac 2022 deadline
+            int split = floor((float)m_lay_it_arr.size() / 2.0);
+            if(k > split)
+            {
+                fprintf(fd, "%s, 0,1,", m_layerName.c_str());
+            }
+            else
+            {
+                fprintf(fd, "%s, 1,0,", m_layerName.c_str());
+            }
+            // for dac 2022 deadline
+            
             
             if(m_layerType == "CONVOLUTION" && m_lay_it_arr[k][d]->m_kernels3x3 != NULL)
             {
