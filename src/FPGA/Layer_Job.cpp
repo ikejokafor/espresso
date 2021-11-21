@@ -360,7 +360,7 @@ void Layer_Job::writeLayIt(string outFN, string mode)
             // for dac 2022 deadline
             
             
-            if(m_layerType == "CONVOLUTION" && m_lay_it_arr[k][d]->m_kernels3x3 != NULL)
+            if(m_layerType == "convolution" && m_lay_it_arr[k][d]->m_kernels3x3 != NULL)
             {
                 fprintf(fd , "%s,%s,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s,-\n",
                     (m_layerName + "_k" + to_string(k) + "_d" + to_string(d)).c_str(),
@@ -371,7 +371,7 @@ void Layer_Job::writeLayIt(string outFN, string mode)
                     m_padding, m_stride, m_group, espresso::to_string(act).c_str()
                 );
             }
-            else if(m_layerType == "CONVOLUTION" && m_lay_it_arr[k][d]->m_kernels1x1 != NULL)
+            else if(m_layerType == "shortcut" && m_lay_it_arr[k][d]->m_kernels1x1 != NULL)
             {
                 fprintf(fd , "%s,%s,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s,-\n",
                     (m_layerName + "_k" + to_string(k) + "_d" + to_string(d)).c_str(),
@@ -384,7 +384,7 @@ void Layer_Job::writeLayIt(string outFN, string mode)
             }
             else if(m_layerType == "RESIDUAL")
             {
-                fprintf(fd , "%s,SHORTCUT,%d,%dx%d,%d,%dx%d,-,-,-,-,-,-\n",
+                fprintf(fd , "%s,shortcut,%d,%dx%d,%d,%dx%d,-,-,-,-,-,-\n",
                     m_layerName.c_str(), 
                     partMaps->m_depth, partMaps->m_rows, partMaps->m_cols,
                     outMaps->m_depth, outMaps->m_rows, outMaps->m_cols
