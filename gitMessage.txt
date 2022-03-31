@@ -1,1 +1,1 @@
-removed del res in layer iteration, added code to write layer it data and some refactoring
+Committed Espresso. Code needs clean up, refactoring and documentation

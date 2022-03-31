@@ -185,51 +185,33 @@ void Layer_Job::getFabric(int& maxKernels, int& maxDepth, string fabric)
 
 void Layer_Job::createLayerIters()
 {
+    m_num_krnl_iter = (m_krnl_1x1_layer || m_do_resLayer_only) ? 1 : ceil((double)m_num3x3Kernels / (double)ACCL_MAX_KRNLS);
+    m_num_depth_iter = (m_krnl_1x1_layer|| m_do_resLayer_only) ? 1 : ceil((double)m_inputMapDepth / (double)ACCL_MAX_DEPTH_SIMD);
+
     // cout << "[ESPRESSO]: Creating Layer Iterations... " << endl;
     // cout << "[ESPRESSO]: " << m_num_krnl_iter << " Kernel Iteration(s)" << endl;
     // cout << "[ESPRESSO]: " << m_num_depth_iter << " Depth Iterations(s)" << endl;
 	// cout << endl << endl;
-    if(m_do_resLayer_only)
-    {
-        m_num_krnl_iter = 1;
-        m_num_depth_iter = 1;        
-        createResLayerIters();
-        return;
-    }
+
     int remNumKrnl = m_num3x3Kernels;
     int numKrnl;
-    layAclPrm_t* layAclPrm;    
-    int krnlBgn = 0, i = 0;
-    while(remNumKrnl > 0)
-    { 
-        int maxKernels;
-        int maxDepth;
-        m_lay_it_arr.resize(m_lay_it_arr.size() + 1);
-        getFabric(
-            maxKernels, 
-            maxDepth,
-            // (i % 2 == 0) ? string("FPGA") : string("SSD")
-            "FPGA"
-        );
-        numKrnl = min(remNumKrnl, maxKernels);
+    layAclPrm_t* layAclPrm;
+    m_lay_it_arr.resize(m_num_krnl_iter);
+    for(int i = 0, krnlBgn = 0; i < m_num_krnl_iter; i++, krnlBgn += numKrnl)
+    {
+        numKrnl = min(remNumKrnl, QUAD_MAX_KERNELS);
         int remDepth = m_inputMapDepth;
         int depth;
-        int depthBgn = 0;
-        int j = 0;
-        while(remDepth > 0)
+        for(int j = 0, depthBgn = 0; j < m_num_depth_iter; j++, depthBgn += depth)
         {
-            depth = min(maxDepth, remDepth);
+            depth = min(ACCL_MAX_DEPTH_SIMD, remDepth);
             layAclPrm = createAccelParams(
                 i,
                 j,
                 depthBgn,
                 depth,
                 krnlBgn,
-                numKrnl,
-                (j == 0) ? true : false,
-                ((remDepth - depth) <= 0) ? true : false,
-                (i == 0) ? true : false,
-                ((remNumKrnl - numKrnl) <= 0) ? true : false
+                numKrnl
             );
             m_lay_it_arr[i].push_back(new Layer_Iteration(
 				m_fpga_hndl,
@@ -263,68 +245,65 @@ void Layer_Job::createLayerIters()
                 m_last           
             ));
             remDepth -= depth;
-            depthBgn += depth;
-            j++;
         }
         remNumKrnl -= numKrnl;
-        krnlBgn += numKrnl;
-        i++;
     }
-    m_num_krnl_iter = m_lay_it_arr.size();
-    m_num_depth_iter = m_lay_it_arr[0].size();
+    // cout << endl << endl;
 }
 
 
-void Layer_Job::createResLayerIters()
-{
-    m_lay_it_arr.resize(1);
-    layAclPrm_t* layAclPrm;
-    layAclPrm = createAccelParams(
-        0,
-        0,
-        0,
-        m_inputMapDepth,
-        0,
-        0,
-        true,
-        true,
-        true,
-        true
-    );
-    m_lay_it_arr[0].push_back(new Layer_Iteration(
-        m_fpga_hndl,
-        layAclPrm->opcode,
-        layAclPrm->inputMaps,
-        layAclPrm->kernels3x3,
-        layAclPrm->kernels1x1,
-        layAclPrm->kernels3x3Bias,
-        layAclPrm->kernels1x1Bias,
-        layAclPrm->partialMaps,
-        layAclPrm->residualMaps,
-        layAclPrm->outputMaps,
-        layAclPrm->prev1x1maps,
-        m_stride,
-        m_upsample,
-        m_padding,
-        m_group,
-        m_act3x3,
-        m_act1x1,
-        layAclPrm->it_act3x3,
-        layAclPrm->it_act1x1,
-        layAclPrm->it_bias3x3,
-        layAclPrm->it_bias1x1,
-        m_krnl1x1_pding,
-        m_krnl1x1_pad_bgn,
-        m_krnl1x1_pad_end,
-        m_layerName,
-        0,
-        0,
-        m_first,
-        m_last           
-    ));
-    m_num_krnl_iter = m_lay_it_arr.size();
-    m_num_depth_iter = m_lay_it_arr[0].size();
-}
+
+
+// void Layer_Job::createResLayerIters()
+// {
+//     m_lay_it_arr.resize(1);
+//     layAclPrm_t* layAclPrm;
+//     layAclPrm = createAccelParams(
+//         0,
+//         0,
+//         0,
+//         m_inputMapDepth,
+//         0,
+//         0,
+//         true,
+//         true,
+//         true,
+//         true
+//     );
+//     m_lay_it_arr[0].push_back(new Layer_Iteration(
+//         m_fpga_hndl,
+//         layAclPrm->opcode,
+//         layAclPrm->inputMaps,
+//         layAclPrm->kernels3x3,
+//         layAclPrm->kernels1x1,
+//         layAclPrm->kernels3x3Bias,
+//         layAclPrm->kernels1x1Bias,
+//         layAclPrm->partialMaps,
+//         layAclPrm->residualMaps,
+//         layAclPrm->outputMaps,
+//         layAclPrm->prev1x1maps,
+//         m_stride,
+//         m_upsample,
+//         m_padding,
+//         m_group,
+//         m_act3x3,
+//         m_act1x1,
+//         layAclPrm->it_act3x3,
+//         layAclPrm->it_act1x1,
+//         layAclPrm->it_bias3x3,
+//         layAclPrm->it_bias1x1,
+//         m_krnl1x1_pding,
+//         m_krnl1x1_pad_bgn,
+//         m_krnl1x1_pad_end,
+//         m_layerName,
+//         0,
+//         0,
+//         m_first,
+//         m_last           
+//     ));
+//     m_num_krnl_iter = m_lay_it_arr.size();
+//     m_num_depth_iter = m_lay_it_arr[0].size();
+// }
 
 
 void Layer_Job::writeLayIt(string outFN, string mode)
@@ -346,36 +325,20 @@ void Layer_Job::writeLayIt(string outFN, string mode)
             ResidualMaps* resdMaps = m_lay_it_arr[k][d]->m_residualMaps;
             OutputMaps* outMaps = m_lay_it_arr[k][d]->m_outputMaps;
             string str_act = (act == espresso::LEAKY) ? "leaky" : "-";
-            
-            // for dac 2022 deadline
-            int split = floor((float)m_lay_it_arr.size() / 2.0);
-            if(k > split)
+            if(m_layerType == "CONVOLUTION" && m_lay_it_arr[k][d]->m_kernels3x3 != NULL)
             {
-                fprintf(fd, "%s, 0,1,", m_layerName.c_str());
-            }
-            else
-            {
-                fprintf(fd, "%s, 1,0,", m_layerName.c_str());
-            }
-            // for dac 2022 deadline
-            
-            
-            if(m_layerType == "convolution" && m_lay_it_arr[k][d]->m_kernels3x3 != NULL)
-            {
-                fprintf(fd , "%s,%s,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s,-\n",
+                fprintf(fd , "%s,convolution,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s,-\n",
                     (m_layerName + "_k" + to_string(k) + "_d" + to_string(d)).c_str(),
-                    m_layerType.c_str(),
                     inMaps->m_depth, inMaps->m_rows, inMaps->m_cols,
                     outMaps->m_depth, outMaps->m_rows, outMaps->m_cols,
                     kernels->m_rows, kernels->m_cols,
                     m_padding, m_stride, m_group, espresso::to_string(act).c_str()
                 );
             }
-            else if(m_layerType == "shortcut" && m_lay_it_arr[k][d]->m_kernels1x1 != NULL)
+            else if(m_layerType == "CONVOLUTION" && m_lay_it_arr[k][d]->m_kernels1x1 != NULL)
             {
-                fprintf(fd , "%s,%s,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s,-\n",
+                fprintf(fd , "%s,convolution,%d,%dx%d,%d,%dx%d,%dx%d,%d,%d,%d,%s,-\n",
                     (m_layerName + "_k" + to_string(k) + "_d" + to_string(d)).c_str(),
-                    m_layerType.c_str(),
                     partMaps->m_depth, partMaps->m_rows, partMaps->m_cols,
                     outMaps->m_depth, outMaps->m_rows, outMaps->m_cols,
                     kernels->m_rows, kernels->m_cols,
@@ -402,17 +365,17 @@ layAclPrm_t* Layer_Job::createAccelParams(
     int depthBgn,
     int depth,
     int krnl3x3Bgn,
-    int numKrnl3x3,
-    bool first_depth_iter,
-    bool last_depth_iter,
-    bool first_krnl_iter,
-    bool last_krnl_iter)
+    int numKrnl3x3)
 {
     layAclPrm_t* layAclPrm = new layAclPrm_t;
     memset(layAclPrm, 0x0, sizeof(layAclPrm_t));
     layAclPrm->inputMaps = (m_krnl_1x1_layer || m_do_resLayer_only) ? NULL : m_inputMaps->GetVolume(depthBgn, depth);
     layAclPrm->kernels3x3 = (m_krnl_1x1_layer || m_do_resLayer_only) ? NULL : m_kernels3x3->GetVolume(krnl3x3Bgn, numKrnl3x3, depthBgn, depth);
     layAclPrm->opcode = (opcode_t)-1;
+    bool first_depth_iter = (dpth_iter == 0);
+    bool last_depth_iter = (dpth_iter == (m_num_depth_iter - 1));
+    bool first_krnl_iter = (krnl_iter == 0);
+    bool last_krnl_iter = (krnl_iter == (m_num_krnl_iter - 1));
     //////
     if(m_do_1x1_res && last_depth_iter && m_num_depth_iter > 1 && first_krnl_iter)
     {

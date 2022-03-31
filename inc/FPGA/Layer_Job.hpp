@@ -131,11 +131,7 @@ class Layer_Job
             int depthBgn,
             int depth,
             int krnl3x3Bgn,
-            int numKrnl3x3,
-            bool first_depth_iter,
-            bool last_depth_iter,
-            bool first_krnl_iter,
-            bool last_krnl_iter
+            int numKrnl3x3
 		);
 		void printConfig(Layer_Iteration* lay_it);
         void process(double& elapsed_time, double& avgIterTime, double& memPower, double& avg_QUAD_time0, double& avg_FAS_time0, double& avg_QUAD_time1, double& avg_FAS_time1);

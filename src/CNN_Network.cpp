@@ -774,6 +774,19 @@ void espresso::CNN_Network::printNetStats()
 
 void espresso::CNN_Network::writeLayIt()
 {
+    // // FIXME: proper way is to access data structures from here and print
+    // string fn = m_netName + "_partitioned_k" + std::to_string(ACCL_MAX_KRNLS) + "_d" + std::to_string(ACCL_MAX_DEPTH_SIMD) + ".csv"; 
+    // FILE *fd = fopen(fn.c_str(), "w");
+    // fprintf(fd , "Name,Type,input channels,input dimensions,output channels,output dimensions,Kernel dimensions,Padding,Stride,group,activation,PoolingType\n");
+    // fclose(fd);
+    // for(int i = 1; i < m_cnn.size(); i++)
+    // {
+    //     if(m_cnn[i]->m_layerType == espresso::CONVOLUTION || m_cnn[i]->m_layerType == espresso::RESIDUAL)
+    //     {
+    //         m_cnn[i]->m_layer_job->writeLayIt(fn, "a");
+    //     }
+    // }
+    
     // FIXME: proper way is to access data structures from here and print
     string fn = m_netName + "_partitioned_k" + std::to_string(ACCL_MAX_KRNLS) + "_d" + std::to_string(ACCL_MAX_DEPTH_SIMD) + ".csv"; 
     FILE *fd = fopen(fn.c_str(), "w");
